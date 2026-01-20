@@ -69,6 +69,19 @@ qt_add_qml_module(CustomModule
     NO_PLUGIN
 )
 
+qt_add_library(CustomQmlControlsModule STATIC)
+
+set_source_files_properties(src/CustomQmlControls/CustomToolbarIndicator.qml PROPERTIES QT_RESOURCE_ALIAS CustomToolbarIndicator.qml)
+
+qt_add_qml_module(CustomQmlControlsModule
+    URI Custom.QmlControls
+    VERSION 1.0
+    RESOURCE_PREFIX /qml
+    QML_FILES
+        src/CustomQmlControls/CustomToolbarIndicator.qml
+    NO_PLUGIN
+)
+
 set(CUSTOM_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/CustomPlugin.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/CustomPlugin.h
@@ -83,6 +96,7 @@ set(CUSTOM_SOURCES
 
 set(CUSTOM_LIBRARIES
     CustomModule # Explicitly link QML module, needed by Qt 6.6.3, TODO: Remove when support for this version is dropped
+    CustomQmlControlsModule
     CACHE INTERNAL "" FORCE
 )
 
