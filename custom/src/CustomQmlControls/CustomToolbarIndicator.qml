@@ -8,6 +8,7 @@ import QGroundControl.Palette
 import QGroundControl.MultiVehicleManager
 import QGroundControl.ScreenTools
 import QGroundControl.Controllers
+import QGroundControl.Vehicle
 
 import Custom.Widgets
 
@@ -70,10 +71,13 @@ Item {
     // middle/right: Indicator Area (including native indicators + our custom buttons)
     QGCFlickable {
         id:                     toolsFlickable
+        // the Margin between components
         anchors.leftMargin:     ScreenTools.defaultFontPixelWidth * ScreenTools.largeFontPointRatio * 1.5
         anchors.rightMargin:    ScreenTools.defaultFontPixelWidth / 2
+        // avoid overlap
         anchors.left:           viewButtonRow.right
         anchors.bottomMargin:   1
+        // fill parent
         anchors.top:            parent.top
         anchors.bottom:         parent.bottom
         anchors.right:          parent.right
@@ -102,18 +106,60 @@ Item {
 
                 CustomToolBarButton2 {
                     text :         "1"
+                    // Only visible when the connected vehicle is PX4
+                    //visible:       _activeVehicle ? _activeVehicle.firmwareType === QGCMAVLink.FirmwareClassPX4 : false
                     iconSource:    "/custom/img/odometer.svg"
                     onClicked:     console.log("1 Toolbar Button2 Clicked!")
                 }
 
                 CustomToolBarButton2 {
                     text :         "2"
+                    // Only visible when the connected vehicle is ArduPilot
+                    //visible:       _activeVehicle ? _activeVehicle.firmwareType === QGCMAVLink.FirmwareClassArduPilot : false
                     iconSource:    "/custom/img/microSD.svg"
                     onClicked:     console.log("2 Toolbar Button2 Clicked!")
                 }
             }
         }
     }
+
+    //-- Time Display Indicator --//
+    // Rectangle {
+    //     id:                         timeIndicator
+    //     anchors.top:                parent.top
+    //     anchors.bottom:             parent.bottom
+    //     anchors.horizontalCenter:   parent.horizontalCenter
+    //     width:                      timeLabel.width + (ScreenTools.defaultFontPixelWidth * 4)
+    //     color:                      timeMouseArea.pressed ? qgcPal.buttonHighlight : (timeMouseArea.containsMouse ? qgcPal.button : "transparent")
+    //     radius:                     ScreenTools.defaultFontPixelHeight / 4
+    //
+    //     QGCLabel {
+    //         id:                     timeLabel
+    //         anchors.centerIn:       parent
+    //         text:                   "00:00:00"
+    //         color:                  qgcPal.text
+    //         font.pointSize:         ScreenTools.defaultFontPointSize
+    //     }
+    //
+    //     Timer {
+    //         interval:       1000
+    //         repeat:         true
+    //         running:        true
+    //         onTriggered: {
+    //             var now = new Date()
+    //             var h = ("0" + now.getHours()).slice(-2)
+    //             var m = ("0" + now.getMinutes()).slice(-2)
+    //             var s = ("0" + now.getSeconds()).slice(-2)
+    //             timeLabel.text = h + ":" + m + ":" + s
+    //         }
+    //     }
+    //
+    //     MouseArea {
+    //         id:                 timeMouseArea
+    //         anchors.fill:       parent
+    //         hoverEnabled:       true
+    //     }
+    // }
 
     // brandImageIndoor/outdoor on the right side
     Image {
