@@ -138,6 +138,16 @@ QString CustomPlugin::brandImageOutdoor(void) const
     return QStringLiteral("/custom/img/dronecode-black.svg");
 }
 
+const QVariantList& CustomPlugin::toolBarIndicators(void)
+{
+    static const QVariantList toolBarIndicatorList = {
+        // 注意路径前缀，这里对应 custom.qrc 中的 prefix="/Custom/qml" 加上 alias
+        QVariant::fromValue(QUrl::fromUserInput("qrc:/Custom/qml/CustomToolbarIndicator.qml")),
+    };
+
+    return toolBarIndicatorList;
+}
+
 bool CustomPlugin::overrideSettingsGroupVisibility(const QString &name)
 {
     // We have set up our own specific brand imaging. Hide the brand image settings such that the end user
