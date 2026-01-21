@@ -12,11 +12,20 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Dialogs
+
+import QtLocation
+import QtPositioning
+import QtQuick.Window
+import QtQml.Models
 
 import QGroundControl
 import QGroundControl.Controls
 import QGroundControl.Palette
 import QGroundControl.ScreenTools
+
+import QGroundControl.FlightDisplay
+import QGroundControl.FlightMap
 
 import Custom.Widgets
 
@@ -24,6 +33,8 @@ Item {
     property var parentToolInsets                       // These insets tell you what screen real estate is available for positioning the controls in your overlay
     property var totalToolInsets:   _totalToolInsets    // The insets updated for the custom overlay additions
     property var mapControl
+
+    property bool rightPanelOpen: false
 
     readonly property string noGPS:         qsTr("NO GPS")
     readonly property real   indicatorValueWidth:   ScreenTools.defaultFontPixelWidth * 7
@@ -255,4 +266,276 @@ Item {
             anchors.centerIn:   parent
         }
     }
+
+    // ================= 右侧任务 / 设置面板 =================
+    Rectangle {
+        id: rightTaskPanel
+        z: 100
+        width: 120
+        height: parent.height
+        color: "#202020"
+
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.rightMargin: rightPanelOpen ? 0 : -width  // 改成 rightMargin 来控制滑动
+
+        Behavior on anchors.rightMargin {
+            NumberAnimation { duration: 250 }
+        }
+
+        Column {
+            anchors.fill: parent
+            anchors.margins: 12
+            spacing: 10
+
+            Text {
+                text: "任务 / 设置"
+                color: "white"
+                font.pixelSize: 18
+            }
+
+            Button {
+                text: "任务规划"
+                onClicked: {
+                    // 跳转到任务规划视图
+                    if (mainWindow.allowViewSwitch()) {
+                        mainWindow.showPlanView()
+                        rightPanelOpen = false  // 关闭面板
+                    }
+                }
+            }
+
+            Button {
+                text: "航线库"
+                onClicked: {
+                    routeLibraryDialogComponent.createObject(_root).open()
+                    rightPanelOpen = false
+                }
+            }
+
+            Button {
+                text: "设备状态"
+                onClicked: {
+                    // 打开设备配置页面
+                    if (mainWindow.allowViewSwitch()) {
+                        mainWindow.showVehicleConfig()
+                        rightPanelOpen = false
+                    }
+                }
+            }
+
+            Button {
+                text: "媒体库"
+                onClicked: {
+                    mediaLibraryDialogComponent.createObject(_root).open()
+                    rightPanelOpen = false
+                }
+            }
+
+
+
+
+            Button {
+                text: "设置"
+                onClicked: {
+                    // 跳转到应用设置
+                    if (mainWindow.allowViewSwitch()) {
+                        mainWindow.showSettingsTool()
+                        rightPanelOpen = false
+                    }
+                }
+            }
+        }
+
+    }
+
+
+    Rectangle {
+        id: toggleButton
+        z: 200
+        width: 28
+        height: 80
+        radius: 4
+        color: "#2c2c2c"
+
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+
+        Text {
+            anchors.centerIn: parent
+            text: rightPanelOpen ? ">" : "<"
+            color: "white"
+            font.pixelSize: 16
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: rightPanelOpen = !rightPanelOpen
+        }
+    }
+
+    // ================= 加载对话框组件 (Loader) =================
+    // 放在右侧面板之后
+    Loader {
+        id: mediaLibraryLoader
+        sourceComponent: mediaLibraryDialogComponent
+        active: true  // 立即激活
+    }
+
+    Loader {
+        id: routeLibraryLoader
+        sourceComponent: routeLibraryDialogComponent
+        active: true  // 立即激活
+    }
+
+    // ================= 对话框实例 (Component) =================
+    // 放在文件末尾
+    Component {
+        id: mediaLibraryDialogComponent
+
+        QGCPopupDialog {
+            id: mediaLibraryDialog
+            title: qsTr("媒体库")
+            buttons: Dialog.Close
+            destroyOnClose: true
+
+            implicitWidth:  ScreenTools.defaultFontPixelWidth * 40
+            implicitHeight: ScreenTools.defaultFontPixelHeight * 15
+
+            property var videoManager: QGroundControl.videoManager
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: ScreenTools.defaultFontPixelWidth
+                spacing: ScreenTools.defaultFontPixelHeight
+
+                Layout.preferredWidth: ScreenTools.defaultFontPixelWidth * 35
+                Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 10
+
+                QGCLabel {
+                    text: qsTr("视频文件管理")
+                    font.bold: true
+                    Layout.preferredWidth: parent.width
+                }
+
+                ListView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 8
+                    model: videoManager ? videoManager.videoFiles : []
+
+                    delegate: Rectangle {
+                        width: parent.width
+                        height: ScreenTools.defaultFontPixelHeight * 2
+                        color: "transparent"
+                        border.color: qgcPal.button
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: ScreenTools.defaultFontPixelWidth / 2
+
+                            QGCLabel {
+                                text: modelData.fileName || "Unknown"
+                                Layout.fillWidth: true
+                            }
+
+                            QGCButton {
+                                text: qsTr("下载")
+                                onClicked: {
+                                    if (videoManager) {
+                                        videoManager.downloadVideo(modelData.filePath)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Component {
+        id: routeLibraryDialogComponent
+
+        QGCPopupDialog {
+            id: routeLibraryDialog
+            title: qsTr("航线库")
+            buttons: Dialog.Close
+            destroyOnClose: true
+
+            // 添加显式尺寸
+            implicitWidth:  ScreenTools.defaultFontPixelWidth * 40
+            implicitHeight: ScreenTools.defaultFontPixelHeight * 15
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: ScreenTools.defaultFontPixelWidth
+                spacing: ScreenTools.defaultFontPixelHeight
+
+                Component.onCompleted: {
+                    console.log("ColumnLayout width:", width)
+                    console.log("ColumnLayout height:", height)
+                    console.log("ColumnLayout implicitWidth:", implicitWidth)
+                    console.log("ColumnLayout implicitHeight:", implicitHeight)
+                }
+
+
+                QGCLabel {
+                    text: qsTr("航线文件管理")
+                    font.bold: true
+
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+
+
+                    QGCButton {
+                        text: qsTr("加载航线")
+
+                        onClicked: {
+                            fileDialog.planFiles = true
+                            fileDialog.openForLoad()
+                        }
+                    }
+
+                    QGCButton {
+                        text: qsTr("保存当前航线")
+
+                        onClicked: {
+                            fileDialog.planFiles = true
+                            fileDialog.openForSave()
+                        }
+                    }
+                }
+            }
+
+            Component.onCompleted: {
+                console.log("航线库对话框组件已创建")
+            }
+        }
+    }
+
+    QGCFileDialog {
+        id: fileDialog
+        folder: QGroundControl.settingsManager.appSettings.missionSavePath
+
+        property bool planFiles: true
+
+        onAcceptedForLoad: (file) => {
+            if (planFiles && mapControl && mapControl.planMasterController) {
+                mapControl.planMasterController.loadFromFile(file)
+                mapControl.planMasterController.fitViewportToItems()
+            }
+            close()
+        }
+
+        onAcceptedForSave: (file) => {
+            if (planFiles && mapControl && mapControl.planMasterController) {
+                mapControl.planMasterController.saveToFile(file)
+            }
+            close()
+        }
+    }
+
 }
