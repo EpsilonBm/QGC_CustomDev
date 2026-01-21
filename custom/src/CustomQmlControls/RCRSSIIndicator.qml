@@ -7,9 +7,6 @@ import QGroundControl.MultiVehicleManager
 import QGroundControl.ScreenTools
 import QGroundControl.Palette
 
-import Custom.Widgets
-
-// Remote Control RSSI Indicator
 Item {
     id: _root
 
@@ -17,35 +14,49 @@ Item {
     visible: _activeVehicle
 
     // Set height to fill the parent toolbar row.
-    // Set width to fit the content.
     height: parent.height
+    // Set width to fit the content.
     width:  _rowLayout.width
 
     property var _activeVehicle: QGroundControl.multiVehicleManager.activeVehicle
-
     // The RC RSSI value from the vehicle. It's a percentage (0-100) or 255 for invalid.
     property int _rcRSSI: _activeVehicle ? _activeVehicle.rcRSSI : 0
 
     QGCPalette { id: qgcPal }
 
     RowLayout {
-        id: _rowLayout
-        anchors.verticalCenter: parent.verticalCenter
-        spacing: ScreenTools.defaultFontPixelWidth / 2
+        id:                     _rowLayout
+        anchors.top:            parent.top
+        anchors.bottom:         parent.bottom
+        spacing:                ScreenTools.defaultFontPixelWidth / 2
 
-        // The signal strength icon.
-        CustomSignalStrength {
-            size:       parent.height * 0.8
-            percent:    _rcRSSI > 100 ? 0 : _rcRSSI // Treat invalid values as 0% for icon display
-            //percent:    _rcRSSI / 255 * 100 // For test
+        // TODO: Change to other kind of component that can show different color
+        QGCColoredImage {
+            Layout.alignment:       Qt.AlignVCenter
+            Layout.preferredHeight: _root.height * 0.6
+            Layout.preferredWidth:  Layout.preferredHeight
+
+            sourceSize.height:      height
+            fillMode:               Image.PreserveAspectFit
+            color:                  qgcPal.text
+
+            function getIconSource() {
+                var val = _rcRSSI > 100 ? 0 : _rcRSSI
+                if (val < 20) return "qrc:/custom/img/RC_signal_0.svg"
+                if (val < 40) return "qrc:/custom/img/RC_signal_25.svg"
+                if (val < 60) return "qrc:/custom/img/RC_signal_50.svg"
+                if (val < 90) return "qrc:/custom/img/RC_signal_75.svg"
+                return "qrc:/custom/img/RC_signal_100.svg"
+            }
+
+            source: getIconSource()
         }
 
-        // The text label for the signal strength value.
         QGCLabel {
-            // Display the percentage value or "Invalid"
-            text: _rcRSSI > 100 ? qsTr("Invalid") : `${_rcRSSI}%`
-            color: qgcPal.text
-            font.pointSize: ScreenTools.defaultFontPointSize
+            Layout.alignment:   Qt.AlignVCenter
+            text:               _rcRSSI > 100 ? qsTr("Invalid") : (_rcRSSI + "%")
+            color:              qgcPal.text
+            font.pointSize:     ScreenTools.defaultFontPointSize
         }
     }
 }

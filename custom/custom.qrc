@@ -14,6 +14,11 @@
         <file alias="vertical_speed.svg">res/Images/vertical_speed.svg</file>
         <file alias="dronecode-black.svg">res/Images/dronecode-black.svg</file>
         <file alias="dronecode-white.svg">res/Images/dronecode-white.svg</file>
+        <file alias="RC_signal_0.svg">res/Images/SignalStrength/RC_signal_0.svg</file>
+        <file alias="RC_signal_25.svg">res/Images/SignalStrength/RC_signal_25.svg</file>
+        <file alias="RC_signal_50.svg">res/Images/SignalStrength/RC_signal_50.svg</file>
+        <file alias="RC_signal_75.svg">res/Images/SignalStrength/RC_signal_75.svg</file>
+        <file alias="RC_signal_100.svg">res/Images/SignalStrength/RC_signal_100.svg</file>
     </qresource>
     <qresource prefix="/Custom/qmlimages">
         <file alias="PaperPlane.svg">res/Images/CustomVehicleIcon.svg</file>
