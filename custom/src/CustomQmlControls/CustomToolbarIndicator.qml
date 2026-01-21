@@ -9,6 +9,7 @@ import QGroundControl.MultiVehicleManager
 import QGroundControl.ScreenTools
 import QGroundControl.Controllers
 import QGroundControl.Vehicle
+import Custom.QmlControls
 
 import Custom.Widgets
 
@@ -93,10 +94,11 @@ Item {
             // 1. original indicators (GPS, RC, Telemetry, Battery, etc.)
             // FlyViewToolBarIndicators will load corePlugin.toolBarIndicators (we will clear it to avoid duplicates)
             // and vehicle.toolIndicators
-            FlyViewToolBarIndicators {
-                id: toolIndicators
-                anchors.verticalCenter: parent.verticalCenter
-            }
+
+            // FlyViewToolBarIndicators {
+            //     id: toolIndicators
+            //     anchors.verticalCenter: parent.verticalCenter
+            // }
 
             // 2. custom buttons
             Row {
@@ -118,6 +120,25 @@ Item {
                     //visible:       _activeVehicle ? _activeVehicle.firmwareType === QGCMAVLink.FirmwareClassArduPilot : false
                     iconSource:    "/custom/img/microSD.svg"
                     onClicked:     console.log("2 Toolbar Button2 Clicked!")
+                }
+
+                // Add the new RC RSSI Indicator here
+                RCRSSIIndicator { }
+
+                // Firmware Type Indicator
+                Rectangle {
+                    height:         parent.height
+                    width:          firmwareLabel.width + (ScreenTools.defaultFontPixelWidth * 2)
+                    color:          qgcPal.button
+                    radius:         ScreenTools.defaultFontPixelHeight / 4
+                    visible:        _activeVehicle
+
+                    QGCLabel {
+                        id:                 firmwareLabel
+                        anchors.centerIn:   parent
+                        text:               _activeVehicle ? _activeVehicle.firmwareTypeString : ""
+                        color:              qgcPal.text
+                    }
                 }
             }
         }

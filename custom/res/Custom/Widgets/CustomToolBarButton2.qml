@@ -22,6 +22,7 @@ Item {
     // define outlook
     width:  rowLayout.width
     height: parent.height
+    visible: _activeVehicle
 
     RowLayout {
         id:                     rowLayout

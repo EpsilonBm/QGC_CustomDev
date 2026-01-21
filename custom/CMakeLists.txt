@@ -72,6 +72,7 @@ qt_add_qml_module(CustomModule
 qt_add_library(CustomQmlControlsModule STATIC)
 
 set_source_files_properties(src/CustomQmlControls/CustomToolbarIndicator.qml PROPERTIES QT_RESOURCE_ALIAS CustomToolbarIndicator.qml)
+set_source_files_properties(src/CustomQmlControls/RCRSSIIndicator.qml PROPERTIES QT_RESOURCE_ALIAS RCRSSIIndicator.qml)
 
 qt_add_qml_module(CustomQmlControlsModule
     URI Custom.QmlControls
@@ -79,6 +80,7 @@ qt_add_qml_module(CustomQmlControlsModule
     RESOURCE_PREFIX /qml
     QML_FILES
         src/CustomQmlControls/CustomToolbarIndicator.qml
+        src/CustomQmlControls/RCRSSIIndicator.qml
     NO_PLUGIN
 )
 
