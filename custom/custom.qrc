@@ -19,6 +19,13 @@
         <file alias="RC_signal_50.svg">res/Images/SignalStrength/RC_signal_50.svg</file>
         <file alias="RC_signal_75.svg">res/Images/SignalStrength/RC_signal_75.svg</file>
         <file alias="RC_signal_100.svg">res/Images/SignalStrength/RC_signal_100.svg</file>
+        <file alias="Battery.svg">res/Images/FuelCell/Battery.svg</file>
+        <file alias="BatteryGreen.svg">res/Images/FuelCell/BatteryGreen.svg</file>
+        <file alias="BatteryOrange.svg">res/Images/FuelCell/BatteryOrange.svg</file>
+        <file alias="BatteryYellow.svg">res/Images/FuelCell/BatteryYellow.svg</file>
+        <file alias="BatteryCritical.svg">res/Images/FuelCell/BatteryCritical.svg</file>
+        <file alias="BatteryEMERGENCY.svg">res/Images/FuelCell/BatteryEMERGENCY.svg</file>
+        <file alias="BatteryYellowGreen.svg">res/Images/FuelCell/BatteryYellowGreen.svg</file>
     </qresource>
     <qresource prefix="/Custom/qmlimages">
         <file alias="PaperPlane.svg">res/Images/CustomVehicleIcon.svg</file>

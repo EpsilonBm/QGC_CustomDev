@@ -106,22 +106,6 @@ Item {
                 anchors.bottom:     parent.bottom
                 spacing:            ScreenTools.defaultFontPixelWidth
 
-                // CustomToolBarButton2 {
-                //     text :         "1"
-                //     // Only visible when the connected vehicle is PX4
-                //     //visible:       _activeVehicle ? _activeVehicle.firmwareType === QGCMAVLink.FirmwareClassPX4 : false
-                //     iconSource:    "/custom/img/odometer.svg"
-                //     onClicked:     console.log("1 Toolbar Button2 Clicked!")
-                // }
-                //
-                // CustomToolBarButton2 {
-                //     text :         "2"
-                //     // Only visible when the connected vehicle is ArduPilot
-                //     //visible:       _activeVehicle ? _activeVehicle.firmwareType === QGCMAVLink.FirmwareClassArduPilot : false
-                //     iconSource:    "/custom/img/microSD.svg"
-                //     onClicked:     console.log("2 Toolbar Button2 Clicked!")
-                // }
-
                 // Flight Mode Indicator
                 Loader {
                     anchors.top:            parent.top
@@ -217,7 +201,6 @@ Item {
 
                     }
                 }
-
 
             }
         }
