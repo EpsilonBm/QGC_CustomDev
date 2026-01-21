@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<mavlink>
+  <include>D:/mavlink/message_definitions/v1.0/all.xml</include>
+  <version>3</version>
+  <enums/>
+  <messages>
+    <!-- Example: Custom sensor data message -->
+    <message id="42000" name="FUEL_CELL_STATUS">
+      <description>Fuel cell status information</description>
+      <!-- Time since system boot (ms) -->
+      <field type="uint32_t" name="time_boot_ms">Time since system boot</field>
+      <!-- Fuel cell output voltage (V) -->
+      <field type="float" name="voltage_v">Fuel cell output voltage</field>
+      <!-- Fuel cell output current (A) -->
+      <field type="float" name="current_a">Fuel cell output current</field>
+      <!-- Hydrogen tank pressure (bar) -->
+      <field type="float" name="hydrogen_pressure_bar">Hydrogen tank pressure</field>
+      <!-- Fuel cell stack temperature (degC) -->
+      <field type="float" name="stack_temperature_c">Fuel cell stack temperature</field>
+      <!--
+        Fuel cell fault flags (bitmask)
+        bit0: Hydrogen pressure low
+        bit1: Stack over temperature
+        bit2: Over current
+        bit3: Sensor fault
+      -->
+      <field type="uint32_t" name="fault_flags">Fuel cell fault bitmask</field>
+    </message>
+
+    <!-- Example: Custom control command -->
+    <message id="42010" name="PAYLOAD_COMMAND">
+      <description>Non-standard mission payload control command used for devices like spotlights, dispensers not standardized in MAVLink</description>
+      <!-- Payload ID, defined internally by the system -->
+      <field type="uint8_t" name="payload_id">Payload identifier</field>
+      <!-- Control command type -->
+      <field type="uint8_t" name="command">Payload command</field>
+      <!-- Command parameter, such as brightness, angle, PWM -->
+      <field type="float" name="param">Command parameter</field>
+    </message>
+
+    <message id="42011" name="PAYLOAD_STATUS">
+      <description>Non-standard mission payload status feedback to report current working status and error information</description>
+      <!-- Payload ID -->
+      <field type="uint8_t" name="payload_id">Payload identifier</field>
+      <!-- Current state (e.g. OFF / ON / ACTIVE / ERROR) -->
+      <field type="uint8_t" name="state">Payload state</field>
+      <!-- Current value, such as brightness, angle, remaining quantity -->
+      <field type="float" name="value">Payload status value</field>
+      <!--
+        Error flags bitmask
+        Specific meanings defined by payload
+      -->
+      <field type="uint32_t" name="error_flags">Payload error bitmask</field>
+    </message>
+  </messages>
+</mavlink>
