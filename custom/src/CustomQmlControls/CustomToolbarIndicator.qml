@@ -122,6 +122,26 @@ Item {
                 //     onClicked:     console.log("2 Toolbar Button2 Clicked!")
                 // }
 
+                // Flight Mode Indicator
+                Loader {
+                    anchors.top:            parent.top
+                    anchors.bottom:         parent.bottom
+                    function getFlightModeIndicatorSource() {
+                        if (!_activeVehicle) return ""
+                        // find the FlightModeIndicator for specific vehicle
+                        var indicators = _activeVehicle.toolIndicators
+                        for (var i = 0; i < indicators.length; i++) {
+                            if (indicators[i].toString().indexOf("FlightModeIndicator.qml") >= 0) {
+                                return indicators[i]
+                            }
+                        }
+                        // if no indicator found, use default
+                        return "qrc:/qml/QGroundControl/Controls/FlightModeIndicator.qml"
+                    }
+                    source:             getFlightModeIndicatorSource()
+                    visible: item ? item.showIndicator : false
+                }
+
                 // Add the new RC RSSI Indicator here
                 RCRSSIIndicator { }
 
@@ -197,6 +217,8 @@ Item {
 
                     }
                 }
+
+
             }
         }
     }
