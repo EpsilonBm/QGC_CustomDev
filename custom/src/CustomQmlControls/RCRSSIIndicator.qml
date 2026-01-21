@@ -30,15 +30,15 @@ Item {
         anchors.bottom:         parent.bottom
         spacing:                ScreenTools.defaultFontPixelWidth / 2
 
-        // TODO: Change to other kind of component that can show different color
-        QGCColoredImage {
+        Image{
+            id:                     signalStrengthIcon
             Layout.alignment:       Qt.AlignVCenter
             Layout.preferredHeight: _root.height * 0.6
             Layout.preferredWidth:  Layout.preferredHeight
 
             sourceSize.height:      height
             fillMode:               Image.PreserveAspectFit
-            color:                  qgcPal.text
+            //color:                  qgcPal.text
 
             function getIconSource() {
                 var val = _rcRSSI > 100 ? 0 : _rcRSSI
