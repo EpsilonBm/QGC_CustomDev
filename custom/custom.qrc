@@ -27,7 +27,9 @@
         <file alias="BatteryEMERGENCY.svg">res/Images/FuelCell/BatteryEMERGENCY.svg</file>
         <file alias="BatteryYellowGreen.svg">res/Images/FuelCell/BatteryYellowGreen.svg</file>
         <file alias="Gps.svg">res/Images/Gps.svg</file>
-        <file alias="Yield.svg">res/Images/Yield.svg</file>
+        <file alias="Yield.svg">res/Images/MessageIndicator/Yield.svg</file>
+        <file alias="Megaphone.svg">res/Images/MessageIndicator/Megaphone.svg</file>
+        <file alias="TrashDelete.svg">res/Images/MessageIndicator/TrashDelete.svg</file>
     </qresource>
     <qresource prefix="/Custom/qmlimages">
         <file alias="PaperPlane.svg">res/Images/CustomVehicleIcon.svg</file>

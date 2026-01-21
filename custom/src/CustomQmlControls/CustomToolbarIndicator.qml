@@ -85,22 +85,13 @@ Item {
         contentWidth:           indicatorRow.width
         flickableDirection:     Flickable.HorizontalFlick
 
+        // indicator row
         Row {
             id:                 indicatorRow
             anchors.top:        parent.top
             anchors.bottom:     parent.bottom
             spacing:            ScreenTools.defaultFontPixelWidth
 
-            // 1. original indicators (GPS, RC, Telemetry, Battery, etc.)
-            // FlyViewToolBarIndicators will load corePlugin.toolBarIndicators (we will clear it to avoid duplicates)
-            // and vehicle.toolIndicators
-
-            // FlyViewToolBarIndicators {
-            //     id: toolIndicators
-            //     anchors.verticalCenter: parent.verticalCenter
-            // }
-
-            // 2. custom buttons
             // Flight Mode Indicator
             Loader {
                 anchors.top:            parent.top
@@ -142,6 +133,11 @@ Item {
 
             // GPS Indicator
             GPSIndicator { }
+
+            // Message indicator
+            // Attention that the MessageIndicator is not supported in v5.0, cause many problems.
+            // Original MessageIndicator function is shift into the MainStatueIndicator.
+            //MessageIndicator { }
         }
     }
 
