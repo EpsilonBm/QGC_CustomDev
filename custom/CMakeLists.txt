@@ -73,6 +73,7 @@ qt_add_library(CustomQmlControlsModule STATIC)
 
 set_source_files_properties(src/CustomQmlControls/CustomToolbarIndicator.qml PROPERTIES QT_RESOURCE_ALIAS CustomToolbarIndicator.qml)
 set_source_files_properties(src/CustomQmlControls/RCRSSIIndicator.qml PROPERTIES QT_RESOURCE_ALIAS RCRSSIIndicator.qml)
+set_source_files_properties(src/CustomQmlControls/GPSIndicator.qml PROPERTIES QT_RESOURCE_ALIAS GPSIndicator.qml)
 
 qt_add_qml_module(CustomQmlControlsModule
     URI Custom.QmlControls
@@ -81,6 +82,7 @@ qt_add_qml_module(CustomQmlControlsModule
     QML_FILES
         src/CustomQmlControls/CustomToolbarIndicator.qml
         src/CustomQmlControls/RCRSSIIndicator.qml
+        src/CustomQmlControls/GPSIndicator.qml
     NO_PLUGIN
 )
 
