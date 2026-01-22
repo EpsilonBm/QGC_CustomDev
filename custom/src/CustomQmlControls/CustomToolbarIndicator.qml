@@ -116,20 +116,20 @@ Item {
             RCRSSIIndicator { }
 
             // Firmware Type Indicator
-            Rectangle {
-                height:         parent.height
-                width:          firmwareLabel.width + (ScreenTools.defaultFontPixelWidth * 2)
-                color:          qgcPal.button
-                radius:         ScreenTools.defaultFontPixelHeight / 4
-                visible:        _activeVehicle
-
-                QGCLabel {
-                    id:                 firmwareLabel
-                    anchors.centerIn:   parent
-                    text:               _activeVehicle ? _activeVehicle.firmwareTypeString : ""
-                    color:              qgcPal.text
-                }
-            }
+            // Rectangle {
+            //     height:         parent.height
+            //     width:          firmwareLabel.width + (ScreenTools.defaultFontPixelWidth * 2)
+            //     color:          qgcPal.button
+            //     radius:         ScreenTools.defaultFontPixelHeight / 4
+            //     visible:        _activeVehicle
+            //
+            //     QGCLabel {
+            //         id:                 firmwareLabel
+            //         anchors.centerIn:   parent
+            //         text:               _activeVehicle ? _activeVehicle.firmwareTypeString : ""
+            //         color:              qgcPal.text
+            //     }
+            // }
 
             // GPS Indicator
             GPSIndicator { }
@@ -138,6 +138,8 @@ Item {
             // Attention that the MessageIndicator is not supported in v5.0, cause many problems.
             // Original MessageIndicator function is shift into the MainStatueIndicator.
             MessageIndicator { }
+
+            // TODO: Add the fuelcell indicator
         }
     }
 
@@ -200,21 +202,40 @@ Item {
         property string _brandImageOutdoor:     brandImageOutdoor()
 
         function brandImageIndoor() {
-            if (_userBrandingIndoor) return _userBrandImageIndoor
-            if (_userBrandingOutdoor) return _userBrandImageOutdoor
-            if (_corePluginBranding) return QGroundControl.corePlugin.brandImageIndoor
-            return _activeVehicle ? _activeVehicle.brandImageIndoor : ""
+            if (_userBrandingIndoor) {
+                return _userBrandImageIndoor
+            } else {
+                if (_userBrandingOutdoor) {
+                    return _userBrandImageOutdoor
+                } else {
+                    if (_corePluginBranding) {
+                        return QGroundControl.corePlugin.brandImageIndoor
+                    } else {
+                        return _activeVehicle ? _activeVehicle.brandImageIndoor : ""
+                    }
+                }
+            }
         }
 
         function brandImageOutdoor() {
-            if (_userBrandingOutdoor) return _userBrandImageOutdoor
-            if (_userBrandingIndoor) return _userBrandImageIndoor
-            if (_corePluginBranding) return QGroundControl.corePlugin.brandImageOutdoor
-            return _activeVehicle ? _activeVehicle.brandImageOutdoor : ""
+            if (_userBrandingOutdoor) {
+                return _userBrandImageOutdoor
+            } else {
+                if (_userBrandingIndoor) {
+                    return _userBrandImageIndoor
+                } else {
+                    if (_corePluginBranding) {
+                        return QGroundControl.corePlugin.brandImageOutdoor
+                    } else {
+                        return _activeVehicle ? _activeVehicle.brandImageOutdoor : ""
+                    }
+                }
+            }
         }
     }
 
     // progressBar
+    // Small parameter download progress bar
     Rectangle {
         anchors.bottom: parent.bottom
         height:         parent.height * 0.05
@@ -223,6 +244,7 @@ Item {
         visible:        !largeProgressBar.visible
     }
 
+    // Large parameter download progress bar
     Rectangle {
         id:             largeProgressBar
         anchors.bottom: parent.bottom

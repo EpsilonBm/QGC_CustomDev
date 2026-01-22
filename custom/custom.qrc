@@ -30,6 +30,7 @@
         <file alias="Yield.svg">res/Images/MessageIndicator/Yield.svg</file>
         <file alias="Megaphone.svg">res/Images/MessageIndicator/Megaphone.svg</file>
         <file alias="TrashDelete.svg">res/Images/MessageIndicator/TrashDelete.svg</file>
+        <file alias="px4.png">res/Images/px4.png</file>
     </qresource>
     <qresource prefix="/Custom/qmlimages">
         <file alias="PaperPlane.svg">res/Images/CustomVehicleIcon.svg</file>

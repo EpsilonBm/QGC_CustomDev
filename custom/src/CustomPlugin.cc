@@ -130,12 +130,12 @@ QGCOptions* CustomPlugin::options()
 
 QString CustomPlugin::brandImageIndoor(void) const
 {
-    return QStringLiteral("/custom/img/dronecode-white.svg");
+    return QStringLiteral("/custom/img/px4.png");
 }
 
 QString CustomPlugin::brandImageOutdoor(void) const
 {
-    return QStringLiteral("/custom/img/dronecode-black.svg");
+    return QStringLiteral("/custom/img/px4.png");
 }
 
 const QVariantList& CustomPlugin::toolBarIndicators(void)
