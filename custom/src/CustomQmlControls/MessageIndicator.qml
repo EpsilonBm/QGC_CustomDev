@@ -55,6 +55,7 @@ Item {
         return qgcPal.colorGrey
     }
 
+    // TODO: Change the fill mode
     Image {
         id:                 criticalMessageIcon
         anchors.fill:       parent
@@ -65,6 +66,7 @@ Item {
         visible:            _activeVehicle && _activeVehicle.messageCount > 0 && _isMessageImportant
     }
 
+    // TODO: Change the fill mode
     QGCColoredImage {
         anchors.fill:       parent
         source:             "qrc:/custom/img/Megaphone.svg"
@@ -82,108 +84,34 @@ Item {
     Component {
         id: vehicleMessagesPopup
 
-        Rectangle {
-            width:          ScreenTools.defaultFontPixelWidth * 60
-            height:         ScreenTools.defaultFontPixelHeight * 20
-            radius:         ScreenTools.defaultFontPixelHeight / 2
-            color:          qgcPal.window
-            border.color:   qgcPal.text
+        ToolIndicatorPage {
+            showExpand: false
 
-            function formatMessage(message) {
-                message = message.replace(new RegExp("<#E>", "g"), "color: " + qgcPal.warningText + "; font: " + (ScreenTools.defaultFontPointSize.toFixed(0) - 1) + "pt monospace;");
-                message = message.replace(new RegExp("<#I>", "g"), "color: " + qgcPal.warningText + "; font: " + (ScreenTools.defaultFontPointSize.toFixed(0) - 1) + "pt monospace;");
-                message = message.replace(new RegExp("<#N>", "g"), "color: " + qgcPal.text + "; font: " + (ScreenTools.defaultFontPointSize.toFixed(0) - 1) + "pt monospace;");
-                return message;
-            }
+            contentComponent: Component {
+                ColumnLayout {
+                    spacing: ScreenTools.defaultFontPixelHeight / 2
 
-            Component.onCompleted: {
-                messageText.text = formatMessage(_activeVehicle.formattedMessages)
-                //-- Hack to scroll to last message
-                for (var i = 0; i < _activeVehicle.messageCount; i++)
-                    messageFlick.flick(0,-5000)
-                _activeVehicle.resetAllMessages()
-            }
+                    SettingsGroupLayout {
+                        heading:            qsTr("Vehicle Messages")
+                        Layout.fillWidth:   true
 
-            Connections {
-                target: _activeVehicle
-                onNewFormattedMessage :{
-                    messageText.append(formatMessage(formattedMessage))
-                    //-- Hack to scroll down
-                    messageFlick.flick(0,-500)
-                }
-            }
-
-            QGCLabel {
-                anchors.centerIn:   parent
-                text:               qsTr("No Messages")
-                visible:            messageText.length === 0
-            }
-
-            //-- Clear Messages
-            QGCColoredImage {
-                anchors.bottom:     parent.bottom
-                anchors.right:      parent.right
-                anchors.margins:    ScreenTools.defaultFontPixelHeight * 0.5
-                height:             ScreenTools.isMobile ? ScreenTools.defaultFontPixelHeight * 1.5 : ScreenTools.defaultFontPixelHeight
-                width:              height
-                sourceSize.height:   height
-                source:             "qrc:/custom/img/TrashDelete.svg"
-                fillMode:           Image.PreserveAspectFit
-                mipmap:             true
-                smooth:             true
-                color:              qgcPal.text
-                visible:            messageText.length !== 0
-                MouseArea {
-                    anchors.fill:   parent
-                    onClicked: {
-                        if (_activeVehicle) {
-                            _activeVehicle.clearMessages()
-                            mainWindow.closeIndicatorDrawer()
+                        // Use Loader to load VehicleMessageList to ensure we get the correct component
+                        // from the standard QGC controls.
+                        Loader {
+                            Layout.fillWidth: true
+                            source: "qrc:/qml/QGroundControl/Controls/VehicleMessageList.qml"
                         }
                     }
-                }
-            }
 
-            FactPanelController {
-                id: controller
-            }
-
-            QGCFlickable {
-                id:                 messageFlick
-                anchors.margins:    ScreenTools.defaultFontPixelHeight
-                anchors.fill:       parent
-                contentHeight:      messageText.height
-                contentWidth:       messageText.width
-                pixelAligned:       true
-
-                TextEdit {
-                    id:                 messageText
-                    readOnly:           true
-                    textFormat:         TextEdit.RichText
-                    selectByMouse:      true
-                    color:              qgcPal.text
-                    selectionColor:     qgcPal.text
-                    selectedTextColor:  qgcPal.window
-                    property var fact:  null
-                    onLinkActivated: {
-                        if (link.startsWith('param://')) {
-                            var paramName = link.substr(8);
-                            fact = controller.getParameterFact(-1, paramName, true)
-                            if (fact != null) {
-                                paramEditorDialogComponent.createObject(mainWindow).open()
+                    QGCButton {
+                        text:               qsTr("Clear Messages")
+                        Layout.alignment:   Qt.AlignRight
+                        onClicked: {
+                            if (_activeVehicle) {
+                                _activeVehicle.clearMessages()
+                                mainWindow.closeIndicatorDrawer()
                             }
-                        } else {
-                            Qt.openUrlExternally(link);
                         }
-                    }
-                }
-                Component {
-                    id: paramEditorDialogComponent
-
-                    ParameterEditorDialog {
-                        title:          qsTr("Edit Parameter")
-                        fact:           messageText.fact
-                        destroyOnClose: true
                     }
                 }
             }
