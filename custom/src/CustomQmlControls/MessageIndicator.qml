@@ -55,10 +55,11 @@ Item {
         return qgcPal.colorGrey
     }
 
-    // TODO: Change the fill mode
     Image {
         id:                 criticalMessageIcon
-        anchors.fill:       parent
+        anchors.centerIn:   parent
+        height:             parent.height * 0.6
+        width:              height
         source:             "qrc:/custom/img/Yield.svg"
         sourceSize.height:  height
         fillMode:           Image.PreserveAspectFit
@@ -66,9 +67,10 @@ Item {
         visible:            _activeVehicle && _activeVehicle.messageCount > 0 && _isMessageImportant
     }
 
-    // TODO: Change the fill mode
     QGCColoredImage {
-        anchors.fill:       parent
+        anchors.centerIn:   parent
+        height:             parent.height * 0.6
+        width:              height
         source:             "qrc:/custom/img/Megaphone.svg"
         sourceSize.height:  height
         fillMode:           Image.PreserveAspectFit
