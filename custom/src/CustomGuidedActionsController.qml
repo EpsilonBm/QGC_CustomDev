@@ -15,6 +15,9 @@ import QGroundControl
 QtObject {
     readonly property int actionCustomButton: 10000 + 0 // _guidedController.customActionStart is 10000
     readonly property int actionCameraSwitch: 10000 + 1
+    readonly property int actionLoadSec1:     10000 + 2
+    readonly property int actionLoadSec2:     10000 + 3
+    readonly property int actionLoadSec3:     10000 + 4
 
     readonly property string customButtonTitle: qsTr("Custom")
     readonly property string customButtonMessage: qsTr("Example of a custom action.")
@@ -73,6 +76,15 @@ QtObject {
                 _currentCamera.toggleCameraMode()
                 //mainWindow.showMessageDialog("TestMessage", "_currentCamera:" + _currentCamera + "\ncameraMode: " + _currentCamera.cameraMode)
             }
+            break
+        case actionLoadSec1:
+            mainWindow.showMessageDialog("Load Control", "sec1 executed")
+            break
+        case actionLoadSec2:
+            mainWindow.showMessageDialog("Load Control", "sec2 executed")
+            break
+        case actionLoadSec3:
+            mainWindow.showMessageDialog("Load Control", "sec3 executed")
             break
         default:
             return false // false = action not handled here
