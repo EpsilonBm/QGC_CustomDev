@@ -1,7 +1,7 @@
 #pragma once
 // MESSAGE PAYLOAD_STATUS PACKING
 
-#define MAVLINK_MSG_ID_PAYLOAD_STATUS 42011
+#define MAVLINK_MSG_ID_PAYLOAD_STATUS 1134
 
 
 typedef struct __mavlink_payload_status_t {
@@ -13,17 +13,17 @@ typedef struct __mavlink_payload_status_t {
 
 #define MAVLINK_MSG_ID_PAYLOAD_STATUS_LEN 10
 #define MAVLINK_MSG_ID_PAYLOAD_STATUS_MIN_LEN 10
-#define MAVLINK_MSG_ID_42011_LEN 10
-#define MAVLINK_MSG_ID_42011_MIN_LEN 10
+#define MAVLINK_MSG_ID_1134_LEN 10
+#define MAVLINK_MSG_ID_1134_MIN_LEN 10
 
 #define MAVLINK_MSG_ID_PAYLOAD_STATUS_CRC 227
-#define MAVLINK_MSG_ID_42011_CRC 227
+#define MAVLINK_MSG_ID_1134_CRC 227
 
 
 
 #if MAVLINK_COMMAND_24BIT
 #define MAVLINK_MESSAGE_INFO_PAYLOAD_STATUS { \
-    42011, \
+    1134, \
     "PAYLOAD_STATUS", \
     4, \
     {  { "payload_id", NULL, MAVLINK_TYPE_UINT8_T, 0, 8, offsetof(mavlink_payload_status_t, payload_id) }, \

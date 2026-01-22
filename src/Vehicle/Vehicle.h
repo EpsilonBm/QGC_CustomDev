@@ -45,6 +45,16 @@
 #include "VehicleVibrationFactGroup.h"
 #include "VehicleWindFactGroup.h"
 #include "GimbalController.h"
+// 在其他MAVLink相关包含之后添加
+#include "MAVLinkLib.h"
+
+// 包含自定义MAVLink消息头文件
+#ifdef QGC_CUSTOM_BUILD
+#include "custom_messages/mavlink_msg_fuel_cell_status.h"
+#include "custom_messages/mavlink_msg_payload_command.h"
+#include "custom_messages/mavlink_msg_payload_status.h"
+#endif
+
 
 class Actuators;
 class AutoPilotPlugin;
@@ -1335,6 +1345,14 @@ public:
 private:
     void _handleControlStatus(const mavlink_message_t& message);
     void _handleCommandRequestOperatorControl(const mavlink_command_long_t commandLong);
+    // 在private部分添加处理方法
+    void _handleFuelCellStatus(const mavlink_message_t& message);
+    void _processFuelCellData(const mavlink_fuel_cell_status_t& status);
+    void _handlePayloadCommand(const mavlink_message_t& message);
+    void _handlePayloadStatus(const mavlink_message_t& message);
+    // 燃料电池管理器指针
+    class FuelCellManager;
+    FuelCellManager* _fuelCellManager;
     static void _requestOperatorControlAckHandler(void* resultHandlerData, int compId, const mavlink_command_ack_t& ack, MavCmdResultFailureCode_t failureCode);
 
     Q_PROPERTY(uint8_t sysidInControl                        READ sysidInControl                        NOTIFY gcsControlStatusChanged)
@@ -1367,6 +1385,11 @@ signals:
     void gcsControlStatusChanged();
     void requestOperatorControlReceived(int sysIdRequestingControl, int allowTakeover, int requestTimeoutSecs);
     void sendControlRequestAllowedChanged(bool sendControlRequestAllowed);
+    void fuelCellStatusReceived(const mavlink_fuel_cell_status_t& status);
+    void payloadCommandReceived(const mavlink_payload_command_t& command);
+    void payloadStatusReceived(const mavlink_payload_status_t& status);
+    void fuelCellProcessedDataReceived(double efficiency, double remainingTime, QString statusDescription);
+
 
 /*===========================================================================*/
 /*                         STATUS TEXT HANDLER                               */

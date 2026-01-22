@@ -117,6 +117,7 @@ Vehicle::Vehicle(LinkInterface*             link,
     , _efiFactGroup                 (this)
     , _rpmFactGroup                 (this)
     , _terrainFactGroup             (this)
+    , _fuelCellManager              (nullptr)
     , _terrainProtocolHandler       (new TerrainProtocolHandler(this, &_terrainFactGroup, this))
 {
     connect(JoystickManager::instance(), &JoystickManager::activeJoystickChanged, this, &Vehicle::_loadJoystickSettings);
@@ -141,6 +142,9 @@ Vehicle::Vehicle(LinkInterface*             link,
     connect(this, &Vehicle::remoteControlRSSIChanged,   this, &Vehicle::_remoteControlRSSIChanged);
 
     _commonInit();
+    // 初始化燃料电池管理器
+
+
 
     _vehicleLinkManager->_addLink(link);
 
@@ -592,6 +596,15 @@ void Vehicle::_mavlinkMessageReceived(LinkInterface* link, mavlink_message_t mes
         break;
     case MAVLINK_MSG_ID_FENCE_STATUS:
         _handleFenceStatus(message);
+        break;
+    case MAVLINK_MSG_ID_FUEL_CELL_STATUS:
+         _handleFuelCellStatus(message);
+         break;
+    case MAVLINK_MSG_ID_PAYLOAD_COMMAND:
+        _handlePayloadCommand(message);
+        break;
+    case MAVLINK_MSG_ID_PAYLOAD_STATUS:
+        _handlePayloadStatus(message);
         break;
 
     case MAVLINK_MSG_ID_EVENT:
@@ -4400,3 +4413,90 @@ MAVLinkLogManager *Vehicle::mavlinkLogManager() const
 }
 
 /*---------------------------------------------------------------------------*/
+/*===========================================================================*/
+/*                         Hydrogen fuel cell processing                               */
+/*===========================================================================*/
+void Vehicle::_handleFuelCellStatus(const mavlink_message_t& message)
+{
+    mavlink_fuel_cell_status_t fuelCellStatus;
+    mavlink_msg_fuel_cell_status_decode(&message, &fuelCellStatus);
+
+    qCDebug(VehicleLog) << "Fuel Cell Status received:"
+                        << "Time:" << fuelCellStatus.time_boot_ms
+                        << "Voltage:" << fuelCellStatus.voltage_v
+                        << "Current:" << fuelCellStatus.current_a
+                        << "Pressure:" << fuelCellStatus.hydrogen_pressure_bar
+                        << "Temp:" << fuelCellStatus.stack_temperature_c;
+
+    emit fuelCellStatusReceived(fuelCellStatus);
+    // 调用二次处理函数
+    _processFuelCellData(fuelCellStatus);
+}
+void Vehicle::_processFuelCellData(const mavlink_fuel_cell_status_t& status)
+{
+    // 计算燃料电池效率
+    double efficiency = 0.0;
+    if (status.current_a > 0 && status.voltage_v > 0) {
+        double power_output = status.voltage_v * status.current_a;
+        // 假设输入功率为常数，这里用氢气流量估算
+        double hydrogen_flow_rate = status.hydrogen_pressure_bar * 0.1; // 简化的估算
+        if (hydrogen_flow_rate > 0) {
+            efficiency = power_output / (hydrogen_flow_rate * 33.3); // 33.3 kWh/kg是氢气的能量密度
+        }
+    }
+
+    // 计算剩余运行时间
+    double remaining_time = 0.0;
+    if (status.current_a > 0) {
+        // 假设最大容量为100单位，根据压力估算剩余容量
+        double remaining_capacity = (status.hydrogen_pressure_bar / 350.0) * 100.0; // 350 bar为满压
+        remaining_time = remaining_capacity / status.current_a; // 小时
+    }
+
+    // 生成状态描述
+    QString status_desc = "Normal";
+    if (status.fault_flags & 0x01) {
+        status_desc = "Low Pressure Warning";
+    } else if (status.fault_flags & 0x02) {
+        status_desc = "High Temperature Error";
+    } else if (status.stack_temperature_c > 80) {
+        status_desc = "High Temperature Warning";
+    } else if (status.voltage_v < 20.0) {
+        status_desc = "Low Voltage Warning";
+    }
+
+    // 发射处理后的数据信号
+    emit fuelCellProcessedDataReceived(efficiency, remaining_time, status_desc);
+
+    // 可选：记录到日志
+    qCDebug(VehicleLog) << "Fuel Cell Processed - Efficiency:" << efficiency
+                        << "Remaining Time:" << remaining_time
+                        << "Status:" << status_desc;
+}
+
+void Vehicle::_handlePayloadCommand(const mavlink_message_t& message)
+{
+    mavlink_payload_command_t payloadCmd;
+    mavlink_msg_payload_command_decode(&message, &payloadCmd);
+
+    qCDebug(VehicleLog) << "Payload Command received:"
+                        << "ID:" << payloadCmd.payload_id
+                        << "Command:" << payloadCmd.command
+                        << "Param:" << payloadCmd.param;
+
+    emit payloadCommandReceived(payloadCmd);
+}
+
+void Vehicle::_handlePayloadStatus(const mavlink_message_t& message)
+{
+    mavlink_payload_status_t payloadStatus;
+    mavlink_msg_payload_status_decode(&message, &payloadStatus);
+
+    qCDebug(VehicleLog) << "Payload Status received:"
+                        << "ID:" << payloadStatus.payload_id
+                        << "State:" << payloadStatus.state
+                        << "Value:" << payloadStatus.value
+                        << "Errors:" << payloadStatus.error_flags;
+
+    emit payloadStatusReceived(payloadStatus);
+}

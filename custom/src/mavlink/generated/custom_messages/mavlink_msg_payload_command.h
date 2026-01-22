@@ -1,7 +1,7 @@
 #pragma once
 // MESSAGE PAYLOAD_COMMAND PACKING
 
-#define MAVLINK_MSG_ID_PAYLOAD_COMMAND 42010
+#define MAVLINK_MSG_ID_PAYLOAD_COMMAND 1133
 
 
 typedef struct __mavlink_payload_command_t {
@@ -12,17 +12,17 @@ typedef struct __mavlink_payload_command_t {
 
 #define MAVLINK_MSG_ID_PAYLOAD_COMMAND_LEN 6
 #define MAVLINK_MSG_ID_PAYLOAD_COMMAND_MIN_LEN 6
-#define MAVLINK_MSG_ID_42010_LEN 6
-#define MAVLINK_MSG_ID_42010_MIN_LEN 6
+#define MAVLINK_MSG_ID_1133_LEN 6
+#define MAVLINK_MSG_ID_1133_MIN_LEN 6
 
 #define MAVLINK_MSG_ID_PAYLOAD_COMMAND_CRC 254
-#define MAVLINK_MSG_ID_42010_CRC 254
+#define MAVLINK_MSG_ID_1133_CRC 254
 
 
 
 #if MAVLINK_COMMAND_24BIT
 #define MAVLINK_MESSAGE_INFO_PAYLOAD_COMMAND { \
-    42010, \
+    1133, \
     "PAYLOAD_COMMAND", \
     3, \
     {  { "payload_id", NULL, MAVLINK_TYPE_UINT8_T, 0, 4, offsetof(mavlink_payload_command_t, payload_id) }, \

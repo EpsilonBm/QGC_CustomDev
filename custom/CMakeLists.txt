@@ -90,3 +90,9 @@ set(CUSTOM_INCLUDE_DIRECTORIES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FirmwarePlugin
     CACHE INTERNAL "" FORCE
 )
+
+# 在custom/CMakeLists.txt中，移除对common目录的包含
+list(APPEND CUSTOM_INCLUDE_DIRECTORIES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/mavlink/generated/custom_messages  # 只包含自定义消息
+    CACHE INTERNAL "" FORCE
+)

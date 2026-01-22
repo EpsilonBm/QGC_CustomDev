@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <mavlink>
-  <include>D:/mavlink/message_definitions/v1.0/common.xml</include>
+  <include>D:/mavlink/message_definitions/v1.0/all.xml</include>
   <version>3</version>
   <enums/>
   <messages>
-    <message id="42000" name="FUEL_CELL_STATUS">
+    <message id="1132" name="FUEL_CELL_STATUS">
       <description>Fuel cell status information</description>
       <field type="uint32_t" name="time_boot_ms">Time since system boot</field>
       <field type="float" name="voltage_v">Fuel cell output voltage</field>
@@ -14,14 +14,14 @@
       <field type="uint32_t" name="fault_flags">Fuel cell fault bitmask</field>
     </message>
 
-    <message id="42010" name="PAYLOAD_COMMAND">
+    <message id="1133" name="PAYLOAD_COMMAND">
       <description>Non-standard mission payload control command</description>
       <field type="uint8_t" name="payload_id">Payload identifier</field>
       <field type="uint8_t" name="command">Payload command</field>
       <field type="float" name="param">Command parameter</field>
     </message>
 
-    <message id="42011" name="PAYLOAD_STATUS">
+    <message id="1134" name="PAYLOAD_STATUS">
       <description>Non-standard mission payload status feedback</description>
       <field type="uint8_t" name="payload_id">Payload identifier</field>
       <field type="uint8_t" name="state">Payload state</field>
