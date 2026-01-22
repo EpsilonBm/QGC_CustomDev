@@ -11,6 +11,7 @@ import QtQml.Models
 
 import QGroundControl
 import QGroundControl.Controls
+import QGroundControl.FlightDisplay
 import Custom.ToolStrip
 
 ToolStripActionList {
@@ -25,14 +26,14 @@ ToolStripActionList {
         GuidedActionRTL { },
         GuidedActionPause { },
         FlyViewAdditionalActionsButton { },
-        CameraSwitch { } ,
-        GuidedToolStripAction {
-            text:       _guidedController._customController.customButtonTitle
-            iconSource: "/res/gear-white.svg"
-            visible:    true
-            enabled:    true
-            actionID:   _guidedController._customController.actionCustomButton
-        }
+        CameraSwitch { }
+        // GuidedToolStripAction {
+        //     text:       _guidedController._customController.customButtonTitle
+        //     iconSource: "/res/gear-white.svg"
+        //     visible:    true
+        //     enabled:    true
+        //     actionID:   _guidedController._customController.actionCustomButton
+        // }
 
     ]
 }

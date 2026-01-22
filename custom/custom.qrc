@@ -42,6 +42,7 @@
         <file alias="QGroundControl/FlightDisplay/FlyViewCustomLayer.qml">src/FlyViewCustomLayer.qml</file>
         <file alias="QGroundControl/FlightDisplay/FlyViewToolStripActionList.qml">src/FlyViewToolStripActionList.qml</file>
         <file alias="QGroundControl/Controls/FlyViewToolBar.qml">src/FlyViewToolBar.qml</file>
+        <file alias="QGroundControl/FlightDisplay/GuidedActionRTL.qml">src/CustomToolStrip/GuidedActionRTL.qml</file>
     </qresource>
     <qresource prefix="/Custom/res">
         <file alias="QGCLogoFull.svg">res/G.svg</file>

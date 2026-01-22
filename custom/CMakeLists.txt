@@ -91,6 +91,7 @@ qt_add_qml_module(CustomQmlControlsModule
 qt_add_library(CustomToolStripModule STATIC)
 
 set_source_files_properties(src/CustomToolStrip/CameraSwitch.qml PROPERTIES QT_RESOURCE_ALIAS CameraSwitch.qml)
+set_source_files_properties(src/CustomToolStrip/GuidedActionRTL.qml PROPERTIES QT_RESOURCE_ALIAS GuidedActionRTL.qml)
 
 qt_add_qml_module(CustomToolStripModule
     URI Custom.ToolStrip
@@ -98,6 +99,7 @@ qt_add_qml_module(CustomToolStripModule
     RESOURCE_PREFIX /qml
     QML_FILES
         src/CustomToolStrip/CameraSwitch.qml
+        src/CustomToolStrip/GuidedActionRTL.qml
     NO_PLUGIN
 )
 

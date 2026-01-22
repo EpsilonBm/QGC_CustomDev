@@ -26,7 +26,7 @@ QtObject {
     property var    _currentCamera:   _cameraManager ? _cameraManager.currentCameraInstance : null
     property bool   cameraAvailable:  _currentCamera !== null
 
-    // TODO: Add -1 and 3 camera mode
+    // TODO: Add -1 and 3 camera mode or just let it disable when Mode == -1
     property string cameraSwitchIcon: {
         if (_currentCamera) {
             // 1 = Video Mode, 0 = Photo Mode

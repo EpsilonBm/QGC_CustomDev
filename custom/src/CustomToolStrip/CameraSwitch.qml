@@ -5,11 +5,11 @@ import QGroundControl.FlightDisplay
 
 ToolStripAction {
     text:       qsTr("Photo/Video Switch")
-    iconSource: _guidedController._customController.cameraSwitchIcon
-    visible:    _guidedController._customController.cameraAvailable
-    enabled:    _guidedController._customController.cameraAvailable
+    iconSource: _guidedController ? _guidedController._customController.cameraSwitchIcon : ""
+    visible:    _guidedController ? _guidedController._customController.cameraAvailable : false
+    enabled:    _guidedController ? _guidedController._customController.cameraAvailable : false
     
-    property int actionID: _guidedController._customController.actionCameraSwitch
+    property int actionID: _guidedController ? _guidedController._customController.actionCameraSwitch : 0
     // 显式获取 _guidedController，因为 ToolStripAction 默认不包含此属性
     property var _guidedController: globals.guidedControllerFlyView
 
