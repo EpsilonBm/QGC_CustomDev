@@ -21,7 +21,7 @@ import QGroundControl.AutoPilotPlugin
 import MAVLink
 
 //-------------------------------------------------------------------------
-//-- Battery Indicator
+//-- FuelCell Indicator from Battery Indicator
 Item {
     id:             control
     anchors.top:    parent.top

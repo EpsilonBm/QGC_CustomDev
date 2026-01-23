@@ -75,6 +75,7 @@ set_source_files_properties(src/CustomQmlControls/CustomToolbarIndicator.qml PRO
 set_source_files_properties(src/CustomQmlControls/RCRSSIIndicator.qml PROPERTIES QT_RESOURCE_ALIAS RCRSSIIndicator.qml)
 set_source_files_properties(src/CustomQmlControls/GPSIndicator.qml PROPERTIES QT_RESOURCE_ALIAS GPSIndicator.qml)
 set_source_files_properties(src/CustomQmlControls/MessageIndicator.qml PROPERTIES QT_RESOURCE_ALIAS MessageIndicator)
+set_source_files_properties(src/CustomQmlControls/FuelCellIndicator.qml PROPERTIES QT_RESOURCE_ALIAS FuelCellIndicator)
 
 qt_add_qml_module(CustomQmlControlsModule
     URI Custom.QmlControls
@@ -85,6 +86,7 @@ qt_add_qml_module(CustomQmlControlsModule
         src/CustomQmlControls/RCRSSIIndicator.qml
         src/CustomQmlControls/GPSIndicator.qml
         src/CustomQmlControls/MessageIndicator.qml
+        src/CustomQmlControls/FuelCellIndicator.qml
     NO_PLUGIN
 )
 
@@ -104,6 +106,21 @@ qt_add_qml_module(CustomToolStripModule
     NO_PLUGIN
 )
 
+qt_add_library(CustomFlyViewModule STATIC)
+
+set_source_files_properties(src/CustomFlyView/CustomPanel.qml PROPERTIES QT_RESOURCE_ALIAS CustomPanel.qml)
+set_source_files_properties(src/CustomFlyView/ValuesBar.qml PROPERTIES QT_RESOURCE_ALIAS ValuesBar.qml)
+
+qt_add_qml_module(CustomFlyViewModule
+    URI Custom.FlyView
+    VERSION 1.0
+    RESOURCE_PREFIX /qml
+    QML_FILES
+        src/CustomFlyView/CustomPanel.qml
+        src/CustomFlyView/ValuesBar.qml
+    NO_PLUGIN
+)
+
 set(CUSTOM_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/CustomPlugin.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/CustomPlugin.h
@@ -120,6 +137,7 @@ set(CUSTOM_LIBRARIES
     CustomModule # Explicitly link QML module, needed by Qt 6.6.3, TODO: Remove when support for this version is dropped
     CustomQmlControlsModule
     CustomToolStripModule
+    CustomFlyViewModule
     CACHE INTERNAL "" FORCE
 )
 

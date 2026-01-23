@@ -19,6 +19,7 @@ import QGroundControl.Palette
 import QGroundControl.ScreenTools
 import QGroundControl.FlightMap
 
+import Custom.FlyView 1.0
 import Custom.Widgets
 
 Item {
@@ -256,21 +257,14 @@ Item {
     //         anchors.centerIn:   parent
     //     }
     // }
-    
+
+
+
     // TODO: To see how its size adapted to the screen especially in Android
-    IntegratedCompassAttitude {
-        id:                     compass
+    CustomPanel {
+        id:                     customPanel
         anchors.bottom:         parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottomMargin:   _toolsMargin + parentToolInsets.bottomEdgeCenterInset
-
-        //property real size:     Math.min(parent.width, parent.height) * 0.2
-        property real size:     ScreenTools.defaultFontPixelHeight * 10
-        property real attSize:  ScreenTools.defaultFontPixelHeight * 0.75
-
-        compassRadius:          (size / 2) - attSize - (attSize / 2)
-        attitudeSize:           attSize
-        attitudeSpacing:        attSize / 2
-        vehicle:                _activeVehicle
+        parentToolInsets:       _root.parentToolInsets
     }
 }
