@@ -148,6 +148,13 @@ Vehicle::Vehicle(LinkInterface*             link,
     #else
         _fuelCellManager = nullptr;
     #endif
+    #ifdef QGC_CUSTOM_BUILD
+        if (_fuelCellManager) {
+            // 连接FuelCellManager的信号到Vehicle的槽
+            connect(_fuelCellManager, &FuelCellManager::processedDataUpdated,
+                    this, &Vehicle::onFuelCellDataUpdated);
+        }
+    #endif
     _vehicleLinkManager->_addLink(link);
 
     // Set video stream to udp if running ArduSub and Video is disabled
@@ -4473,4 +4480,15 @@ void Vehicle::_handlePayloadStatus(const mavlink_message_t& message)
                         << "Errors:" << payloadStatus.error_flags;
 
     emit payloadStatusReceived(payloadStatus);
+}
+
+// 在Vehicle.cc中添加槽函数实现
+void Vehicle::onFuelCellDataUpdated(const FuelCellManager::ProcessedFuelCellData& data)
+{
+    // 发射信号到QML
+    emit fuelCellDataUpdated(
+        QString::number(data.efficiency, 'f', 2),
+        QString::number(data.remaining_time_hours, 'f', 2),
+        data.status_description
+    );
 }

@@ -426,6 +426,24 @@ public:
 
     Q_INVOKABLE void sendSetupSigning();
 
+    // 在这里添加FuelCellManager的QML访问方法
+    Q_INVOKABLE QObject* fuelCellManager() const {
+        #ifdef QGC_CUSTOM_BUILD
+                return _fuelCellManager;
+        #else
+                return nullptr;
+        #endif
+    }
+
+    Q_INVOKABLE void setFuelCellBottleCapacity(double capacity) {
+    #ifdef QGC_CUSTOM_BUILD
+        if (_fuelCellManager) {
+            double maxEnergy = (capacity / 9.0) * 3.0; // 9L→3度电的比例关系
+            _fuelCellManager->setBottleCapacity(capacity, maxEnergy);
+        }
+    #endif
+}
+
     bool    isInitialConnectComplete() const;
     bool    guidedModeSupported     () const;
     bool    pauseVehicleSupported   () const;
@@ -959,6 +977,8 @@ private slots:
     void _doSetHomeTerrainReceived          (bool success, QList<double> heights);
     void _updateAltAboveTerrain             ();
     void _altitudeAboveTerrainReceived      (bool sucess, QList<double> heights);
+    // 添加FuelCell数据更新槽函数
+    void onFuelCellDataUpdated(const FuelCellManager::ProcessedFuelCellData& data);
 
 private:
     void _loadJoystickSettings          ();
@@ -1387,7 +1407,7 @@ signals:
     void fuelCellStatusReceived(const mavlink_fuel_cell_status_t& status);
     void payloadCommandReceived(const mavlink_payload_command_t& command);
     void payloadStatusReceived(const mavlink_payload_status_t& status);
-
+    void fuelCellDataUpdated(const QString& efficiency, const QString& remainingTime, const QString& status);
 
 /*===========================================================================*/
 /*                         STATUS TEXT HANDLER                               */

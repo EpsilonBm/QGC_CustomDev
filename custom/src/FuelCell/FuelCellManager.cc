@@ -8,9 +8,16 @@ FuelCellManager::FuelCellManager(QObject *parent)
     , _efficiencySampleCount(0)
     , _minVoltage(999.0)
     , _maxTemperature(-999.0)
+    , _bottleCapacity(9.0)      // 默认9L氢气瓶
+    , _maxEnergy(3.0)           // 默认3度电
+    , _avgPower(0.0)            // 平均功率初始化为0
 {
-    connect(&_efficiencyCalcTimer, &QTimer::timeout, this, &FuelCellManager::_calculateEfficiency);
-    _efficiencyCalcTimer.start(1000); // 每秒计算一次效率
+}
+
+void FuelCellManager::setBottleCapacity(double capacity, double maxEnergy)
+{
+    _bottleCapacity = capacity;
+    _maxEnergy = maxEnergy;
 }
 
 void FuelCellManager::handleFuelCellStatus(const mavlink_fuel_cell_status_t& status)
@@ -23,27 +30,47 @@ void FuelCellManager::handleFuelCellStatus(const mavlink_fuel_cell_status_t& sta
     data.stack_temperature = status.stack_temperature_c;
     data.fault_flags = status.fault_flags;
 
-    // 计算功率输出
-    data.power_output = status.voltage_v * status.current_a;
+    // 1. 计算瞬时功率 (kW)
+    double instantaneous_power_kw = (status.voltage_v * status.current_a) / 1000.0; // 转换为kW
 
-    // 计算效率
-    if (status.current_a > 0 && status.voltage_v > 0) {
-        // 使用氢气压力变化来估算氢气消耗量
-        double hydrogen_consumption_rate = status.hydrogen_pressure_bar * 0.001; // 简化计算
-        data.efficiency = (data.power_output) / (hydrogen_consumption_rate * 33.3); // 33.3 kWh/kg为氢气能量密度
-    } else {
-        data.efficiency = 0.0;
+    // 2. 将瞬时功率添加到历史队列
+    _powerHistory.enqueue(instantaneous_power_kw);
+    if (_powerHistory.size() > 10) {
+        _powerHistory.dequeue(); // 保持最多10个数据点
     }
 
-    // 估算剩余运行时间（小时）
-    if (status.current_a > 0.1) { // 避免除零
-        double remaining_capacity = (status.hydrogen_pressure_bar / 350.0) * 100.0; // 350bar为满压
-        data.remaining_time_hours = remaining_capacity / status.current_a;
-    } else {
-        data.remaining_time_hours = 0.0;
+    // 3. 计算平均功率
+    double power_sum = 0.0;
+    for (double power : _powerHistory) {
+        power_sum += power;
+    }
+    _avgPower = power_sum / _powerHistory.size();
+
+    // 4. 计算剩余电量
+    // 压强转换为百分比 (2-35 bar 对应 0%-100%)
+    double min_pressure = 2.0;  // 最小有效压力
+    double max_pressure = 35.0; // 最大压力
+    double pressure_range = max_pressure - min_pressure; // 压力范围: 33.0 bar
+
+    // 将实际压力映射到0-100%范围内
+    double percentage = qBound(0.0,
+        ((status.hydrogen_pressure_bar - min_pressure) / pressure_range) * 100.0,
+        100.0);
+
+    double remaining_energy = (_maxEnergy * percentage) / 100.0; // 剩余电量 (kWh)
+
+    // 5. 计算剩余时间 (小时)
+    double remaining_time_hours = 0.0;
+    if (_avgPower > 0.001) { // 避免除零，假设最小功率为1W
+        remaining_time_hours = remaining_energy / _avgPower;
     }
 
-    // 生成状态描述
+    // 设置计算结果
+    data.power_output = instantaneous_power_kw * 1000; // 瞬时功率 (W)
+    data.efficiency = 0.0; // 在新逻辑中暂时不计算效率
+    data.remaining_time_hours = remaining_time_hours;
+
+    // 6. 生成状态描述
     if (status.fault_flags != 0) {
         data.status_description = "FAULT";
     } else if (status.stack_temperature_c > 80) {
@@ -54,73 +81,100 @@ void FuelCellManager::handleFuelCellStatus(const mavlink_fuel_cell_status_t& sta
         data.status_description = "NORMAL";
     }
 
-    // 保存数据
+    // 7. 保存数据
     _lastProcessedData = data;
 
-    // 添加到历史队列（保留最近100个数据点）
+    // 8. 添加到历史队列（保留最近100个数据点）
     _dataHistory.enqueue(data);
     if (_dataHistory.size() > 100) {
         _dataHistory.dequeue();
     }
 
-    // 更新统计信息
-    _updateStatistics();
+    // 9. 更新统计信息
+    if (!_dataHistory.isEmpty()) {
+        // 计算平均值
+        double voltage_sum = 0, temp_sum = 0;
+        int count = _dataHistory.size();
 
-    // 发射信号
+        for (const auto& data : _dataHistory) {
+            voltage_sum += data.voltage;
+            temp_sum += data.stack_temperature;
+
+            if (data.voltage < _minVoltage) _minVoltage = data.voltage;
+            if (data.stack_temperature > _maxTemperature) _maxTemperature = data.stack_temperature;
+        }
+
+        _lastProcessedData.avg_efficiency = _avgEfficiencySum /
+                                           (_efficiencySampleCount > 0 ? _efficiencySampleCount : 1);
+        _lastProcessedData.min_voltage = _minVoltage;
+        _lastProcessedData.max_temperature = _maxTemperature;
+    }
+
+    // 10. 发射信号
     emit processedDataUpdated(data);
 
-    // 检查警报条件
-    if (data.efficiency < 0.3) { // 效率低于30%
-        emit efficiencyAlert(data.efficiency);
-    }
+    // 11. 检查警报条件
     if (data.stack_temperature > 80) {
         emit temperatureAlert(data.stack_temperature);
     }
-    if (data.hydrogen_pressure < 50) { // 压力过低
-        emit pressureAlert(data.hydrogen_pressure);
-    }
-    if (data.fault_flags != 0) {
+    if (status.fault_flags != 0) {
         emit faultDetected(data.fault_flags);
     }
 }
 
-void FuelCellManager::_updateStatistics()
+// QML可访问的方法实现
+QString FuelCellManager::getLastEfficiency() const
 {
-    if (_dataHistory.isEmpty()) return;
-
-    // 计算平均值
-    double voltage_sum = 0, temp_sum = 0;
-    int count = _dataHistory.size();
-
-    for (const auto& data : _dataHistory) {
-        voltage_sum += data.voltage;
-        temp_sum += data.stack_temperature;
-
-        if (data.voltage < _minVoltage) _minVoltage = data.voltage;
-        if (data.stack_temperature > _maxTemperature) _maxTemperature = data.stack_temperature;
-    }
-
-    _lastProcessedData.avg_efficiency = _avgEfficiencySum /
-                                       (_efficiencySampleCount > 0 ? _efficiencySampleCount : 1);
-    _lastProcessedData.min_voltage = _minVoltage;
-    _lastProcessedData.max_temperature = _maxTemperature;
+    return QString::number(_lastProcessedData.efficiency, 'f', 2);
 }
 
-void FuelCellManager::_calculateEfficiency()
+QString FuelCellManager::getLastRemainingTime() const
 {
-    // 这里可以根据历史数据计算更精确的效率值
-    if (_dataHistory.size() >= 2) {
-        auto recent = _dataHistory.last();
-        auto prev = _dataHistory[_dataHistory.size() - 2];
+    return QString::number(_lastProcessedData.remaining_time_hours, 'f', 2);
+}
 
-        if (recent.current > 0 && recent.voltage > 0) {
-            double instantaneous_efficiency = (recent.voltage * recent.current) /
-                                            (recent.hydrogen_pressure * 0.1); // 简化计算
+QString FuelCellManager::getLastStatus() const
+{
+    return _lastProcessedData.status_description;
+}
 
-            _avgEfficiencySum += instantaneous_efficiency;
-            _efficiencySampleCount++;
+QString FuelCellManager::getLastVoltage() const
+{
+    return QString::number(_lastProcessedData.voltage, 'f', 2);
+}
 
-            _lastProcessedData.efficiency = instantaneous_efficiency;
-        }
-    }
+QString FuelCellManager::getLastCurrent() const
+{
+    return QString::number(_lastProcessedData.current, 'f', 2);
+}
+
+QString FuelCellManager::getLastPressure() const
+{
+    return QString::number(_lastProcessedData.hydrogen_pressure, 'f', 2);
+}
+
+QString FuelCellManager::getLastTemperature() const
+{
+    return QString::number(_lastProcessedData.stack_temperature, 'f', 2);
+}
+
+QString FuelCellManager::getAveragePower() const
+{
+    return QString::number(_avgPower * 1000, 'f', 2); // 转换回瓦特显示
+}
+
+QString FuelCellManager::getRemainingEnergy() const
+{
+    // 压强转换为百分比 (2-35 bar 对应 0%-100%)
+    double min_pressure = 2.0;  // 最小有效压力
+    double max_pressure = 35.0; // 最大压力
+    double pressure_range = max_pressure - min_pressure; // 压力范围: 33.0 bar
+
+    // 将实际压力映射到0-100%范围内
+    double percentage = qBound(0.0,
+        ((_lastProcessedData.hydrogen_pressure - min_pressure) / pressure_range) * 100.0,
+        100.0);
+
+    double remaining_energy = (_maxEnergy * percentage) / 100.0;
+    return QString::number(remaining_energy, 'f', 2);
 }
