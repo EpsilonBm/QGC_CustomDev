@@ -264,6 +264,7 @@ if(QGC_CUSTOM_BUILD)
             ${CMAKE_SOURCE_DIR}/custom/src/mavlink/generated
             ${CMAKE_SOURCE_DIR}/custom/src/mavlink/generated/custom_messages
             ${CMAKE_SOURCE_DIR}/custom/src/mavlink/generated/common
+            ${CMAKE_SOURCE_DIR}/custom/src/FuelCell
     )
 endif()
 

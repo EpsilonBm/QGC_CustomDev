@@ -143,9 +143,11 @@ Vehicle::Vehicle(LinkInterface*             link,
 
     _commonInit();
     // 初始化燃料电池管理器
-
-
-
+    #ifdef QGC_CUSTOM_BUILD
+        _fuelCellManager = new FuelCellManager(this);
+    #else
+        _fuelCellManager = nullptr;
+    #endif
     _vehicleLinkManager->_addLink(link);
 
     // Set video stream to udp if running ArduSub and Video is disabled
@@ -375,7 +377,13 @@ void Vehicle::_commonInit()
 Vehicle::~Vehicle()
 {
     qCDebug(VehicleLog) << "~Vehicle" << this;
-
+    // 清理FuelCellManager
+    #ifdef QGC_CUSTOM_BUILD
+        if (_fuelCellManager) {
+            delete _fuelCellManager;
+            _fuelCellManager = nullptr;
+        }
+    #endif
     delete _missionManager;
     _missionManager = nullptr;
 
@@ -4421,6 +4429,7 @@ void Vehicle::_handleFuelCellStatus(const mavlink_message_t& message)
     mavlink_fuel_cell_status_t fuelCellStatus;
     mavlink_msg_fuel_cell_status_decode(&message, &fuelCellStatus);
 
+    // 记录原始数据
     qCDebug(VehicleLog) << "Fuel Cell Status received:"
                         << "Time:" << fuelCellStatus.time_boot_ms
                         << "Voltage:" << fuelCellStatus.voltage_v
@@ -4428,50 +4437,15 @@ void Vehicle::_handleFuelCellStatus(const mavlink_message_t& message)
                         << "Pressure:" << fuelCellStatus.hydrogen_pressure_bar
                         << "Temp:" << fuelCellStatus.stack_temperature_c;
 
+    // 发射原始数据信号
     emit fuelCellStatusReceived(fuelCellStatus);
-    // 调用二次处理函数
-    _processFuelCellData(fuelCellStatus);
-}
-void Vehicle::_processFuelCellData(const mavlink_fuel_cell_status_t& status)
-{
-    // 计算燃料电池效率
-    double efficiency = 0.0;
-    if (status.current_a > 0 && status.voltage_v > 0) {
-        double power_output = status.voltage_v * status.current_a;
-        // 假设输入功率为常数，这里用氢气流量估算
-        double hydrogen_flow_rate = status.hydrogen_pressure_bar * 0.1; // 简化的估算
-        if (hydrogen_flow_rate > 0) {
-            efficiency = power_output / (hydrogen_flow_rate * 33.3); // 33.3 kWh/kg是氢气的能量密度
-        }
+
+    // 使用FuelCellManager进行高级处理
+    #ifdef QGC_CUSTOM_BUILD
+    if (_fuelCellManager) {
+        _fuelCellManager->handleFuelCellStatus(fuelCellStatus);
     }
-
-    // 计算剩余运行时间
-    double remaining_time = 0.0;
-    if (status.current_a > 0) {
-        // 假设最大容量为100单位，根据压力估算剩余容量
-        double remaining_capacity = (status.hydrogen_pressure_bar / 350.0) * 100.0; // 350 bar为满压
-        remaining_time = remaining_capacity / status.current_a; // 小时
-    }
-
-    // 生成状态描述
-    QString status_desc = "Normal";
-    if (status.fault_flags & 0x01) {
-        status_desc = "Low Pressure Warning";
-    } else if (status.fault_flags & 0x02) {
-        status_desc = "High Temperature Error";
-    } else if (status.stack_temperature_c > 80) {
-        status_desc = "High Temperature Warning";
-    } else if (status.voltage_v < 20.0) {
-        status_desc = "Low Voltage Warning";
-    }
-
-    // 发射处理后的数据信号
-    emit fuelCellProcessedDataReceived(efficiency, remaining_time, status_desc);
-
-    // 可选：记录到日志
-    qCDebug(VehicleLog) << "Fuel Cell Processed - Efficiency:" << efficiency
-                        << "Remaining Time:" << remaining_time
-                        << "Status:" << status_desc;
+    #endif
 }
 
 void Vehicle::_handlePayloadCommand(const mavlink_message_t& message)
