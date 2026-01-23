@@ -11,14 +11,20 @@ import Custom.QmlControls // For FuelCellIndicator
 Item {
     id: _root
 
+    property real _toolsMargin: ScreenTools.defaultFontPixelWidth * 0.75
+    // Last method: just define it without relationship
+    property real ca_Width: 0
+    property real c_R: 0
+    property real columnDataNum: 4
+
     // The height is determined by the content (the left column) plus vertical margins.
-    height: _leftDataColumn.implicitHeight + (_toolsMargin * 2)
+    //height: _leftDataColumn.implicitHeight + (_toolsMargin * 2)
+    height: c_R * 2
+
     // The width is calculated to be symmetrical based on the left column and the compass width.
     // Width = 2 * (LeftMargin + ColumnWidth + CompassHalfWidth)
-    width: (_leftMargin + _leftDataColumn.implicitWidth + (compassWidth / 2)) * 2
-
-    property real _toolsMargin: ScreenTools.defaultFontPixelWidth * 0.75
-    property real compassWidth: 0
+    //width: (_leftMargin + _leftDataColumn.implicitWidth + (compassWidth / 2)) * 2
+    width: (_leftMargin + _leftDataColumn.implicitWidth + (ca_Width / 2)) * 2
 
     // This property is passed down from FlyViewCustomLayer
     property var parentToolInsets
@@ -30,7 +36,7 @@ Item {
         id: backgroundRect
         anchors.fill: parent
         color: qgcPal.window
-        opacity: 0.75
+        opacity: 1
     }
 
     property real _leftMargin: _toolsMargin + (_root.parentToolInsets ? _root.parentToolInsets.bottomEdgeLeftInset : 0)
@@ -44,29 +50,37 @@ Item {
         spacing: _toolsMargin / 4
 
         Repeater {
-            model: 4
+            model: columnDataNum
             delegate: Rectangle {
-                implicitWidth: ScreenTools.defaultFontPixelWidth * 15
-                implicitHeight: ScreenTools.defaultFontPixelHeight * 1.5
+                id:            dataRec
+                implicitWidth: ScreenTools.defaultFontPixelWidth * 25
+                //implicitHeight: ScreenTools.defaultFontPixelHeight * 1.5
+                implicitHeight: _root.height / 4
                 color: "transparent"
 
                 RowLayout {
                     anchors.fill: parent
                     spacing: _toolsMargin / 2
 
-                    QGCColoredImage {
-                        Layout.preferredWidth: height
-                        Layout.preferredHeight: parent.height
+                    QGCLabel {
+                        Layout.fillWidth: true
                         Layout.alignment: Qt.AlignVCenter
-                        source: "qrc:/custom/img/chronometer.svg"
+                        text: qsTr("Speed: ")
                         color: qgcPal.text
-                        fillMode: Image.PreserveAspectFit
                     }
 
                     QGCLabel {
                         Layout.fillWidth: true
                         Layout.alignment: Qt.AlignVCenter
-                        text: qsTr("Speed: 00.00m/s")
+                        // TODO: get the data
+                        text: qsTr("00.00")
+                        color: qgcPal.text
+                    }
+
+                    QGCLabel {
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignVCenter
+                        text: qsTr(" m/s")
                         color: qgcPal.text
                     }
                 }

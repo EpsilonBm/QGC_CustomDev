@@ -262,9 +262,9 @@ Item {
 
     // TODO: To see how its size adapted to the screen especially in Android
     CustomPanel {
-        id:                     customPanel
-        anchors.bottom:         parent.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-        parentToolInsets:       _root.parentToolInsets
+        id:                        customPanel
+        anchors.bottom:            parent.bottom
+        anchors.horizontalCenter:  parent.horizontalCenter
+        parentToolInsets:          _root.parentToolInsets
     }
 }
