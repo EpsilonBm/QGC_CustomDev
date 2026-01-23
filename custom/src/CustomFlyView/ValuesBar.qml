@@ -5,6 +5,7 @@ import QGroundControl
 import QGroundControl.Controls
 import QGroundControl.ScreenTools
 import QGroundControl.Palette
+import QGroundControl.MultiVehicleManager
 
 import Custom.QmlControls // For FuelCellIndicator
 
@@ -15,11 +16,18 @@ Item {
     // Last method: just define it without relationship
     property real ca_Width: 0
     property real c_R: 0
-    property real columnDataNum: 4
+
+    property var _telemetryData: [
+        { label: qsTr("G_Speed"), unit: "m/s", fact: "groundSpeed" },
+        { label: qsTr("A_Speed"), unit: "m/s", fact: "airSpeed" },
+        { label: qsTr("climbRate"),  unit: "m/s",   fact: "climbRate" },
+        { label: qsTr("alt_R"),  unit: "m",   fact: "altitudeRelative" }
+    ]
 
     // The height is determined by the content (the left column) plus vertical margins.
     //height: _leftDataColumn.implicitHeight + (_toolsMargin * 2)
-    height: c_R * 2
+    //height: c_R * 2
+    height: ca_Width
 
     // The width is calculated to be symmetrical based on the left column and the compass width.
     // Width = 2 * (LeftMargin + ColumnWidth + CompassHalfWidth)
@@ -30,6 +38,8 @@ Item {
     property var parentToolInsets
 
     QGCPalette { id: qgcPal }
+
+    property var _activeVehicle: QGroundControl.multiVehicleManager.activeVehicle
 
     // Background Rectangle
     Rectangle {
@@ -50,7 +60,7 @@ Item {
         spacing: _toolsMargin / 4
 
         Repeater {
-            model: columnDataNum
+            model: _telemetryData
             delegate: Rectangle {
                 id:            dataRec
                 implicitWidth: ScreenTools.defaultFontPixelWidth * 25
@@ -65,22 +75,22 @@ Item {
                     QGCLabel {
                         Layout.fillWidth: true
                         Layout.alignment: Qt.AlignVCenter
-                        text: qsTr("Speed: ")
+                        text: modelData.label + ": "
                         color: qgcPal.text
                     }
 
                     QGCLabel {
                         Layout.fillWidth: true
                         Layout.alignment: Qt.AlignVCenter
-                        // TODO: get the data
-                        text: qsTr("00.00")
+                        property var factObj: _activeVehicle ? _activeVehicle[modelData.fact] : null
+                        text: factObj ? factObj.valueString : "0.00"
                         color: qgcPal.text
                     }
 
                     QGCLabel {
                         Layout.fillWidth: true
                         Layout.alignment: Qt.AlignVCenter
-                        text: qsTr(" m/s")
+                        text: " " + modelData.unit
                         color: qgcPal.text
                     }
                 }
@@ -89,10 +99,13 @@ Item {
     }
 
     // Right side: Battery Indicator
+    // TODO: create a new type of the fuelcell indicator to change the mouse event
+    // TODO: two cell statue in column
     FuelCellIndicator {
         id: _fuelCellIndicator
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
+        //width: _leftMargin + _leftDataColumn.implicitWidth
         anchors.rightMargin: _toolsMargin + (_root.parentToolInsets ? _root.parentToolInsets.bottomEdgeRightInset : 0)
     }
 }
