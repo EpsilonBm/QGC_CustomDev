@@ -43,6 +43,7 @@ Item {
     property int threshold1: _batterySettings.threshold1.rawValue
     property int threshold2: _batterySettings.threshold2.rawValue   
 
+    // batteryIndicatorRow
     Row {
         id:             batteryIndicatorRow
         anchors.top:    parent.top
@@ -67,6 +68,11 @@ Item {
         }
     }
 
+    /* batteryPopup
+    *  called from: MouseArea
+    *  call       : batteryContentComponent batteryExpandedComponent
+    *  function   : show the information in two pages.
+    */
     Component {
         id: batteryPopup
 
@@ -78,6 +84,11 @@ Item {
         }
     }
 
+    // batteryVisual
+    /* battery visual indicator
+    *  called from: batteryIndicatorRow
+    *  function   : show the battery icon and some important information
+    */
     Component {
         id: batteryVisual
 
@@ -196,6 +207,10 @@ Item {
         }
     }
 
+    /* batteryContentComponent
+    *  called from: batteryPopup
+    *  function   : show temperature current mah timeRemaining percentRemaining
+    */
     Component {
         id: batteryContentComponent
 
@@ -279,6 +294,10 @@ Item {
         }
     }
 
+    /* batteryExpandedComponent
+    *  called from: batteryPopup
+    *  function   :
+    */
     Component {
         id: batteryExpandedComponent
 
