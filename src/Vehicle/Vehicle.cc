@@ -145,15 +145,7 @@ Vehicle::Vehicle(LinkInterface*             link,
     // 初始化燃料电池管理器
     #ifdef QGC_CUSTOM_BUILD
         _fuelCellManager = new FuelCellManager(this);
-    #else
-        _fuelCellManager = nullptr;
-    #endif
-    #ifdef QGC_CUSTOM_BUILD
-        if (_fuelCellManager) {
-            // 连接FuelCellManager的信号到Vehicle的槽
-            connect(_fuelCellManager, &FuelCellManager::processedDataUpdated,
-                    this, &Vehicle::onFuelCellDataUpdated);
-        }
+        _addFactGroup(_fuelCellManager, "fuelCellManager");
     #endif
     _vehicleLinkManager->_addLink(link);
 
@@ -384,8 +376,8 @@ void Vehicle::_commonInit()
 Vehicle::~Vehicle()
 {
     qCDebug(VehicleLog) << "~Vehicle" << this;
-    // 清理FuelCellManager
     #ifdef QGC_CUSTOM_BUILD
+        // 清理FuelCellManager
         if (_fuelCellManager) {
             delete _fuelCellManager;
             _fuelCellManager = nullptr;
@@ -612,6 +604,7 @@ void Vehicle::_mavlinkMessageReceived(LinkInterface* link, mavlink_message_t mes
     case MAVLINK_MSG_ID_FENCE_STATUS:
         _handleFenceStatus(message);
         break;
+    #ifdef QGC_CUSTOM_BUILD
     case MAVLINK_MSG_ID_FUEL_CELL_STATUS:
          _handleFuelCellStatus(message);
          break;
@@ -621,6 +614,7 @@ void Vehicle::_mavlinkMessageReceived(LinkInterface* link, mavlink_message_t mes
     case MAVLINK_MSG_ID_PAYLOAD_STATUS:
         _handlePayloadStatus(message);
         break;
+    #endif
 
     case MAVLINK_MSG_ID_EVENT:
     case MAVLINK_MSG_ID_CURRENT_EVENT_SEQUENCE:
@@ -4431,6 +4425,7 @@ MAVLinkLogManager *Vehicle::mavlinkLogManager() const
 /*===========================================================================*/
 /*                         Hydrogen fuel cell processing                               */
 /*===========================================================================*/
+#ifdef QGC_CUSTOM_BUILD
 void Vehicle::_handleFuelCellStatus(const mavlink_message_t& message)
 {
     mavlink_fuel_cell_status_t fuelCellStatus;
@@ -4448,11 +4443,9 @@ void Vehicle::_handleFuelCellStatus(const mavlink_message_t& message)
     emit fuelCellStatusReceived(fuelCellStatus);
 
     // 使用FuelCellManager进行高级处理
-    #ifdef QGC_CUSTOM_BUILD
     if (_fuelCellManager) {
         _fuelCellManager->handleFuelCellStatus(fuelCellStatus);
     }
-    #endif
 }
 
 void Vehicle::_handlePayloadCommand(const mavlink_message_t& message)
@@ -4482,13 +4475,11 @@ void Vehicle::_handlePayloadStatus(const mavlink_message_t& message)
     emit payloadStatusReceived(payloadStatus);
 }
 
-// 在Vehicle.cc中添加槽函数实现
-void Vehicle::onFuelCellDataUpdated(const FuelCellManager::ProcessedFuelCellData& data)
+void Vehicle::setFuelCellBottleCapacity(double capacity)
 {
-    // 发射信号到QML
-    emit fuelCellDataUpdated(
-        QString::number(data.efficiency, 'f', 2),
-        QString::number(data.remaining_time_hours, 'f', 2),
-        data.status_description
-    );
+    if (_fuelCellManager) {
+        double maxEnergy = (capacity / 9.0) * 3.0; // 9L→3度电的比例关系
+        _fuelCellManager->setBottleCapacity(capacity, maxEnergy);
+    }
 }
+#endif

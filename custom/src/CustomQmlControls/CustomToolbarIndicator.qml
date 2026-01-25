@@ -139,7 +139,8 @@ Item {
             // Original MessageIndicator function is shift into the MainStatueIndicator.
             MessageIndicator { }
 
-            // TODO: Add the fuelcell indicator
+            // Fuel Cell Indicator
+            FuelCellIndicator { }
         }
     }
 

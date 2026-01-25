@@ -49,16 +49,14 @@ Item {
         anchors.top:    parent.top
         anchors.bottom: parent.bottom
 
-        Repeater {
-            model: _activeVehicle ? _activeVehicle.batteries : 0
-
-            Loader {
-                anchors.top:        parent.top
-                anchors.bottom:     parent.bottom
-                sourceComponent:    batteryVisual
-
-                property var battery: object
-            }
+        // Since there is only one FuelCellManager, we don't need a Repeater.
+        // We use a Loader and make it visible if the fuelCellManager exists.
+        Loader {
+            anchors.top:        parent.top
+            anchors.bottom:     parent.bottom
+            sourceComponent:    batteryVisual
+            visible:            fuelCell !== null
+            property var fuelCell: _activeVehicle ? _activeVehicle.fuelCellManager : null
         }
     }
     MouseArea {
@@ -97,76 +95,42 @@ Item {
             anchors.bottom: parent.bottom
 
             function getBatteryColor() {
-                switch (battery.chargeState.rawValue) {
-                    case MAVLink.MAV_BATTERY_CHARGE_STATE_OK:
-                        if (!isNaN(battery.percentRemaining.rawValue)) {
-                            if (battery.percentRemaining.rawValue > threshold1) {
-                                return qgcPal.colorGreen 
-                            } else if (battery.percentRemaining.rawValue > threshold2) {
-                                return qgcPal.colorYellowGreen 
-                            } else {
-                                return qgcPal.colorYellow 
-                            }
-                        } else {
-                            return qgcPal.text
-                        }
-                    case MAVLink.MAV_BATTERY_CHARGE_STATE_LOW:
-                        return qgcPal.colorOrange
-                    case MAVLink.MAV_BATTERY_CHARGE_STATE_CRITICAL:
-                    case MAVLink.MAV_BATTERY_CHARGE_STATE_EMERGENCY:
-                    case MAVLink.MAV_BATTERY_CHARGE_STATE_FAILED:
-                    case MAVLink.MAV_BATTERY_CHARGE_STATE_UNHEALTHY:
-                        return qgcPal.colorRed
-                    default:
-                        return qgcPal.text
+                if (fuelCell && fuelCell.percentRemaining) {
+                    var p = fuelCell.percentRemaining.value
+                    if (p > 90) return qgcPal.colorGreen
+                    if (p > 70) return qgcPal.colorYellowGreen
+                    if (p > 50) return qgcPal.colorYellow
+                    if (p > 30) return qgcPal.colorOrange
+                    return qgcPal.colorRed // Critical (30-10) & Emergency (10-0)
                 }
+                return qgcPal.text
             }    
 
             function getBatterySvgSource() {
-                switch (battery.chargeState.rawValue) {
-                    case MAVLink.MAV_BATTERY_CHARGE_STATE_OK:
-                        if (!isNaN(battery.percentRemaining.rawValue)) {
-                            if (battery.percentRemaining.rawValue > threshold1) {
-                                return "qrc:/custom/img/BatteryGreen.svg"
-                            } else if (battery.percentRemaining.rawValue > threshold2) {
-                                return "qrc:/custom/img/BatteryYellowGreen.svg"
-                            } else {
-                                return "qrc:/custom/img/BatteryYellow.svg"
-                            } 
-                        }
-                    case MAVLink.MAV_BATTERY_CHARGE_STATE_LOW:
-                        return "qrc:/custom/img/BatteryOrange.svg" // Low with orange svg
-                    case MAVLink.MAV_BATTERY_CHARGE_STATE_CRITICAL:
-                        return "qrc:/custom/img/BatteryCritical.svg" // Critical with red svg
-                    case MAVLink.MAV_BATTERY_CHARGE_STATE_EMERGENCY:
-                    case MAVLink.MAV_BATTERY_CHARGE_STATE_FAILED:
-                    case MAVLink.MAV_BATTERY_CHARGE_STATE_UNHEALTHY:
-                        return "qrc:/custom/img/BatteryEMERGENCY.svg" // Exclamation mark
-                    default:
-                        return "qrc:/custom/img/Battery.svg" // Fallback if percentage is unavailable
+                if (fuelCell && fuelCell.percentRemaining) {
+                    var p = fuelCell.percentRemaining.value
+                    if (p > 90) return "qrc:/custom/img/BatteryGreen.svg"
+                    if (p > 70) return "qrc:/custom/img/BatteryYellowGreen.svg"
+                    if (p > 50) return "qrc:/custom/img/BatteryYellow.svg"
+                    if (p > 30) return "qrc:/custom/img/BatteryOrange.svg"
+                    if (p > 10) return "qrc:/custom/img/BatteryCritical.svg"
+                    return "qrc:/custom/img/BatteryEMERGENCY.svg"
                 }
+                return "qrc:/custom/img/Battery.svg"
             }
 
             function getBatteryPercentageText() {
-                if (!isNaN(battery.percentRemaining.rawValue)) {
-                    if (battery.percentRemaining.rawValue > 98.9) {
-                        return qsTr("100%")
-                    } else {
-                        return battery.percentRemaining.valueString + battery.percentRemaining.units
-                    }
-                } else if (!isNaN(battery.voltage.rawValue)) {
-                    return battery.voltage.valueString + battery.voltage.units
-                } else if (battery.chargeState.rawValue !== MAVLink.MAV_BATTERY_CHARGE_STATE_UNDEFINED) {
-                    return battery.chargeState.enumStringValue
+                if (fuelCell && fuelCell.percentRemaining) {
+                    // 直接显示百分比数值
+                    return fuelCell.percentRemaining.valueString + "%"
                 }
                 return qsTr("n/a")
             }
 
             function getBatteryVoltageText() {
-                if (!isNaN(battery.voltage.rawValue)) {
-                    return battery.voltage.valueString + battery.voltage.units
-                } else if (battery.chargeState.rawValue !== MAVLink.MAV_BATTERY_CHARGE_STATE_UNDEFINED) {
-                    return battery.chargeState.enumStringValue
+                if (fuelCell && fuelCell.voltage) {
+                    // 显示 FactGroup 中的 voltage
+                    return fuelCell.voltage.valueString + " " + fuelCell.voltage.units
                 }
                 return qsTr("n/a")
             }
@@ -221,73 +185,74 @@ Item {
                 id: batteryValuesAvailableComponent
 
                 QtObject {
-                    property bool functionAvailable:         battery.function.rawValue !== MAVLink.MAV_BATTERY_FUNCTION_UNKNOWN
-                    property bool showFunction:              functionAvailable && battery.function.rawValue != MAVLink.MAV_BATTERY_FUNCTION_ALL
-                    property bool temperatureAvailable:      !isNaN(battery.temperature.rawValue)
-                    property bool currentAvailable:          !isNaN(battery.current.rawValue)
-                    property bool mahConsumedAvailable:      !isNaN(battery.mahConsumed.rawValue)
-                    property bool timeRemainingAvailable:    !isNaN(battery.timeRemaining.rawValue)
-                    property bool percentRemainingAvailable: !isNaN(battery.percentRemaining.rawValue)
-                    property bool chargeStateAvailable:      battery.chargeState.rawValue !== MAVLink.MAV_BATTERY_CHARGE_STATE_UNDEFINED
+                    property bool voltageAvailable:          fuelCell && fuelCell.voltage
+                    property bool currentAvailable:          fuelCell && fuelCell.current
+                    property bool pressureAvailable:         fuelCell && fuelCell.pressure
+                    property bool temperatureAvailable:      fuelCell && fuelCell.temperature
+                    property bool powerAvailable:            fuelCell && fuelCell.power
+                    property bool remainingEnergyAvailable:  fuelCell && fuelCell.remainingEnergy
+                    property bool remainingTimeAvailable:    fuelCell && fuelCell.remainingTime
                 }
             }
 
             Repeater {
-                model: _activeVehicle ? _activeVehicle.batteries : 0
+                model: 1
 
                 SettingsGroupLayout {
-                    heading:        qsTr("Battery %1").arg(_activeVehicle.batteries.length === 1 ? qsTr("Status") : object.id.rawValue)
+                    heading:        qsTr("Fuel Cell Status")
                     contentSpacing: 0
                     showDividers:   false
 
+                    property var fuelCell: _activeVehicle ? _activeVehicle.fuelCellManager : null
                     property var batteryValuesAvailable: batteryValuesAvailableLoader.item
 
                     Loader {
                         id:                 batteryValuesAvailableLoader
                         sourceComponent:    batteryValuesAvailableComponent
 
-                        property var battery: object
-                    }
-
-                    LabelledLabel {
-                        label:  qsTr("Charge State")
-                        labelText:  object.chargeState.enumStringValue
-                        visible:    batteryValuesAvailable.chargeStateAvailable
-                    }
-
-                    LabelledLabel {
-                        label:      qsTr("Remaining")
-                        labelText:  object.timeRemainingStr.value
-                        visible:    batteryValuesAvailable.timeRemainingAvailable
-                    }
-
-                    LabelledLabel {
-                        label:      qsTr("Remaining")
-                        labelText:  object.percentRemaining.valueString + " " + object.percentRemaining.units
-                        visible:    batteryValuesAvailable.percentRemainingAvailable
+                        property var fuelCell: parent.fuelCell
                     }
 
                     LabelledLabel {
                         label:      qsTr("Voltage")
-                        labelText:  object.voltage.valueString + " " + object.voltage.units
+                        labelText:  fuelCell.voltage.valueString + " " + fuelCell.voltage.units
+                        visible:    batteryValuesAvailable.voltageAvailable
                     }
 
                     LabelledLabel {
-                        label:      qsTr("Consumed")
-                        labelText:  object.mahConsumed.valueString + " " + object.mahConsumed.units
-                        visible:    batteryValuesAvailable.mahConsumedAvailable
+                        label:      qsTr("Current")
+                        labelText:  fuelCell.current.valueString + " " + fuelCell.current.units
+                        visible:    batteryValuesAvailable.currentAvailable
+                    }
+
+                    LabelledLabel {
+                        label:      qsTr("Pressure")
+                        labelText:  fuelCell.pressure.valueString + " " + fuelCell.pressure.units
+                        visible:    batteryValuesAvailable.pressureAvailable
                     }
 
                     LabelledLabel {
                         label:      qsTr("Temperature")
-                        labelText:  object.temperature.valueString + " " + object.temperature.units
+                        labelText:  fuelCell.temperature.valueString + " " + fuelCell.temperature.units
                         visible:    batteryValuesAvailable.temperatureAvailable
                     }
 
                     LabelledLabel {
-                        label:      qsTr("Function")
-                        labelText:  object.function.enumStringValue
-                        visible:    batteryValuesAvailable.showFunction
+                        label:      qsTr("Power")
+                        labelText:  fuelCell.power.valueString + " " + fuelCell.power.units
+                        visible:    batteryValuesAvailable.powerAvailable
+                    }
+
+                    LabelledLabel {
+                        label:      qsTr("Remaining Energy")
+                        labelText:  fuelCell.remainingEnergy.valueString + " " + fuelCell.remainingEnergy.units
+                        visible:    batteryValuesAvailable.remainingEnergyAvailable
+                    }
+
+                    LabelledLabel {
+                        label:      qsTr("Remaining Time")
+                        labelText:  fuelCell.remainingTime.valueString + " " + fuelCell.remainingTime.units
+                        visible:    batteryValuesAvailable.remainingTimeAvailable
                     }
                 }
             }
@@ -301,135 +266,50 @@ Item {
     Component {
         id: batteryExpandedComponent
 
-        ColumnLayout {
-            spacing: ScreenTools.defaultFontPixelHeight / 2
+        // The expanded view now directly shows specific fuel cell status details.
+        // The complex settings UI has been removed as requested.
+        SettingsGroupLayout {
+            heading: qsTr("Details & Alerts")
 
-            FactPanelController { id: controller }
+            property var fuelCell: _activeVehicle ? _activeVehicle.fuelCellManager : null
+            property var expandedValuesAvailable: expandedValuesAvailableLoader.item
 
-            SettingsGroupLayout {
-                heading:            qsTr("Battery Display")
-                Layout.fillWidth:   true
-
-                LabelledFactComboBox {
-                    id:             editModeCheckBox
-                    label:          qsTr("Value")
-                    fact:           _fact
-                    //visible:        _fact,visible
-                    visible:        _fact.visible
-                    property Fact _fact: QGroundControl.settingsManager.batteryIndicatorSettings.valueDisplay
-                }
-
-                ColumnLayout {
-                    QGCLabel { text: qsTr("Coloring") }
-
-                    RowLayout {
-                        spacing: ScreenTools.defaultFontPixelWidth * 0.05  // Reduced spacing between elements
-
-                        // Battery 100%
-                        RowLayout {
-                            spacing: ScreenTools.defaultFontPixelWidth * 0.05  // Tighter spacing for icon and label
-                            QGCColoredImage {
-                                source: "qrc:/custom/img/BatteryGreen.svg"
-                                width: ScreenTools.defaultFontPixelWidth * 6
-                                height: width
-                                fillMode: Image.PreserveAspectFit
-                                color: qgcPal.colorGreen
-                            }
-                            QGCLabel { text: qsTr("100%") }
-                        }
-
-                        // Threshold 1
-                        RowLayout {
-                            spacing: ScreenTools.defaultFontPixelWidth * 0.05  // Tighter spacing for icon and field
-                            QGCColoredImage {
-                                source: "qrc:/custom/img/BatteryYellowGreen.svg"
-                                width: ScreenTools.defaultFontPixelWidth * 6
-                                height: width
-                                fillMode: Image.PreserveAspectFit
-                                color: qgcPal.colorYellowGreen
-                            }
-                            FactTextField {
-                                id: threshold1Field
-                                fact: _batterySettings.threshold1
-                                implicitWidth: ScreenTools.defaultFontPixelWidth * 6
-                                height: ScreenTools.defaultFontPixelHeight * 1.5
-                                enabled: fact.visible
-                                onEditingFinished: {
-                                    // Validate and set the new threshold value
-                                    _batterySettings.setThreshold1(parseInt(text));
-                                }
-                            }
-                        }
-
-                        // Threshold 2
-                        RowLayout {
-                            spacing: ScreenTools.defaultFontPixelWidth * 0.05  // Tighter spacing for icon and field
-                            QGCColoredImage {
-                                source: "qrc:/custom/img/BatteryYellow.svg"
-                                width: ScreenTools.defaultFontPixelWidth * 6
-                                height: width
-                                fillMode: Image.PreserveAspectFit
-                                color: qgcPal.colorYellow
-                            }
-                            FactTextField {
-                                fact: _batterySettings.threshold2
-                                implicitWidth: ScreenTools.defaultFontPixelWidth * 6
-                                height: ScreenTools.defaultFontPixelHeight * 1.5
-                                enabled: fact.visible
-                                onEditingFinished: {
-                                    // Validate and set the new threshold value
-                                    _batterySettings.setThreshold2(parseInt(text));                                
-                                }
-                            }
-                        }
-
-                        // Low state
-                        RowLayout {
-                            spacing: ScreenTools.defaultFontPixelWidth * 0.05  // Tighter spacing for icon and label
-                            QGCColoredImage {
-                                source: "qrc:/custom/img/BatteryOrange.svg"
-                                width: ScreenTools.defaultFontPixelWidth * 6
-                                height: width
-                                fillMode: Image.PreserveAspectFit
-                                color: qgcPal.colorOrange
-                            }
-                            QGCLabel { text: qsTr("Low") }
-                        }
-
-                        // Critical state
-                        RowLayout {
-                            spacing: ScreenTools.defaultFontPixelWidth * 0.05  // Tighter spacing for icon and label
-                            QGCColoredImage {
-                                source: "qrc:/custom/img/BatteryCritical.svg"
-                                width: ScreenTools.defaultFontPixelWidth * 6
-                                height: width
-                                fillMode: Image.PreserveAspectFit
-                                color: qgcPal.colorRed
-                            }
-                            QGCLabel { text: qsTr("Critical") }
-                        }
-                    }
-                }
-            }
-
+            // Loader for the availability check component
             Loader {
-                Layout.fillWidth: true
-                sourceComponent: expandedPageComponent
+                id:                 expandedValuesAvailableLoader
+                sourceComponent:    expandedValuesAvailableComponent
+                property var fuelCell: parent.fuelCell
             }
 
-            SettingsGroupLayout {
-                visible: _activeVehicle.autopilotPlugin.knownVehicleComponentAvailable(AutoPilotPlugin.KnownPowerVehicleComponent) &&
-                            QGroundControl.corePlugin.showAdvancedUI
+            // Component to check if facts are available
+            Component {
+                id: expandedValuesAvailableComponent
+                QtObject {
+                    property bool statusAvailable:           fuelCell && fuelCell.status
+                    property bool bottleCapacityAvailable:   fuelCell && fuelCell.bottleCapacity
+                }
+            }
 
-                LabelledButton {
-                    label:      qsTr("Vehicle Power")
-                    buttonText: qsTr("Configure")
+            // Display the current status
+            LabelledLabel {
+                label:      qsTr("Status")
+                labelText:  fuelCell.status.valueString
+                visible:    expandedValuesAvailable.statusAvailable
+            }
 
-                    onClicked: {
-                        mainWindow.showKnownVehicleComponentConfigPage(AutoPilotPlugin.KnownPowerVehicleComponent)
-                        mainWindow.closeIndicatorDrawer()
-                    }
-                }                
+            // Display alert information based on status
+            LabelledLabel {
+                label:      qsTr("Alerts")
+                labelText:  fuelCell.status.valueString === "NORMAL" ? qsTr("No Alerts") : qsTr("Check Status!")
+                //textColor:  fuelCell.status.valueString === "NORMAL" ? qgcPal.text : qgcPal.colorRed
+                visible:    expandedValuesAvailable.statusAvailable
+            }
+
+            // Display the bottle capacity
+            LabelledLabel {
+                label:      qsTr("Bottle Capacity")
+                labelText:  fuelCell.bottleCapacity.valueString + " " + fuelCell.bottleCapacity.units
+                visible:    expandedValuesAvailable.bottleCapacityAvailable
             }
         }
     }
