@@ -45,6 +45,17 @@
 #include "VehicleVibrationFactGroup.h"
 #include "VehicleWindFactGroup.h"
 #include "GimbalController.h"
+// 在其他MAVLink相关包含之后添加
+#include "all/mavlink.h"
+
+// 包含自定义MAVLink消息头文件
+#ifdef QGC_CUSTOM_BUILD
+#include "custom_messages/mavlink_msg_fuel_cell_status.h"
+#include "custom_messages/mavlink_msg_payload_command.h"
+#include "custom_messages/mavlink_msg_payload_status.h"
+#include "FuelCell/FuelCellManager.h"
+#endif
+
 
 class Actuators;
 class AutoPilotPlugin;
@@ -414,6 +425,24 @@ public:
     Q_INVOKABLE void saveJoystickSettings(void);
 
     Q_INVOKABLE void sendSetupSigning();
+
+    // 在这里添加FuelCellManager的QML访问方法
+    Q_INVOKABLE QObject* fuelCellManager() const {
+        #ifdef QGC_CUSTOM_BUILD
+                return _fuelCellManager;
+        #else
+                return nullptr;
+        #endif
+    }
+
+    Q_INVOKABLE void setFuelCellBottleCapacity(double capacity) {
+    #ifdef QGC_CUSTOM_BUILD
+        if (_fuelCellManager) {
+            double maxEnergy = (capacity / 9.0) * 3.0; // 9L→3度电的比例关系
+            _fuelCellManager->setBottleCapacity(capacity, maxEnergy);
+        }
+    #endif
+}
 
     bool    isInitialConnectComplete() const;
     bool    guidedModeSupported     () const;
@@ -948,6 +977,8 @@ private slots:
     void _doSetHomeTerrainReceived          (bool success, QList<double> heights);
     void _updateAltAboveTerrain             ();
     void _altitudeAboveTerrainReceived      (bool sucess, QList<double> heights);
+    // 添加FuelCell数据更新槽函数
+    void onFuelCellDataUpdated(const FuelCellManager::ProcessedFuelCellData& data);
 
 private:
     void _loadJoystickSettings          ();
@@ -1335,6 +1366,12 @@ public:
 private:
     void _handleControlStatus(const mavlink_message_t& message);
     void _handleCommandRequestOperatorControl(const mavlink_command_long_t commandLong);
+    // 在private部分添加处理方法
+    void _handleFuelCellStatus(const mavlink_message_t& message);
+    void _handlePayloadCommand(const mavlink_message_t& message);
+    void _handlePayloadStatus(const mavlink_message_t& message);
+    // 燃料电池管理器指针
+    FuelCellManager* _fuelCellManager;
     static void _requestOperatorControlAckHandler(void* resultHandlerData, int compId, const mavlink_command_ack_t& ack, MavCmdResultFailureCode_t failureCode);
 
     Q_PROPERTY(uint8_t sysidInControl                        READ sysidInControl                        NOTIFY gcsControlStatusChanged)
@@ -1367,6 +1404,10 @@ signals:
     void gcsControlStatusChanged();
     void requestOperatorControlReceived(int sysIdRequestingControl, int allowTakeover, int requestTimeoutSecs);
     void sendControlRequestAllowedChanged(bool sendControlRequestAllowed);
+    void fuelCellStatusReceived(const mavlink_fuel_cell_status_t& status);
+    void payloadCommandReceived(const mavlink_payload_command_t& command);
+    void payloadStatusReceived(const mavlink_payload_status_t& status);
+    void fuelCellDataUpdated(const QString& efficiency, const QString& remainingTime, const QString& status);
 
 /*===========================================================================*/
 /*                         STATUS TEXT HANDLER                               */

@@ -130,7 +130,9 @@ set(CUSTOM_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FirmwarePlugin/CustomFirmwarePlugin.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FirmwarePlugin/CustomFirmwarePluginFactory.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FirmwarePlugin/CustomFirmwarePluginFactory.h
-    CACHE INTERNAL "" FORCE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/FuelCell/FuelCellManager.cc  # 添加这一行
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/FuelCell/FuelCellManager.h  # 添加这一行
+        CACHE INTERNAL "" FORCE
 )
 
 set(CUSTOM_LIBRARIES
@@ -145,5 +147,11 @@ set(CUSTOM_INCLUDE_DIRECTORIES
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/AutoPilotPlugin
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FirmwarePlugin
+    CACHE INTERNAL "" FORCE
+)
+
+# 在custom/CMakeLists.txt中，移除对common目录的包含
+list(APPEND CUSTOM_INCLUDE_DIRECTORIES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/mavlink/generated/custom_messages  # 只包含自定义消息
     CACHE INTERNAL "" FORCE
 )

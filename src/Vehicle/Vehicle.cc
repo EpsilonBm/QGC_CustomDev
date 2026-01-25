@@ -117,6 +117,7 @@ Vehicle::Vehicle(LinkInterface*             link,
     , _efiFactGroup                 (this)
     , _rpmFactGroup                 (this)
     , _terrainFactGroup             (this)
+    , _fuelCellManager              (nullptr)
     , _terrainProtocolHandler       (new TerrainProtocolHandler(this, &_terrainFactGroup, this))
 {
     connect(JoystickManager::instance(), &JoystickManager::activeJoystickChanged, this, &Vehicle::_loadJoystickSettings);
@@ -141,7 +142,19 @@ Vehicle::Vehicle(LinkInterface*             link,
     connect(this, &Vehicle::remoteControlRSSIChanged,   this, &Vehicle::_remoteControlRSSIChanged);
 
     _commonInit();
-
+    // 初始化燃料电池管理器
+    #ifdef QGC_CUSTOM_BUILD
+        _fuelCellManager = new FuelCellManager(this);
+    #else
+        _fuelCellManager = nullptr;
+    #endif
+    #ifdef QGC_CUSTOM_BUILD
+        if (_fuelCellManager) {
+            // 连接FuelCellManager的信号到Vehicle的槽
+            connect(_fuelCellManager, &FuelCellManager::processedDataUpdated,
+                    this, &Vehicle::onFuelCellDataUpdated);
+        }
+    #endif
     _vehicleLinkManager->_addLink(link);
 
     // Set video stream to udp if running ArduSub and Video is disabled
@@ -371,7 +384,13 @@ void Vehicle::_commonInit()
 Vehicle::~Vehicle()
 {
     qCDebug(VehicleLog) << "~Vehicle" << this;
-
+    // 清理FuelCellManager
+    #ifdef QGC_CUSTOM_BUILD
+        if (_fuelCellManager) {
+            delete _fuelCellManager;
+            _fuelCellManager = nullptr;
+        }
+    #endif
     delete _missionManager;
     _missionManager = nullptr;
 
@@ -592,6 +611,15 @@ void Vehicle::_mavlinkMessageReceived(LinkInterface* link, mavlink_message_t mes
         break;
     case MAVLINK_MSG_ID_FENCE_STATUS:
         _handleFenceStatus(message);
+        break;
+    case MAVLINK_MSG_ID_FUEL_CELL_STATUS:
+         _handleFuelCellStatus(message);
+         break;
+    case MAVLINK_MSG_ID_PAYLOAD_COMMAND:
+        _handlePayloadCommand(message);
+        break;
+    case MAVLINK_MSG_ID_PAYLOAD_STATUS:
+        _handlePayloadStatus(message);
         break;
 
     case MAVLINK_MSG_ID_EVENT:
@@ -4400,3 +4428,67 @@ MAVLinkLogManager *Vehicle::mavlinkLogManager() const
 }
 
 /*---------------------------------------------------------------------------*/
+/*===========================================================================*/
+/*                         Hydrogen fuel cell processing                               */
+/*===========================================================================*/
+void Vehicle::_handleFuelCellStatus(const mavlink_message_t& message)
+{
+    mavlink_fuel_cell_status_t fuelCellStatus;
+    mavlink_msg_fuel_cell_status_decode(&message, &fuelCellStatus);
+
+    // 记录原始数据
+    qCDebug(VehicleLog) << "Fuel Cell Status received:"
+                        << "Time:" << fuelCellStatus.time_boot_ms
+                        << "Voltage:" << fuelCellStatus.voltage_v
+                        << "Current:" << fuelCellStatus.current_a
+                        << "Pressure:" << fuelCellStatus.hydrogen_pressure_bar
+                        << "Temp:" << fuelCellStatus.stack_temperature_c;
+
+    // 发射原始数据信号
+    emit fuelCellStatusReceived(fuelCellStatus);
+
+    // 使用FuelCellManager进行高级处理
+    #ifdef QGC_CUSTOM_BUILD
+    if (_fuelCellManager) {
+        _fuelCellManager->handleFuelCellStatus(fuelCellStatus);
+    }
+    #endif
+}
+
+void Vehicle::_handlePayloadCommand(const mavlink_message_t& message)
+{
+    mavlink_payload_command_t payloadCmd;
+    mavlink_msg_payload_command_decode(&message, &payloadCmd);
+
+    qCDebug(VehicleLog) << "Payload Command received:"
+                        << "ID:" << payloadCmd.payload_id
+                        << "Command:" << payloadCmd.command
+                        << "Param:" << payloadCmd.param;
+
+    emit payloadCommandReceived(payloadCmd);
+}
+
+void Vehicle::_handlePayloadStatus(const mavlink_message_t& message)
+{
+    mavlink_payload_status_t payloadStatus;
+    mavlink_msg_payload_status_decode(&message, &payloadStatus);
+
+    qCDebug(VehicleLog) << "Payload Status received:"
+                        << "ID:" << payloadStatus.payload_id
+                        << "State:" << payloadStatus.state
+                        << "Value:" << payloadStatus.value
+                        << "Errors:" << payloadStatus.error_flags;
+
+    emit payloadStatusReceived(payloadStatus);
+}
+
+// 在Vehicle.cc中添加槽函数实现
+void Vehicle::onFuelCellDataUpdated(const FuelCellManager::ProcessedFuelCellData& data)
+{
+    // 发射信号到QML
+    emit fuelCellDataUpdated(
+        QString::number(data.efficiency, 'f', 2),
+        QString::number(data.remaining_time_hours, 'f', 2),
+        data.status_description
+    );
+}

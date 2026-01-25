@@ -259,6 +259,13 @@ endif()
 
 if(QGC_CUSTOM_BUILD)
     add_subdirectory(custom)
+    # 添加自定义MAVLink消息头文件路径
+    include_directories(
+            ${CMAKE_SOURCE_DIR}/custom/src/mavlink/generated
+            ${CMAKE_SOURCE_DIR}/custom/src/mavlink/generated/custom_messages
+            ${CMAKE_SOURCE_DIR}/custom/src/mavlink/generated/common
+            ${CMAKE_SOURCE_DIR}/custom/src/FuelCell
+    )
 endif()
 
 #######################################################
