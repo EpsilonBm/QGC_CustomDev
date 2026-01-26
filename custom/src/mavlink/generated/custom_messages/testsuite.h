@@ -37,16 +37,27 @@ static void mavlink_test_fuel_cell_status(uint8_t system_id, uint8_t component_i
         uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
         uint16_t i;
     mavlink_fuel_cell_status_t packet_in = {
-        963497464,45.0,73.0,101.0,129.0,963498504
+        17235,17339,17443,17547,17651,17755,17859,17963,18067,18171,18275,18379,18483,18587,18691,18795,18899
     };
     mavlink_fuel_cell_status_t packet1, packet2;
         memset(&packet1, 0, sizeof(packet1));
-        packet1.time_boot_ms = packet_in.time_boot_ms;
-        packet1.voltage_v = packet_in.voltage_v;
-        packet1.current_a = packet_in.current_a;
-        packet1.hydrogen_pressure_bar = packet_in.hydrogen_pressure_bar;
-        packet1.stack_temperature_c = packet_in.stack_temperature_c;
-        packet1.fault_flags = packet_in.fault_flags;
+        packet1.system_status = packet_in.system_status;
+        packet1.load_voltage = packet_in.load_voltage;
+        packet1.error_code = packet_in.error_code;
+        packet1.highest_temperature_id = packet_in.highest_temperature_id;
+        packet1.highest_temperature = packet_in.highest_temperature;
+        packet1.highest_fan_speed = packet_in.highest_fan_speed;
+        packet1.lowest_voltage_id = packet_in.lowest_voltage_id;
+        packet1.lowest_voltage = packet_in.lowest_voltage;
+        packet1.fault_id = packet_in.fault_id;
+        packet1.fault_dc_flag = packet_in.fault_dc_flag;
+        packet1.fault_fc_flag = packet_in.fault_fc_flag;
+        packet1.dc_output_current = packet_in.dc_output_current;
+        packet1.dc_input_power = packet_in.dc_input_power;
+        packet1.dc_output_power = packet_in.dc_output_power;
+        packet1.pressure_lowest_id = packet_in.pressure_lowest_id;
+        packet1.pressure_lowest = packet_in.pressure_lowest;
+        packet1.pressure_total = packet_in.pressure_total;
         
         
 #ifdef MAVLINK_STATUS_FLAG_OUT_MAVLINK1
@@ -61,12 +72,12 @@ static void mavlink_test_fuel_cell_status(uint8_t system_id, uint8_t component_i
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
         memset(&packet2, 0, sizeof(packet2));
-    mavlink_msg_fuel_cell_status_pack(system_id, component_id, &msg , packet1.time_boot_ms , packet1.voltage_v , packet1.current_a , packet1.hydrogen_pressure_bar , packet1.stack_temperature_c , packet1.fault_flags );
+    mavlink_msg_fuel_cell_status_pack(system_id, component_id, &msg , packet1.system_status , packet1.load_voltage , packet1.error_code , packet1.highest_temperature_id , packet1.highest_temperature , packet1.highest_fan_speed , packet1.lowest_voltage_id , packet1.lowest_voltage , packet1.fault_id , packet1.fault_dc_flag , packet1.fault_fc_flag , packet1.dc_output_current , packet1.dc_input_power , packet1.dc_output_power , packet1.pressure_lowest_id , packet1.pressure_lowest , packet1.pressure_total );
     mavlink_msg_fuel_cell_status_decode(&msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
         memset(&packet2, 0, sizeof(packet2));
-    mavlink_msg_fuel_cell_status_pack_chan(system_id, component_id, MAVLINK_COMM_0, &msg , packet1.time_boot_ms , packet1.voltage_v , packet1.current_a , packet1.hydrogen_pressure_bar , packet1.stack_temperature_c , packet1.fault_flags );
+    mavlink_msg_fuel_cell_status_pack_chan(system_id, component_id, MAVLINK_COMM_0, &msg , packet1.system_status , packet1.load_voltage , packet1.error_code , packet1.highest_temperature_id , packet1.highest_temperature , packet1.highest_fan_speed , packet1.lowest_voltage_id , packet1.lowest_voltage , packet1.fault_id , packet1.fault_dc_flag , packet1.fault_fc_flag , packet1.dc_output_current , packet1.dc_input_power , packet1.dc_output_power , packet1.pressure_lowest_id , packet1.pressure_lowest , packet1.pressure_total );
     mavlink_msg_fuel_cell_status_decode(&msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
@@ -79,7 +90,7 @@ static void mavlink_test_fuel_cell_status(uint8_t system_id, uint8_t component_i
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
         
         memset(&packet2, 0, sizeof(packet2));
-    mavlink_msg_fuel_cell_status_send(MAVLINK_COMM_1 , packet1.time_boot_ms , packet1.voltage_v , packet1.current_a , packet1.hydrogen_pressure_bar , packet1.stack_temperature_c , packet1.fault_flags );
+    mavlink_msg_fuel_cell_status_send(MAVLINK_COMM_1 , packet1.system_status , packet1.load_voltage , packet1.error_code , packet1.highest_temperature_id , packet1.highest_temperature , packet1.highest_fan_speed , packet1.lowest_voltage_id , packet1.lowest_voltage , packet1.fault_id , packet1.fault_dc_flag , packet1.fault_fc_flag , packet1.dc_output_current , packet1.dc_input_power , packet1.dc_output_power , packet1.pressure_lowest_id , packet1.pressure_lowest , packet1.pressure_total );
     mavlink_msg_fuel_cell_status_decode(last_msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
@@ -89,46 +100,46 @@ static void mavlink_test_fuel_cell_status(uint8_t system_id, uint8_t component_i
 #endif
 }
 
-static void mavlink_test_payload_command(uint8_t system_id, uint8_t component_id, mavlink_message_t *last_msg)
+static void mavlink_test_fuel_cell_command(uint8_t system_id, uint8_t component_id, mavlink_message_t *last_msg)
 {
 #ifdef MAVLINK_STATUS_FLAG_OUT_MAVLINK1
     mavlink_status_t *status = mavlink_get_channel_status(MAVLINK_COMM_0);
-        if ((status->flags & MAVLINK_STATUS_FLAG_OUT_MAVLINK1) && MAVLINK_MSG_ID_PAYLOAD_COMMAND >= 256) {
+        if ((status->flags & MAVLINK_STATUS_FLAG_OUT_MAVLINK1) && MAVLINK_MSG_ID_FUEL_CELL_COMMAND >= 256) {
             return;
         }
 #endif
     mavlink_message_t msg;
         uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
         uint16_t i;
-    mavlink_payload_command_t packet_in = {
-        17.0,17,84
+    mavlink_fuel_cell_command_t packet_in = {
+        17235,17339,17443
     };
-    mavlink_payload_command_t packet1, packet2;
+    mavlink_fuel_cell_command_t packet1, packet2;
         memset(&packet1, 0, sizeof(packet1));
-        packet1.param = packet_in.param;
-        packet1.payload_id = packet_in.payload_id;
-        packet1.command = packet_in.command;
+        packet1.runtime_command = packet_in.runtime_command;
+        packet1.requested_power = packet_in.requested_power;
+        packet1.startup_mode = packet_in.startup_mode;
         
         
 #ifdef MAVLINK_STATUS_FLAG_OUT_MAVLINK1
         if (status->flags & MAVLINK_STATUS_FLAG_OUT_MAVLINK1) {
            // cope with extensions
-           memset(MAVLINK_MSG_ID_PAYLOAD_COMMAND_MIN_LEN + (char *)&packet1, 0, sizeof(packet1)-MAVLINK_MSG_ID_PAYLOAD_COMMAND_MIN_LEN);
+           memset(MAVLINK_MSG_ID_FUEL_CELL_COMMAND_MIN_LEN + (char *)&packet1, 0, sizeof(packet1)-MAVLINK_MSG_ID_FUEL_CELL_COMMAND_MIN_LEN);
         }
 #endif
         memset(&packet2, 0, sizeof(packet2));
-    mavlink_msg_payload_command_encode(system_id, component_id, &msg, &packet1);
-    mavlink_msg_payload_command_decode(&msg, &packet2);
+    mavlink_msg_fuel_cell_command_encode(system_id, component_id, &msg, &packet1);
+    mavlink_msg_fuel_cell_command_decode(&msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
         memset(&packet2, 0, sizeof(packet2));
-    mavlink_msg_payload_command_pack(system_id, component_id, &msg , packet1.payload_id , packet1.command , packet1.param );
-    mavlink_msg_payload_command_decode(&msg, &packet2);
+    mavlink_msg_fuel_cell_command_pack(system_id, component_id, &msg , packet1.runtime_command , packet1.requested_power , packet1.startup_mode );
+    mavlink_msg_fuel_cell_command_decode(&msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
         memset(&packet2, 0, sizeof(packet2));
-    mavlink_msg_payload_command_pack_chan(system_id, component_id, MAVLINK_COMM_0, &msg , packet1.payload_id , packet1.command , packet1.param );
-    mavlink_msg_payload_command_decode(&msg, &packet2);
+    mavlink_msg_fuel_cell_command_pack_chan(system_id, component_id, MAVLINK_COMM_0, &msg , packet1.runtime_command , packet1.requested_power , packet1.startup_mode );
+    mavlink_msg_fuel_cell_command_decode(&msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
         memset(&packet2, 0, sizeof(packet2));
@@ -136,87 +147,24 @@ static void mavlink_test_payload_command(uint8_t system_id, uint8_t component_id
         for (i=0; i<mavlink_msg_get_send_buffer_length(&msg); i++) {
             comm_send_ch(MAVLINK_COMM_0, buffer[i]);
         }
-    mavlink_msg_payload_command_decode(last_msg, &packet2);
+    mavlink_msg_fuel_cell_command_decode(last_msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
         
         memset(&packet2, 0, sizeof(packet2));
-    mavlink_msg_payload_command_send(MAVLINK_COMM_1 , packet1.payload_id , packet1.command , packet1.param );
-    mavlink_msg_payload_command_decode(last_msg, &packet2);
+    mavlink_msg_fuel_cell_command_send(MAVLINK_COMM_1 , packet1.runtime_command , packet1.requested_power , packet1.startup_mode );
+    mavlink_msg_fuel_cell_command_decode(last_msg, &packet2);
         MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
 
 #ifdef MAVLINK_HAVE_GET_MESSAGE_INFO
-    MAVLINK_ASSERT(mavlink_get_message_info_by_name("PAYLOAD_COMMAND") != NULL);
-    MAVLINK_ASSERT(mavlink_get_message_info_by_id(MAVLINK_MSG_ID_PAYLOAD_COMMAND) != NULL);
-#endif
-}
-
-static void mavlink_test_payload_status(uint8_t system_id, uint8_t component_id, mavlink_message_t *last_msg)
-{
-#ifdef MAVLINK_STATUS_FLAG_OUT_MAVLINK1
-    mavlink_status_t *status = mavlink_get_channel_status(MAVLINK_COMM_0);
-        if ((status->flags & MAVLINK_STATUS_FLAG_OUT_MAVLINK1) && MAVLINK_MSG_ID_PAYLOAD_STATUS >= 256) {
-            return;
-        }
-#endif
-    mavlink_message_t msg;
-        uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
-        uint16_t i;
-    mavlink_payload_status_t packet_in = {
-        17.0,963497672,29,96
-    };
-    mavlink_payload_status_t packet1, packet2;
-        memset(&packet1, 0, sizeof(packet1));
-        packet1.value = packet_in.value;
-        packet1.error_flags = packet_in.error_flags;
-        packet1.payload_id = packet_in.payload_id;
-        packet1.state = packet_in.state;
-        
-        
-#ifdef MAVLINK_STATUS_FLAG_OUT_MAVLINK1
-        if (status->flags & MAVLINK_STATUS_FLAG_OUT_MAVLINK1) {
-           // cope with extensions
-           memset(MAVLINK_MSG_ID_PAYLOAD_STATUS_MIN_LEN + (char *)&packet1, 0, sizeof(packet1)-MAVLINK_MSG_ID_PAYLOAD_STATUS_MIN_LEN);
-        }
-#endif
-        memset(&packet2, 0, sizeof(packet2));
-    mavlink_msg_payload_status_encode(system_id, component_id, &msg, &packet1);
-    mavlink_msg_payload_status_decode(&msg, &packet2);
-        MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
-
-        memset(&packet2, 0, sizeof(packet2));
-    mavlink_msg_payload_status_pack(system_id, component_id, &msg , packet1.payload_id , packet1.state , packet1.value , packet1.error_flags );
-    mavlink_msg_payload_status_decode(&msg, &packet2);
-        MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
-
-        memset(&packet2, 0, sizeof(packet2));
-    mavlink_msg_payload_status_pack_chan(system_id, component_id, MAVLINK_COMM_0, &msg , packet1.payload_id , packet1.state , packet1.value , packet1.error_flags );
-    mavlink_msg_payload_status_decode(&msg, &packet2);
-        MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
-
-        memset(&packet2, 0, sizeof(packet2));
-        mavlink_msg_to_send_buffer(buffer, &msg);
-        for (i=0; i<mavlink_msg_get_send_buffer_length(&msg); i++) {
-            comm_send_ch(MAVLINK_COMM_0, buffer[i]);
-        }
-    mavlink_msg_payload_status_decode(last_msg, &packet2);
-        MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
-        
-        memset(&packet2, 0, sizeof(packet2));
-    mavlink_msg_payload_status_send(MAVLINK_COMM_1 , packet1.payload_id , packet1.state , packet1.value , packet1.error_flags );
-    mavlink_msg_payload_status_decode(last_msg, &packet2);
-        MAVLINK_ASSERT(memcmp(&packet1, &packet2, sizeof(packet1)) == 0);
-
-#ifdef MAVLINK_HAVE_GET_MESSAGE_INFO
-    MAVLINK_ASSERT(mavlink_get_message_info_by_name("PAYLOAD_STATUS") != NULL);
-    MAVLINK_ASSERT(mavlink_get_message_info_by_id(MAVLINK_MSG_ID_PAYLOAD_STATUS) != NULL);
+    MAVLINK_ASSERT(mavlink_get_message_info_by_name("FUEL_CELL_COMMAND") != NULL);
+    MAVLINK_ASSERT(mavlink_get_message_info_by_id(MAVLINK_MSG_ID_FUEL_CELL_COMMAND) != NULL);
 #endif
 }
 
 static void mavlink_test_custom_messages(uint8_t system_id, uint8_t component_id, mavlink_message_t *last_msg)
 {
     mavlink_test_fuel_cell_status(system_id, component_id, last_msg);
-    mavlink_test_payload_command(system_id, component_id, last_msg);
-    mavlink_test_payload_status(system_id, component_id, last_msg);
+    mavlink_test_fuel_cell_command(system_id, component_id, last_msg);
 }
 
 #ifdef __cplusplus

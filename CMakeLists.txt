@@ -46,6 +46,10 @@ project(${QGC_APP_NAME}
     LANGUAGES C CXX
 )
 
+if(ANDROID)
+    set(QGC_ENABLE_GSTREAMER OFF CACHE BOOL "" FORCE)
+endif()
+
 if(APPLE AND NOT IOS)
     set(MACOS TRUE)
 
@@ -580,3 +584,5 @@ endif()
 include(Install)
 
 include(PrintSummary)
+
+add_definitions(-DQGC_DISABLE_GST_GL)
