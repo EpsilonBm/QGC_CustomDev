@@ -45,17 +45,6 @@
 #include "VehicleVibrationFactGroup.h"
 #include "VehicleWindFactGroup.h"
 #include "GimbalController.h"
-// 在其他MAVLink相关包含之后添加
-#include "all/mavlink.h"
-
-// 包含自定义MAVLink消息头文件
-#ifdef QGC_CUSTOM_BUILD
-#include "custom_messages/mavlink_msg_fuel_cell_status.h"
-#include "custom_messages/mavlink_msg_payload_command.h"
-#include "custom_messages/mavlink_msg_payload_status.h"
-#include "FuelCell/FuelCellManager.h"
-#endif
-
 
 class Actuators;
 class AutoPilotPlugin;
@@ -282,9 +271,6 @@ public:
     Q_PROPERTY(FactGroup*           efi             READ efiFactGroup               CONSTANT)
     Q_PROPERTY(QmlObjectListModel*  batteries       READ batteries                  CONSTANT)
     Q_PROPERTY(Actuators*           actuators       READ actuators                  CONSTANT)
-    #ifdef QGC_CUSTOM_BUILD
-    Q_PROPERTY(FuelCellManager*     fuelCellManager READ fuelCellManager            CONSTANT)
-    #endif
     Q_PROPERTY(HealthAndArmingCheckReport* healthAndArmingCheckReport READ healthAndArmingCheckReport CONSTANT)
 
     Q_PROPERTY(int      firmwareMajorVersion        READ firmwareMajorVersion       NOTIFY firmwareVersionChanged)
@@ -406,7 +392,7 @@ public:
     Q_ENUM(PIDTuningTelemetryMode)
 
     Q_INVOKABLE void setPIDTuningTelemetryMode(PIDTuningTelemetryMode mode);
-    
+
     Q_INVOKABLE void forceArm           ();
 
     /// Sends PARAM_MAP_RC message to vehicle
@@ -428,12 +414,6 @@ public:
     Q_INVOKABLE void saveJoystickSettings(void);
 
     Q_INVOKABLE void sendSetupSigning();
-
-    // 在这里添加FuelCellManager的QML访问方法
-    #ifdef QGC_CUSTOM_BUILD
-    FuelCellManager* fuelCellManager() { return _fuelCellManager; }
-    Q_INVOKABLE void setFuelCellBottleCapacity(double capacity);
-    #endif
 
     bool    isInitialConnectComplete() const;
     bool    guidedModeSupported     () const;
@@ -695,7 +675,7 @@ public:
     // Callback info for sendMavCommandWithHandler
     typedef struct MavCmdAckHandlerInfo_s {
         MavCmdResultHandler     resultHandler;          ///> nullptr for no handler
-        void*                   resultHandlerData; 
+        void*                   resultHandlerData;
         MavCmdProgressHandler   progressHandler;
         void*                   progressHandlerData;    ///> nullptr for no handler
     } MavCmdAckHandlerInfo_t;
@@ -703,7 +683,7 @@ public:
     /// Sends the command and calls the callback with the result
     void sendMavCommandWithHandler(
         const MavCmdAckHandlerInfo_t* ackHandlerInfo,   ///> nullptr to signale no handlers
-        int compId, MAV_CMD command, 
+        int compId, MAV_CMD command,
         float param1 = 0.0f, float param2 = 0.0f, float param3 = 0.0f, float param4 = 0.0f, float param5 = 0.0f, float param6 = 0.0f, float param7 = 0.0f);
 
     /// Sends the command and calls the callback with the result
@@ -711,7 +691,7 @@ public:
     ///     @param resultHandleData Opaque data passed through callback
     void sendMavCommandIntWithHandler(
         const MavCmdAckHandlerInfo_t* ackHandlerInfo,   ///> nullptr to signale no handlers
-        int compId, MAV_CMD command, MAV_FRAME frame, 
+        int compId, MAV_CMD command, MAV_FRAME frame,
         float param1 = 0.0f, float param2 = 0.0f, float param3 = 0.0f, float param4 = 0.0f, double param5 = 0.0f, double param6 = 0.0f, float param7 = 0.0f);
 
     /// Sends the command and calls the fallback lambda function in
@@ -968,8 +948,6 @@ private slots:
     void _doSetHomeTerrainReceived          (bool success, QList<double> heights);
     void _updateAltAboveTerrain             ();
     void _altitudeAboveTerrainReceived      (bool sucess, QList<double> heights);
-    // 添加FuelCell数据更新槽函数
-    //void onFuelCellDataUpdated(const FuelCellManager::ProcessedFuelCellData& data);
 
 private:
     void _loadJoystickSettings          ();
@@ -1233,9 +1211,9 @@ private:
     static const int                _mavCommandAckTimeoutMSecsHighLatency   = 120000;
 
     void _sendMavCommandWorker  (
-            bool commandInt, bool showError, 
+            bool commandInt, bool showError,
             const MavCmdAckHandlerInfo_t* ackHandlerInfo,   ///> nullptr to signale no handlers
-            int compId, MAV_CMD command, MAV_FRAME frame, 
+            int compId, MAV_CMD command, MAV_FRAME frame,
             float param1, float param2, float param3, float param4, double param5, double param6, float param7);
     void _sendMavCommandFromList(int index);
     int  _findMavCommandListEntryIndex(int targetCompId, MAV_CMD command);
@@ -1357,13 +1335,6 @@ public:
 private:
     void _handleControlStatus(const mavlink_message_t& message);
     void _handleCommandRequestOperatorControl(const mavlink_command_long_t commandLong);
-    #ifdef QGC_CUSTOM_BUILD
-    void _handleFuelCellStatus(const mavlink_message_t& message);
-    void _handlePayloadCommand(const mavlink_message_t& message);
-    void _handlePayloadStatus(const mavlink_message_t& message);
-    // 燃料电池管理器指针
-    FuelCellManager* _fuelCellManager = nullptr;
-    #endif
     static void _requestOperatorControlAckHandler(void* resultHandlerData, int compId, const mavlink_command_ack_t& ack, MavCmdResultFailureCode_t failureCode);
 
     Q_PROPERTY(uint8_t sysidInControl                        READ sysidInControl                        NOTIFY gcsControlStatusChanged)
@@ -1382,7 +1353,7 @@ private:
     int     requestOperatorControlRemainingMsecs() const { return _timerRequestOperatorControl.remainingTime(); }
     bool    sendControlRequestAllowed() const { return _sendControlRequestAllowed; }
     void    requestOperatorControlStartTimer(int requestTimeoutMsecs);
-    
+
     uint8_t _sysid_in_control = 0;
     uint8_t _gcsControlStatusFlags = 0;
     bool    _gcsControlStatusFlags_SystemManager = 0;
@@ -1396,11 +1367,6 @@ signals:
     void gcsControlStatusChanged();
     void requestOperatorControlReceived(int sysIdRequestingControl, int allowTakeover, int requestTimeoutSecs);
     void sendControlRequestAllowedChanged(bool sendControlRequestAllowed);
-    #ifdef QGC_CUSTOM_BUILD
-    void fuelCellStatusReceived(const mavlink_fuel_cell_status_t& status);
-    void payloadCommandReceived(const mavlink_payload_command_t& command);
-    void payloadStatusReceived(const mavlink_payload_status_t& status);
-    #endif
 
 /*===========================================================================*/
 /*                         STATUS TEXT HANDLER                               */
