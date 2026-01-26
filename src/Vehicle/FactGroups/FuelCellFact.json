@@ -120,6 +120,57 @@
             "longDescription": "Total or average pressure of hydrogen bottles.",
             "units": "bar",
             "decimalPlaces": 2
+        },
+        {
+            "name": "instantPower",
+            "type": "double",
+            "shortDescription": "Instantaneous Power",
+            "units": "W",
+            "decimalPlaces": 1
+        },
+        {
+            "name": "remainingEnergy",
+            "type": "double",
+            "shortDescription": "Remaining Energy",
+            "units": "kWh",
+            "decimalPlaces": 2
+        },
+        {
+            "name": "remainingTime",
+            "type": "double",
+            "shortDescription": "Remaining Time",
+            "units": "h",
+            "decimalPlaces": 2
+        },
+        {
+            "name": "percentRemaining",
+            "type": "double",
+            "shortDescription": "Percent Remaining",
+            "units": "%",
+            "decimalPlaces": 0
+        },
+        {
+            "name": "bottleCapacity",
+            "type": "double",
+            "shortDescription": "Bottle Capacity",
+            "units": "L",
+            "decimalPlaces": 1
+        },
+        {
+            "name": "maxEnergy",
+            "type": "double",
+            "shortDescription": "Max Energy",
+            "longDescription": "Maximum energy of the fuel cell system determined by the bottle capacity.",
+            "units": "kWh",
+            "decimalPlaces": 1
+        },
+        {
+            "name": "avgPower",
+            "type": "double",
+            "shortDescription": "Average Power",
+            "longDescription": "Average power of the fuel cell system.",
+            "units": "W",
+            "decimalPlaces": 1
         }
     ]
 }

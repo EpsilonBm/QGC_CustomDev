@@ -2,13 +2,17 @@
 
 #include "FactGroup.h"
 #include "QGCMAVLink.h"
+#include <QQueue>
 
 class FuelCellFactGroup : public FactGroup
 {
     Q_OBJECT
 
 public:
-    FuelCellFactGroup(QObject* parent = nullptr);
+    explicit FuelCellFactGroup(QObject* parent = nullptr);
+
+    // 设置氢气瓶容量和最大电量
+    void setBottleCapacity(double capacity, double maxEnergy);
 
     Q_PROPERTY(Fact* systemStatus         READ systemStatus         CONSTANT)
     Q_PROPERTY(Fact* loadVoltage          READ loadVoltage          CONSTANT)
@@ -27,7 +31,13 @@ public:
     Q_PROPERTY(Fact* pressureLowestId     READ pressureLowestId     CONSTANT)
     Q_PROPERTY(Fact* pressureLowest       READ pressureLowest       CONSTANT)
     Q_PROPERTY(Fact* pressureTotal        READ pressureTotal        CONSTANT)
+    Q_PROPERTY(Fact* instantPower         READ instantPower         CONSTANT)
+    Q_PROPERTY(Fact* remainingEnergy      READ remainingEnergy      CONSTANT)
+    Q_PROPERTY(Fact* remainingTime        READ remainingTime        CONSTANT)
+    Q_PROPERTY(Fact* percentRemaining     READ percentRemaining     CONSTANT)
+    Q_PROPERTY(Fact* bottleCapacity       READ bottleCapacity       CONSTANT)
 
+    // Fact 访问器 (C++侧使用，QML侧直接通过属性名访问)
     Fact* systemStatus          () { return &_systemStatusFact; }
     Fact* loadVoltage           () { return &_loadVoltageFact; }
     Fact* errorCode             () { return &_errorCodeFact; }
@@ -45,8 +55,22 @@ public:
     Fact* pressureLowestId      () { return &_pressureLowestIdFact; }
     Fact* pressureLowest        () { return &_pressureLowestFact; }
     Fact* pressureTotal         () { return &_pressureTotalFact; }
+    Fact* instantPower          () { return &_instantPowerFact; }
+    Fact* remainingEnergy       () { return &_remainingEnergyFact; }
+    Fact* remainingTime         () { return &_remainingTimeFact; }
+    Fact* percentRemaining      () { return &_percentRemainingFact; }
+    Fact* bottleCapacity        () { return &_bottleCapacityFact; }
 
-    void handleMessage(Vehicle* vehicle, mavlink_message_t& message) override;
+    void handleMessage(Vehicle* vehicle, mavlink_message_t& message);
+
+signals:
+    // FactGroup 会自动处理 Fact 值的变化信号
+    // 我们保留特定的报警信号
+    // TODO: realize them.
+    void efficiencyAlert(double efficiency);
+    void temperatureAlert(double temperature);
+    void pressureAlert(double pressure);
+    void faultDetected(uint32_t fault_flags);
 
 private:
     Fact _systemStatusFact;
@@ -66,4 +90,15 @@ private:
     Fact _pressureLowestIdFact;
     Fact _pressureLowestFact;
     Fact _pressureTotalFact;
+    Fact _instantPowerFact;
+    Fact _remainingEnergyFact;
+    Fact _remainingTimeFact;
+    Fact _percentRemainingFact;
+    Fact _bottleCapacityFact;
+
+    // 燃料电池参数
+    double _bottleCapacity;      // 氢气瓶容量 (L)
+    double _maxEnergy;           // 最大电量 (kWh)
+    double _avgPower;            // 平均功率 (kW)
+    QQueue<double> _powerHistory; // 功率历史数据队列
 };

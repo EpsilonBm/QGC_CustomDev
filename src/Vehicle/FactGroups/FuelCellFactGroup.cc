@@ -4,23 +4,11 @@
 
 FuelCellFactGroup::FuelCellFactGroup(QObject* parent)
     : FactGroup(1000, ":/json/Vehicle/FuelCellFact.json", parent)
-    , _systemStatusFact         (0, "systemStatus",         FactMetaData::valueTypeUint16,  this)
-    , _loadVoltageFact          (0, "loadVoltage",          FactMetaData::valueTypeDouble,  this)
-    , _errorCodeFact            (0, "errorCode",            FactMetaData::valueTypeUint16,  this)
-    , _highestTemperatureIdFact (0, "highestTemperatureId", FactMetaData::valueTypeUint16,  this)
-    , _highestTemperatureFact   (0, "highestTemperature",   FactMetaData::valueTypeDouble,  this)
-    , _highestFanSpeedFact      (0, "highestFanSpeed",      FactMetaData::valueTypeUint16,  this)
-    , _lowestVoltageIdFact      (0, "lowestVoltageId",      FactMetaData::valueTypeUint16,  this)
-    , _lowestVoltageFact        (0, "lowestVoltage",        FactMetaData::valueTypeDouble,  this)
-    , _faultIdFact              (0, "faultId",              FactMetaData::valueTypeUint16,  this)
-    , _faultDcFlagFact          (0, "faultDcFlag",          FactMetaData::valueTypeUint16,  this)
-    , _faultFcFlagFact          (0, "faultFcFlag",          FactMetaData::valueTypeUint16,  this)
-    , _dcOutputCurrentFact      (0, "dcOutputCurrent",      FactMetaData::valueTypeDouble,  this)
-    , _dcInputPowerFact         (0, "dcInputPower",         FactMetaData::valueTypeDouble,  this)
-    , _dcOutputPowerFact        (0, "dcOutputPower",        FactMetaData::valueTypeDouble,  this)
-    , _pressureLowestIdFact     (0, "pressureLowestId",     FactMetaData::valueTypeUint16,  this)
-    , _pressureLowestFact       (0, "pressureLowest",       FactMetaData::valueTypeDouble,  this)
-    , _pressureTotalFact        (0, "pressureTotal",        FactMetaData::valueTypeDouble,  this)
+    // Should be loaded via json, or U can init like this:
+    // , _systemStatusFact(0, "systemStatus", FactMetaData::valueTypeUint16,this)
+    , _bottleCapacity(9.0)      // 默认9L氢气瓶
+    , _maxEnergy(3.0)           // 默认3度电
+    , _avgPower(0.0)            // 平均功率初始化为0
 {
     _addFact(&_systemStatusFact,         _systemStatusFact.name());
     _addFact(&_loadVoltageFact,          _loadVoltageFact.name());
@@ -39,6 +27,19 @@ FuelCellFactGroup::FuelCellFactGroup(QObject* parent)
     _addFact(&_pressureLowestIdFact,     _pressureLowestIdFact.name());
     _addFact(&_pressureLowestFact,       _pressureLowestFact.name());
     _addFact(&_pressureTotalFact,        _pressureTotalFact.name());
+    _addFact(&_instantPowerFact,         _instantPowerFact.name());
+    _addFact(&_remainingEnergyFact,      _remainingEnergyFact.name());
+    _addFact(&_remainingTimeFact,        _remainingTimeFact.name());
+    _addFact(&_percentRemainingFact,     _percentRemainingFact.name());
+    _addFact(&_bottleCapacityFact,       _bottleCapacityFact.name());
+}
+
+void FuelCellFactGroup::setBottleCapacity(double capacity, double maxEnergy)
+{
+    _bottleCapacity = capacity;
+    _bottleCapacityFact.setRawValue(capacity);
+    // TODO: Add relationship between bottle capacity and max energy
+    _maxEnergy = maxEnergy;
 }
 
 void FuelCellFactGroup::handleMessage(Vehicle* /*vehicle*/, mavlink_message_t& message)
@@ -67,4 +68,47 @@ void FuelCellFactGroup::handleMessage(Vehicle* /*vehicle*/, mavlink_message_t& m
     _pressureLowestIdFact.setRawValue(status.pressure_lowest_id);
     _pressureLowestFact.setRawValue(status.pressure_lowest / 100.0);
     _pressureTotalFact.setRawValue(status.pressure_total / 100.0);
+
+    // 1. Calculate instantaneous power (W)
+    double instantaneous_power_w = _loadVoltageFact.rawValue().toDouble() * _dcOutputCurrentFact.rawValue().toDouble();
+    _instantPowerFact.setRawValue(instantaneous_power_w);
+
+    // 2. Update power history and calculate average power
+    _powerHistory.enqueue(instantaneous_power_w / 1000.0); // Store as kW for avg calculation
+    if (_powerHistory.size() > 10) {                         // Up to 10 data.
+        _powerHistory.dequeue();
+    }
+    double power_sum = 0.0;                                  // Calculating average power
+    for (double power : _powerHistory) {
+        power_sum += power;
+    }
+    _avgPower = _powerHistory.isEmpty() ? 0.0 : (power_sum / _powerHistory.size());
+
+    // 3. Calculate remaining energy and percentage from pressure
+    double min_pressure = 2.0;
+    double max_pressure = 35.0;
+    double pressure_range = max_pressure - min_pressure;
+    double percentage = qBound(0.0, ((_pressureLowestFact.rawValue().toDouble() - min_pressure) / pressure_range) * 100.0, 100.0);
+    double remaining_energy = (_maxEnergy * percentage) / 100.0;
+    _percentRemainingFact.setRawValue(percentage);
+    _remainingEnergyFact.setRawValue(remaining_energy);
+
+    // 4. Calculate remaining time
+    double remaining_time_hours = 0.0;
+    if (_avgPower > 0.001) { // Avoid division by zero (avg power in kW)
+        remaining_time_hours = remaining_energy / _avgPower;
+    }
+    _remainingTimeFact.setRawValue(remaining_time_hours);
+
+    // 5. Determine status string
+    // TODO: match it after getting the specific meaning from the SEEEX
+    // QString statusStr = "NORMAL";
+    // if (status.fault_id != 0) {
+    //     statusStr = "FAULT";
+    // } else if (_highestTemperatureFact.rawValue().toDouble() > 80.0) {
+    //     statusStr = "HIGH_TEMP";
+    // } else if (_loadVoltageFact.rawValue().toDouble() < 20.0 && _loadVoltageFact.rawValue().toDouble() > 0) {
+    //     statusStr = "LOW_VOLTAGE";
+    // }
+    // _statusFact.setRawValue(statusStr);
 }

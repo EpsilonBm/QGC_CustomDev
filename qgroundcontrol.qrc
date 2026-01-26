@@ -113,7 +113,7 @@
         <file alias="GimbalController.SettingsGroup.json">src/Settings/GimbalController.SettingsGroup.json</file>
         <file alias="CameraMetaData.json">src/Camera/CameraMetaData.json</file>
 
-        <file alias="Vehicle/FuelCellFactGroup.json">src/Vehicle/FactGroups/FuelCellFactGroup.json</file>
+        <file alias="Vehicle/FuelCellFact.json">src/Vehicle/FactGroups/FuelCellFact.json</file>
     </qresource>
     <qresource prefix="/MockLink">
         <file alias="APMArduSubMockLink.params">src/Comms/MockLink/APMArduSubMockLink.params</file>
