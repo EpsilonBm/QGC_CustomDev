@@ -4,29 +4,34 @@
   <version>3</version>
   <enums/>
   <messages>
-    <message id="1132" name="FUEL_CELL_STATUS">
-      <description>Fuel cell status information</description>
-      <field type="uint32_t" name="time_boot_ms">Time since system boot</field>
-      <field type="float" name="voltage_v">Fuel cell output voltage</field>
-      <field type="float" name="current_a">Fuel cell output current</field>
-      <field type="float" name="hydrogen_pressure_bar">Hydrogen tank pressure</field>
-      <field type="float" name="stack_temperature_c">Fuel cell stack temperature</field>
-      <field type="uint32_t" name="fault_flags">Fuel cell fault bitmask</field>
-    </message>
-
-    <message id="1133" name="PAYLOAD_COMMAND">
-      <description>Non-standard mission payload control command</description>
-      <field type="uint8_t" name="payload_id">Payload identifier</field>
-      <field type="uint8_t" name="command">Payload command</field>
-      <field type="float" name="param">Command parameter</field>
-    </message>
-
-    <message id="1134" name="PAYLOAD_STATUS">
-      <description>Non-standard mission payload status feedback</description>
-      <field type="uint8_t" name="payload_id">Payload identifier</field>
-      <field type="uint8_t" name="state">Payload state</field>
-      <field type="float" name="value">Payload status value</field>
-      <field type="uint32_t" name="error_flags">Payload error bitmask</field>
-    </message>
-  </messages>
+  <!-- Fuel cell status message -->
+  <message id="12921" name="FUEL_CELL_STATUS">
+    <!-- System status -->
+    <description>Fuel Cell System Status</description>
+    <field type="uint16_t" name="system_status">System Status</field>
+    <field type="uint16_t" name="load_voltage">Load Voltage</field>
+    <field type="uint16_t" name="error_code">Error Code</field>
+    <field type="uint16_t" name="highest_temperature_id">Stack Temperature Highest ID</field>
+    <field type="uint16_t" name="highest_temperature">Stack Temperature Highest Temperature</field>
+    <field type="uint16_t" name="highest_fan_speed">Stack Temperature Highest Fan Speed</field>
+    <field type="uint16_t" name="lowest_voltage_id">Stack Voltage Lowest ID</field>
+    <field type="uint16_t" name="lowest_voltage">Stack Voltage Lowest Voltage</field>
+    <field type="uint16_t" name="fault_id">Fault ID</field>
+    <field type="uint16_t" name="fault_dc_flag">Fault DC Flag</field>
+    <field type="uint16_t" name="fault_fc_flag">Fault FC Flag</field>
+    <field type="uint16_t" name="dc_output_current">DC Output Total Current</field>
+    <field type="uint16_t" name="dc_input_power">DC Input Total Power</field>
+    <field type="uint16_t" name="dc_output_power">DC Output Total Power</field>
+    <field type="uint16_t" name="pressure_lowest_id">Hydrogen Bottle Pressure Lowest ID</field>
+    <field type="uint16_t" name="pressure_lowest">Hydrogen Bottle Pressure Lowest Pressure</field>
+    <field type="uint16_t" name="pressure_total">Hydrogen Bottle Pressure Total</field>
+  </message>
+  <!-- Fuel cell command message -->
+  <message id="12922" name="FUEL_CELL_COMMAND">
+    <description>Fuel Cell System Operation Command</description>
+    <field type="uint16_t" name="runtime_command">Runtime Command</field>
+    <field type="uint16_t" name="requested_power">Requested Power</field>
+    <field type="uint16_t" name="startup_mode">Startup Mode</field>
+  </message>
+</messages>
 </mavlink>
