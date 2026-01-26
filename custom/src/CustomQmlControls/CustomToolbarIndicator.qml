@@ -141,6 +141,9 @@ Item {
 
             // Fuel Cell Indicator
             FuelCellIndicator { }
+
+            // Battery Indicator
+            BatteryIndicator { }
         }
     }
 
