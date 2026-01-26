@@ -26,10 +26,6 @@ if(IS_DIRECTORY ${CMAKE_SOURCE_DIR}/custom)
     list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/custom/cmake)
     include(CustomOverrides)
 
-    # Check for Android using CMAKE_SYSTEM_NAME as ANDROID var might not be set yet
-    if(ANDROID OR CMAKE_SYSTEM_NAME MATCHES "Android")
-
-    endif()
 endif()
 
 #######################################################
@@ -51,9 +47,12 @@ project(${QGC_APP_NAME}
     LANGUAGES C CXX
 )
 
-if(ANDROID)
-    set(QGC_ENABLE_GSTREAMER OFF CACHE BOOL "" FORCE)
-endif()
+# TODO: Check if Qt Multimedia is available
+# Note: if the platform is android, the gstreamer function will be banned and changing to use Qt Multimedia
+#       to gain better performance on android platform.
+#if(ANDROID)
+#    set(QGC_ENABLE_GSTREAMER OFF CACHE BOOL "" FORCE)
+#endif()
 
 if(APPLE AND NOT IOS)
     set(MACOS TRUE)
@@ -614,4 +613,5 @@ include(Install)
 
 include(PrintSummary)
 
-add_definitions(-DQGC_DISABLE_GST_GL)
+# TODO: As the same above
+#add_definitions(-DQGC_DISABLE_GST_GL)
