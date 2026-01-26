@@ -81,9 +81,9 @@ void _registerPlugins()
     #ifdef GST_PLUGIN_d3d12_FOUND
         GST_PLUGIN_STATIC_REGISTER(d3d12);
     #endif
-    #ifdef GST_PLUGIN_dav1d_FOUND
-        GST_PLUGIN_STATIC_REGISTER(dav1d);
-    #endif
+    // #ifdef GST_PLUGIN_dav1d_FOUND
+    //     GST_PLUGIN_STATIC_REGISTER(dav1d);
+    // #endif
     #ifdef GST_PLUGIN_dxva_FOUND
         GST_PLUGIN_STATIC_REGISTER(dxva);
     #endif
