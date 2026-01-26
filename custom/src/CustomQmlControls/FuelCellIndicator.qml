@@ -56,7 +56,7 @@ Item {
             anchors.bottom:     parent.bottom
             sourceComponent:    batteryVisual
             visible:            fuelCell !== null
-            property var fuelCell: _activeVehicle ? _activeVehicle.fuelCellManager : null
+            property var fuelCell: _activeVehicle ? _activeVehicle.fuelCell : null
         }
     }
     MouseArea {
@@ -128,9 +128,9 @@ Item {
             }
 
             function getBatteryVoltageText() {
-                if (fuelCell && fuelCell.voltage) {
-                    // 显示 FactGroup 中的 voltage
-                    return fuelCell.voltage.valueString + " " + fuelCell.voltage.units
+                if (fuelCell && fuelCell.loadVoltage) {
+                    // Use loadVoltage from the new FactGroup
+                    return fuelCell.loadVoltage.valueString + " " + fuelCell.loadVoltage.units
                 }
                 return qsTr("n/a")
             }
@@ -185,11 +185,11 @@ Item {
                 id: batteryValuesAvailableComponent
 
                 QtObject {
-                    property bool voltageAvailable:          fuelCell && fuelCell.voltage
-                    property bool currentAvailable:          fuelCell && fuelCell.current
-                    property bool pressureAvailable:         fuelCell && fuelCell.pressure
-                    property bool temperatureAvailable:      fuelCell && fuelCell.temperature
-                    property bool powerAvailable:            fuelCell && fuelCell.power
+                    property bool voltageAvailable:          fuelCell && fuelCell.loadVoltage
+                    property bool currentAvailable:          fuelCell && fuelCell.dcOutputCurrent
+                    property bool pressureAvailable:         fuelCell && fuelCell.pressureLowest
+                    property bool temperatureAvailable:      fuelCell && fuelCell.highestTemperature
+                    property bool powerAvailable:            fuelCell && fuelCell.instantPower // This is the calculated power
                     property bool remainingEnergyAvailable:  fuelCell && fuelCell.remainingEnergy
                     property bool remainingTimeAvailable:    fuelCell && fuelCell.remainingTime
                 }
@@ -203,7 +203,7 @@ Item {
                     contentSpacing: 0
                     showDividers:   false
 
-                    property var fuelCell: _activeVehicle ? _activeVehicle.fuelCellManager : null
+                    property var fuelCell: _activeVehicle ? _activeVehicle.fuelCell : null
                     property var batteryValuesAvailable: batteryValuesAvailableLoader.item
 
                     Loader {
@@ -215,25 +215,25 @@ Item {
 
                     LabelledLabel {
                         label:      qsTr("Voltage")
-                        labelText:  fuelCell.voltage.valueString + " " + fuelCell.voltage.units
+                        labelText:  fuelCell.loadVoltage.valueString + " " + fuelCell.loadVoltage.units
                         visible:    batteryValuesAvailable.voltageAvailable
                     }
 
                     LabelledLabel {
                         label:      qsTr("Current")
-                        labelText:  fuelCell.current.valueString + " " + fuelCell.current.units
+                        labelText:  fuelCell.dcOutputCurrent.valueString + " " + fuelCell.dcOutputCurrent.units
                         visible:    batteryValuesAvailable.currentAvailable
                     }
 
                     LabelledLabel {
                         label:      qsTr("Pressure")
-                        labelText:  fuelCell.pressure.valueString + " " + fuelCell.pressure.units
+                        labelText:  fuelCell.pressureLowest.valueString + " " + fuelCell.pressureLowest.units
                         visible:    batteryValuesAvailable.pressureAvailable
                     }
 
                     LabelledLabel {
                         label:      qsTr("Temperature")
-                        labelText:  fuelCell.temperature.valueString + " " + fuelCell.temperature.units
+                        labelText:  fuelCell.highestTemperature.valueString + " " + fuelCell.highestTemperature.units
                         visible:    batteryValuesAvailable.temperatureAvailable
                     }
 
@@ -259,6 +259,7 @@ Item {
         }
     }
 
+    // TODO: choose appropriate value to restructure the popup page.
     /* batteryExpandedComponent
     *  called from: batteryPopup
     *  function   :
@@ -271,7 +272,7 @@ Item {
         SettingsGroupLayout {
             heading: qsTr("Details & Alerts")
 
-            property var fuelCell: _activeVehicle ? _activeVehicle.fuelCellManager : null
+            property var fuelCell: _activeVehicle ? _activeVehicle.fuelCell : null
             property var expandedValuesAvailable: expandedValuesAvailableLoader.item
 
             // Loader for the availability check component
