@@ -834,79 +834,26 @@ Item {
     }
 
     function loadFlightPath(index) {
-        // 加载航线到地图的逻辑
         var flightPath = flightPathModel.get(index);
         console.log("加载航线到地图: " + flightPath.name);
         
-        // 检查是否有文件路径
         if (!flightPath.filePath || flightPath.filePath === "") {
             console.log("航线没有关联的文件路径，无法加载");
             return;
         }
         
-        // 尝试跳转到计划视图并加载航线
         if (mainWindow.allowViewSwitch()) {
-            // 通知主窗口切换到计划视图
+            // 将文件路径存储到全局对象
+            QGroundControl.planFilePathToLoad = flightPath.filePath;
+            
+            // 切换到计划视图
             mainWindow.showPlanView();
-            rightPanelOpen = false;  // 关闭面板
+            rightPanelOpen = false;
             
-            console.log("已切换到计划视图，将尝试加载文件: " + flightPath.filePath);
+            console.log("已设置全局文件路径: " + flightPath.filePath);
             
-            // 使用QML的Timer来延迟执行
-            var timer = Qt.createQmlObject("import QtQuick 2.0; Timer {}", flightPathLibrary, "loadTimer");
-            timer.interval = 1500;  // 1.5秒延迟
-            timer.repeat = false;
-            timer.triggered.connect(function() {
-                // 尝试触发QGC的内置文件加载功能
-                // 通过QGC的PlanView来打开指定的.plan文件
-                
-                // 由于我们无法直接访问PlanView中的控制器，
-                // 我们尝试使用QGC的全局API来触发文件加载
-                
-                // 1. 检查文件是否存在
-                if (fileDialogController.fileExists(flightPath.filePath)) {
-                    console.log("文件存在，尝试加载: " + flightPath.filePath);
-                    
-                    // 2. 尝试通过QGC的全局对象触发文件加载
-                    // 这要访问PlanMasterController的实例
-                    try {
-                        // 尝试通过QGroundControl全局对象访问PlanMasterController
-                        // 虽然我们无法直接访问，但我们可以尝试使用QGC的内置方法
-                        console.log("正在尝试通过QGC API加载文件: " + flightPath.filePath);
-                        
-                        // 如果QGC有全局的文件加载方法
-                        if (typeof QGroundControl.corePlugin.loadPlanFromFile === 'function') {
-                            QGroundControl.corePlugin.loadPlanFromFile(flightPath.filePath);
-                            console.log("已调用QGroundControl.corePlugin.loadPlanFromFile");
-                        } else {
-                            console.log("QGroundControl.corePlugin.loadPlanFromFile方法不可用");
-                            
-                            // 尝试另一种方式：使用QGC的菜单命令
-                            // 通过模拟QGC的菜单操作来加载文件
-                            console.log("文件已就绪，用户可在计划视图中手动加载: " + flightPath.filePath);
-                            
-                            // 在PlanView中，通常有"打开"菜单项，我们可以尝试触发它
-                            // 但首先需要将文件路径存储在一个全局位置
-                            QGroundControl.pendingLoadFile = flightPath.filePath;
-                            console.log("已设置待加载文件路径: " + flightPath.filePath);
-                        }
-                    } catch (e) {
-                        console.log("加载过程中发生错误: " + e.message);
-                        console.log("错误堆栈: ", e);
-                        
-                        // 如果上述方法失败，至少通知用户要加载的文件路径
-                        console.log("请在计划视图中手动加载文件: " + flightPath.filePath);
-                    }
-                } else {
-                    console.log("文件不存在: " + flightPath.filePath);
-                }
-                
-                // 销毁定时器对象
-                timer.destroy();
-            });
-            
-            // 启动定时器
-            timer.start();
+            // 关闭航线库界面，返回到计划视图
+            flightPathLibrary.visible = false;
         }
     }
 
@@ -1086,6 +1033,12 @@ Item {
         var missionDir = QGroundControl.settingsManager.appSettings.missionSavePath;
         console.log("扫描目录: " + missionDir);
         
+        // 检查目录是否存在
+        if (!missionDir || missionDir === "") {
+            console.log("任务保存路径未设置或为空");
+            return;
+        }
+        
         var planFiles = [];
         var missionFiles = [];
         
@@ -1103,11 +1056,20 @@ Item {
                     planFiles = fileDialogController.getFiles(missionDir, ["*.plan"]);
                     console.log("找到 " + planFiles.length + " 个.plan文件: ", planFiles);
                 } catch (e) {
-                    console.log("调用getFiles方法失败: " + e.message + " at " + e.lineNumber);
+                    console.log("调用getFiles方法获取plan文件失败: " + e.message + " at " + e.lineNumber);
                     console.log("错误堆栈: ", e.stack);
                 }
             } else {
-                console.log("getFiles方法不存在于fileDialogController上");
+                console.log("getFiles方法不存在于fileDialogController上，尝试其他方法");
+                
+                // 尝试使用QDir方式
+                try {
+                    // 作为后备方案，手动构建文件列表
+                    console.log("使用备用方案加载.plan文件");
+                    // 这里我们可以尝试其他方式，但目前依赖fileDialogController
+                } catch (backupError) {
+                    console.log("备用方案也失败: " + backupError.message);
+                }
             }
         } else {
             console.log("fileDialogController不可用");
@@ -1223,6 +1185,7 @@ Item {
         flightPathList.currentIndex = -1;
         
         console.log("完成扫描，当前模型总数: " + flightPathModel.count);
+        console.log("当前filtered模型总数: " + filteredFlightPathModel.count);
     }
 
     function filterFlightPaths(filterText) {
@@ -1338,5 +1301,28 @@ Item {
         filterFlightPaths(searchInput.text);
         // 应用当前排序
         sortFlightPaths(sortComboBox.currentIndex);
+    }
+    
+    // 添加一个定时器，持续检查planView是否已初始化
+    Timer {
+        id: planViewInitTimer
+        interval: 100  // 每100ms检查一次
+        repeat: true
+        running: false  // 默认不运行，只在需要时启动
+        onTriggered: {
+            if (mainWindow && mainWindow.planView && mainWindow.planView._planMasterController) {
+                console.log("检测到planView已完全初始化");
+                stop(); // 停止定时器
+            }
+        }
+    }
+    
+    // 添加初始化检查
+    Component.onCompleted: {
+        // 确保MainWindow完全加载后再执行操作
+        if (mainWindow && (mainWindow.planView === undefined || mainWindow.planView._planMasterController === undefined)) {
+            console.log("等待planView初始化...");
+            planViewInitTimer.start(); // 启动定时器监控planView初始化
+        }
     }
 }

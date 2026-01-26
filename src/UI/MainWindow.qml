@@ -137,8 +137,8 @@ ApplicationWindow {
         showTool(qsTr("Analyze Tools"), "qrc:/qml/QGroundControl/AnalyzeView/AnalyzeView.qml", "/qmlimages/Analyze.svg")
     }
 
-    function showflightlibrary() {
-        showTool(qsTr("VtFlightPathLibrary"), "qrc: /Custom/qml/QGroundControl/FlightDisplay/VtFlightPathLibrary.qml", "/qmlimages/Analyze.svg")
+    function showFlightPathLibrary() {
+        showTool(qsTr("VtFlightPathLibrary"), "qrc:/Custom/qml/QGroundControl/FlightDisplay/VtFlightPathLibrary.qml", "/qmlimages/Analyze.svg")
     }
 
     function showVehicleConfig() {

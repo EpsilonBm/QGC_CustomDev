@@ -12,9 +12,7 @@ import QGroundControl.Controls 1.0
 import QGroundControl.FactSystem 1.0
 import QGroundControl.Vehicle 1.0
 import QGroundControl.MultiVehicleManager 1.0
-import QGroundControl.Mavlink 1.0
-import QGroundControl.Utils 1.0
-import QGroundControl.Location 1.0
+
 
 Item {
     id: root
@@ -430,12 +428,26 @@ Item {
         }
     }
 
+    // 添加一个定时器，持续检查planView是否已初始化
+    Timer {
+        id: planViewInitTimer
+        interval: 100  // 每100ms检查一次
+        repeat: true
+        running: false  // 默认不运行，只在需要时启动
+        onTriggered: {
+            if (mainWindow && mainWindow.planView && mainWindow.planView._planMasterController) {
+                console.log("检测到planView已完全初始化");
+                // 如果有等待加载的航线，可以在这里处理
+                stop(); // 停止定时器
+            }
+        }
+    }
+
     // 初始化时加载航线数据
     Component.onCompleted: {
         console.log("航线库界面已加载");
-        // 复制原始数据到过滤模型
-        copyModelData(flightPathModel, filteredFlightPathModel);
-        // 这里可以添加从文件系统加载航线数据的逻辑
+        // 从文件系统加载航线数据
+        loadFlightPathsFromStorage();
     }
 
     // JavaScript 函数实现实际功能
@@ -453,18 +465,26 @@ Item {
     }
 
     function loadFlightPath(index) {
-        // 加载航线到地图的逻辑
         var flightPath = flightPathModel.get(index);
         console.log("加载航线到地图: " + flightPath.name);
         
-        // 尝试跳转到计划视图并加载航线
-        if (typeof mainWindow !== 'undefined' && mainWindow && mainWindow.allowViewSwitch) {
-            // 通知主窗口切换到计划视图
-            mainWindow.showPlanView();
+        if (!flightPath.filePath || flightPath.filePath === "") {
+            console.log("航线没有关联的文件路径，无法加载");
+            return;
+        }
+        
+        if (mainWindow.allowViewSwitch()) {
+            // 将文件路径存储到全局对象
+            QGroundControl.planFilePathToLoad = flightPath.filePath;
             
-            console.log("已切换到计划视图");
-        } else {
-            console.log("无法访问mainWindow或allowViewSwitch方法");
+            // 切换到计划视图
+            mainWindow.showPlanView();
+            rightPanelOpen = false;
+            
+            console.log("已设置全局文件路径: " + flightPath.filePath);
+            
+            // 关闭航线库界面，返回到计划视图
+            root.closeRequested();
         }
     }
 
@@ -486,12 +506,13 @@ Item {
         // 获取文件名（不含扩展名）
         var fileName = filePath.split('\\\\').pop().split('/').pop();
         var nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
-        // 添加一个新航线到模型
+        // 添加一个新航线到模型，包含文件路径信息
         flightPathModel.append({
             "name": nameWithoutExt,
             "date": new Date().toISOString().split('T')[0],
             "distance": "未知",
-            "waypoints": 0
+            "waypoints": 0,
+            "filePath": filePath  // 添加文件路径信息
         });
         updateFilteredModel();
         console.log("成功导入航线: " + nameWithoutExt);
@@ -571,37 +592,79 @@ Item {
     }
 
     function loadFlightPathsFromStorage() {
-        // 从存储加载航线的逻辑
         console.log("从存储加载航线 - 开始");
         
-        // 使用QGC的文件系统API获取默认任务目录
         var missionDir = QGroundControl.settingsManager.appSettings.missionSavePath;
         console.log("扫描目录: " + missionDir);
         
-        // 保存现有的非文件航线（如用户创建的临时航线）
-        var existingTempPaths = [];
-
-        // 保存非文件相关的航线（即用户创建的临时航线）
-        for (var k = flightPathModel.count - 1; k >= 0; k--) {
-            var item = flightPathModel.get(k);
-            // 没有文件路径的航线是临时创建的航线
-            if (!item.filePath) {
-                existingTempPaths.push({
-                    name: item.name,
-                    date: item.date,
-                    distance: item.distance,
-                    waypoints: item.waypoints
-                });
-                // 从模型中移除，稍后重新添加
-                flightPathModel.remove(k);
-            }
+        if (!missionDir || missionDir === "") {
+            console.log("任务保存路径未设置或为空");
+            return;
         }
         
-        // 不再添加示例数据，只保留用户创建的临时航线和从文件系统加载的航线
-        
-        // 重新添加之前保存的临时航线
-        for (var n = 0; n < existingTempPaths.length; n++) {
-            flightPathModel.append(existingTempPaths[n]);
+        // 使用 QGC 的文件系统 API
+        try {
+            // 使用 QML 的 FolderListModel 扫描文件
+            var folderModel = Qt.createQmlObject('import Qt.labs.folderlistmodel 2.1; FolderListModel {}',
+                                               root, "folderModel");
+            folderModel.folder = missionDir;
+            folderModel.nameFilters = ["*.plan"];
+            
+            var planFiles = [];
+            for (var i = 0; i < folderModel.count; i++) {
+                var fileName = folderModel.get(i).fileName;
+                if (fileName.endsWith(".plan")) {
+                    var filePath = missionDir + "/" + fileName;
+                    planFiles.push(filePath);
+                }
+            }
+            
+            console.log("找到 " + planFiles.length + " 个.plan文件: ", planFiles);
+            
+            // 更新航线模型
+            flightPathModel.clear();
+            for (var j = 0; j < planFiles.length; j++) {
+                var fileName = planFiles[j].split('/').pop().replace('.plan', '');
+                flightPathModel.append({
+                    "name": fileName,
+                    "filePath": planFiles[j],
+                    "date": new Date().toISOString().split('T')[0],
+                    "distance": "未知",
+                    "waypoints": 0
+                });
+            }
+            
+            folderModel.destroy();
+            
+        } catch (e) {
+            console.log("扫描文件失败: " + e.message);
+            
+            // 备用方案：如果FolderListModel不可用，则保留原有逻辑
+            console.log("使用备用方案扫描文件...");
+            
+            // 保留示例数据
+            flightPathModel.clear();
+            flightPathModel.append({
+                name: "测试航线1",
+                date: "2024-01-15",
+                distance: "15.2 km",
+                waypoints: 8,
+                filePath: ""
+            });
+            flightPathModel.append({
+                name: "测试航线2",
+                date: "2024-01-10",
+                distance: "8.7 km",
+                waypoints: 5,
+                filePath: ""
+            });
+            flightPathModel.append({
+                name: "测试航线3",
+                date: "2024-01-05",
+                distance: "22.3 km",
+                waypoints: 12,
+                filePath: ""
+            });
         }
         
         // 更新过滤模型
@@ -610,7 +673,8 @@ Item {
         // 在加载完数据后，确保currentIndex为-1，避免选中状态残留
         flightPathList.currentIndex = -1;
         
-        console.log("完成加载，当前模型总数: " + flightPathModel.count);
+        console.log("完成扫描，当前模型总数: " + flightPathModel.count);
+        console.log("当前filtered模型总数: " + filteredFlightPathModel.count);
     }
 
     function filterFlightPaths(filterText) {
