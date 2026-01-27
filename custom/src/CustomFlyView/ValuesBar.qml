@@ -81,7 +81,7 @@ Item {
             QGCLabel {
                 Layout.alignment:   Qt.AlignVCenter | Qt.AlignRight
                 property var factObj: _activeVehicle ? _activeVehicle[modelData.fact] : null
-                text:               factObj ? factObj.valueString : "0.00"
+                text:               factObj ? factObj.valueString : "--.--"
                 color:              qgcPal.text
             }
         }
@@ -104,7 +104,8 @@ Item {
         anchors.left:           parent.horizontalCenter
         anchors.right:          parent.right
         anchors.verticalCenter: parent.verticalCenter
-        anchors.leftMargin:     compassRadius + compassBorder + attitudeSpacing + attitudeSize
+        //anchors.leftMargin:     compassRadius + compassBorder + attitudeSpacing + attitudeSize
+        anchors.leftMargin:     compassRadius
         anchors.rightMargin:    _rightMargin
     }
 }
