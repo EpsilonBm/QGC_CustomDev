@@ -26,7 +26,7 @@ Item {
     id:             control
     anchors.top:    parent.top
     anchors.bottom: parent.bottom
-    width:          batteryIndicatorRow.width
+    width:          fuelCellIndicatorRow.width
 
     property bool       showIndicator:      true
     property bool       waitForParameters:  false   // UI won't show until parameters are ready
@@ -34,18 +34,21 @@ Item {
 
     property var    _activeVehicle:     QGroundControl.multiVehicleManager.activeVehicle
     property var    _batterySettings:   QGroundControl.settingsManager.batteryIndicatorSettings
-    property Fact   _indicatorDisplay:  _batterySettings.valueDisplay
-    property bool   _showPercentage:    _indicatorDisplay.rawValue === 0
-    property bool   _showVoltage:       _indicatorDisplay.rawValue === 1
-    property bool   _showBoth:          _indicatorDisplay.rawValue === 2
+    // TODO: Add fuelcell indicator setting and replace these all
+    // property Fact   _indicatorDisplay:  _batterySettings.valueDisplay
+    // property bool   _showPercentage:    _indicatorDisplay.rawValue === 0
+    // property bool   _showVoltage:       _indicatorDisplay.rawValue === 1
+    // property bool   _showBoth:          _indicatorDisplay.rawValue === 2
+    // fuelCell object
+    property var fuelCell: _activeVehicle ? _activeVehicle.fuelCell : null
 
     // Properties to hold the thresholds
-    property int threshold1: _batterySettings.threshold1.rawValue
-    property int threshold2: _batterySettings.threshold2.rawValue   
+    // property int threshold1: _batterySettings.threshold1.rawValue
+    // property int threshold2: _batterySettings.threshold2.rawValue
 
-    // batteryIndicatorRow
+    // fuelCellIndicatorRow
     Row {
-        id:             batteryIndicatorRow
+        id:             fuelCellIndicatorRow
         anchors.top:    parent.top
         anchors.bottom: parent.bottom
 
@@ -54,41 +57,40 @@ Item {
         Loader {
             anchors.top:        parent.top
             anchors.bottom:     parent.bottom
-            sourceComponent:    batteryVisual
-            visible:            fuelCell !== null
-            property var fuelCell: _activeVehicle ? _activeVehicle.fuelCell : null
+            sourceComponent:    fuelCellVisual
+            visible:            control.fuelCell !== null
         }
     }
     MouseArea {
         anchors.fill:   parent
         onClicked: {
-            mainWindow.showIndicatorDrawer(batteryPopup, control)
+            mainWindow.showIndicatorDrawer(fuelCellPopup, control)
         }
     }
 
-    /* batteryPopup
+    /* fuelCellPopup
     *  called from: MouseArea
-    *  call       : batteryContentComponent batteryExpandedComponent
+    *  call       : fuelCellContentComponent fuelCellExpandedComponent
     *  function   : show the information in two pages.
     */
     Component {
-        id: batteryPopup
+        id: fuelCellPopup
 
         ToolIndicatorPage {
             showExpand:         expandedComponent ? true : false
             waitForParameters:  control.waitForParameters
-            contentComponent:   batteryContentComponent
-            expandedComponent:  batteryExpandedComponent
+            contentComponent:   fuelCellContentComponent
+            expandedComponent:  fuelCellExpandedComponent
         }
     }
 
-    // batteryVisual
-    /* battery visual indicator
-    *  called from: batteryIndicatorRow
+    // fuelCellVisual
+    /* fuelCell visual indicator
+    *  called from: fuelCellIndicatorRow
     *  function   : show the battery icon and some important information
     */
     Component {
-        id: batteryVisual
+        id: fuelCellVisual
 
         Row {
             anchors.top:    parent.top
@@ -156,42 +158,46 @@ Item {
                     verticalAlignment:      Text.AlignVCenter
                     color:                  qgcPal.text
                     text:                   getBatteryPercentageText()
-                    font.pointSize:         _showBoth ? ScreenTools.defaultFontPointSize : ScreenTools.mediumFontPointSize
-                    visible:                _showBoth || _showPercentage
+                    // TODO: add switching logic after setting is added
+                    //font.pointSize:         _showBoth ? ScreenTools.defaultFontPointSize : ScreenTools.mediumFontPointSize
+                    //visible:                _showBoth || _showPercentage
+                    font.pointSize:         ScreenTools.defaultFontPointSize
+                    visible:                true
                 }
 
-                QGCLabel {
-                    Layout.alignment:       Qt.AlignHCenter
-                    font.pointSize:         _showBoth ? ScreenTools.defaultFontPointSize : ScreenTools.mediumFontPointSize
-                    color:                  qgcPal.text
-                    text:                   getBatteryVoltageText()
-                    visible:                _showBoth || _showVoltage
-                }
+                // TODO: add switching logic after setting is added
+                // QGCLabel {
+                //     Layout.alignment:       Qt.AlignHCenter
+                //     font.pointSize:         _showBoth ? ScreenTools.defaultFontPointSize : ScreenTools.mediumFontPointSize
+                //     color:                  qgcPal.text
+                //     text:                   getBatteryVoltageText()
+                //     visible:                _showBoth || _showVoltage
+                // }
             }
         }
     }
 
-    /* batteryContentComponent
-    *  called from: batteryPopup
+    /* fuelCellContentComponent
+    *  called from: fuelCellPopup
     *  function   : show temperature current mah timeRemaining percentRemaining
     */
     Component {
-        id: batteryContentComponent
+        id: fuelCellContentComponent
 
         ColumnLayout {
             spacing: ScreenTools.defaultFontPixelHeight / 2
 
             Component {
-                id: batteryValuesAvailableComponent
+                id: fuelCellValuesAvailableComponent
 
                 QtObject {
-                    property bool voltageAvailable:          fuelCell && fuelCell.loadVoltage
-                    property bool currentAvailable:          fuelCell && fuelCell.dcOutputCurrent
-                    property bool pressureAvailable:         fuelCell && fuelCell.pressureLowest
-                    property bool temperatureAvailable:      fuelCell && fuelCell.highestTemperature
-                    property bool powerAvailable:            fuelCell && fuelCell.instantPower // This is the calculated power
-                    property bool remainingEnergyAvailable:  fuelCell && fuelCell.remainingEnergy
-                    property bool remainingTimeAvailable:    fuelCell && fuelCell.remainingTime
+                    property bool voltageAvailable:          control.fuelCell && control.fuelCell.loadVoltage
+                    property bool currentAvailable:          control.fuelCell && control.fuelCell.dcOutputCurrent
+                    property bool pressureAvailable:         control.fuelCell && control.fuelCell.pressureLowest
+                    property bool temperatureAvailable:      control.fuelCell && control.fuelCell.highestTemperature
+                    property bool powerAvailable:            control.fuelCell && control.fuelCell.instantPower // This is the calculated power
+                    property bool remainingEnergyAvailable:  control.fuelCell && control.fuelCell.remainingEnergy
+                    property bool remainingTimeAvailable:    control.fuelCell && control.fuelCell.remainingTime
                 }
             }
 
@@ -203,12 +209,11 @@ Item {
                     contentSpacing: 0
                     showDividers:   false
 
-                    property var fuelCell: _activeVehicle ? _activeVehicle.fuelCell : null
-                    property var batteryValuesAvailable: batteryValuesAvailableLoader.item
+                    property var fuelCellValuesAvailable: fuelCellValuesAvailableLoader.item
 
                     Loader {
-                        id:                 batteryValuesAvailableLoader
-                        sourceComponent:    batteryValuesAvailableComponent
+                        id:                 fuelCellValuesAvailableLoader
+                        sourceComponent:    fuelCellValuesAvailableComponent
 
                         property var fuelCell: parent.fuelCell
                     }
@@ -216,43 +221,43 @@ Item {
                     LabelledLabel {
                         label:      qsTr("Voltage")
                         labelText:  fuelCell.loadVoltage.valueString + " " + fuelCell.loadVoltage.units
-                        visible:    batteryValuesAvailable.voltageAvailable
+                        visible:    fuelCellValuesAvailable.voltageAvailable
                     }
 
                     LabelledLabel {
                         label:      qsTr("Current")
                         labelText:  fuelCell.dcOutputCurrent.valueString + " " + fuelCell.dcOutputCurrent.units
-                        visible:    batteryValuesAvailable.currentAvailable
+                        visible:    fuelCellValuesAvailable.currentAvailable
                     }
 
                     LabelledLabel {
                         label:      qsTr("Pressure")
                         labelText:  fuelCell.pressureLowest.valueString + " " + fuelCell.pressureLowest.units
-                        visible:    batteryValuesAvailable.pressureAvailable
+                        visible:    fuelCellValuesAvailable.pressureAvailable
                     }
 
                     LabelledLabel {
-                        label:      qsTr("Temperature")
+                        label:      qsTr("Highest temperature")
                         labelText:  fuelCell.highestTemperature.valueString + " " + fuelCell.highestTemperature.units
-                        visible:    batteryValuesAvailable.temperatureAvailable
+                        visible:    fuelCellValuesAvailable.temperatureAvailable
                     }
 
                     LabelledLabel {
-                        label:      qsTr("Power")
-                        labelText:  fuelCell.power.valueString + " " + fuelCell.power.units
-                        visible:    batteryValuesAvailable.powerAvailable
+                        label:      qsTr("Instant power")
+                        labelText:  fuelCell.instantPower.valueString + " " + fuelCell.instantPower.units
+                        visible:    fuelCellValuesAvailable.powerAvailable
                     }
 
                     LabelledLabel {
                         label:      qsTr("Remaining Energy")
                         labelText:  fuelCell.remainingEnergy.valueString + " " + fuelCell.remainingEnergy.units
-                        visible:    batteryValuesAvailable.remainingEnergyAvailable
+                        visible:    fuelCellValuesAvailable.remainingEnergyAvailable
                     }
 
                     LabelledLabel {
                         label:      qsTr("Remaining Time")
                         labelText:  fuelCell.remainingTime.valueString + " " + fuelCell.remainingTime.units
-                        visible:    batteryValuesAvailable.remainingTimeAvailable
+                        visible:    fuelCellValuesAvailable.remainingTimeAvailable
                     }
                 }
             }
@@ -260,12 +265,12 @@ Item {
     }
 
     // TODO: choose appropriate value to restructure the popup page.
-    /* batteryExpandedComponent
-    *  called from: batteryPopup
+    /* fuelCellExpandedComponent
+    *  called from: fuelCellPopup
     *  function   :
     */
     Component {
-        id: batteryExpandedComponent
+        id: fuelCellExpandedComponent
 
         // The expanded view now directly shows specific fuel cell status details.
         // The complex settings UI has been removed as requested.
@@ -286,30 +291,31 @@ Item {
             Component {
                 id: expandedValuesAvailableComponent
                 QtObject {
-                    property bool statusAvailable:           fuelCell && fuelCell.status
-                    property bool bottleCapacityAvailable:   fuelCell && fuelCell.bottleCapacity
+                    property bool statusAvailable:           control.fuelCell && control.fuelCell.status
+                    property bool bottleCapacityAvailable:   control.fuelCell && control.fuelCell.bottleCapacity
                 }
             }
 
             // Display the current status
-            LabelledLabel {
-                label:      qsTr("Status")
-                labelText:  fuelCell.status.valueString
-                visible:    expandedValuesAvailable.statusAvailable
-            }
-
-            // Display alert information based on status
-            LabelledLabel {
-                label:      qsTr("Alerts")
-                labelText:  fuelCell.status.valueString === "NORMAL" ? qsTr("No Alerts") : qsTr("Check Status!")
-                //textColor:  fuelCell.status.valueString === "NORMAL" ? qgcPal.text : qgcPal.colorRed
-                visible:    expandedValuesAvailable.statusAvailable
-            }
+            // TODO: Get the statue code define from the SEEEX
+            // LabelledLabel {
+            //     label:      qsTr("Status")
+            //     labelText:  control.fuelCell.status.valueString
+            //     labelText:  control.fuelCell.status
+            //     visible:    expandedValuesAvailable.statusAvailable
+            // }
+            //
+            // // Display alert information based on status
+            // LabelledLabel {
+            //     label:      qsTr("Alerts")
+            //     labelText:  control.fuelCell.status.valueString === "NORMAL" ? qsTr("No Alerts") : qsTr("Check Status!")
+            //     visible:    expandedValuesAvailable.statusAvailable
+            // }
 
             // Display the bottle capacity
             LabelledLabel {
                 label:      qsTr("Bottle Capacity")
-                labelText:  fuelCell.bottleCapacity.valueString + " " + fuelCell.bottleCapacity.units
+                labelText:  control.fuelCell.bottleCapacity.valueString + " " + control.fuelCell.bottleCapacity.units
                 visible:    expandedValuesAvailable.bottleCapacityAvailable
             }
         }

@@ -144,6 +144,10 @@ Item {
 
             // Battery Indicator
             BatteryIndicator { }
+
+            QGCLabel {
+                text: _activeVehicle ? _activeVehicle.fuelCell.loadVoltage.valueString + " V" : "N/A"
+            }
         }
     }
 
