@@ -69,6 +69,93 @@ Item {
         }
     }
 
+    //-- Time Display Indicator --//
+    Column {
+        id:                         timeIndicator
+        anchors.top:                parent.top
+        anchors.bottom:             parent.bottom
+        anchors.left:               viewButtonRow.right
+        width:                      Math.max(systemTimeLabel.width, flightTimeLabel.width) + (ScreenTools.defaultFontPixelWidth * 4)
+        spacing:                    2
+
+        Rectangle {
+            width:                  systemTimeLabel.width + (ScreenTools.defaultFontPixelWidth * 4)
+            //height:                 systemTimeLabel.height + (ScreenTools.defaultFontPixelHeight)
+            height:                 parent.height / 2
+            color:                  systemTimeMouseArea.pressed ? qgcPal.buttonHighlight : (systemTimeMouseArea.containsMouse ? qgcPal.button : "transparent")
+            radius:                 ScreenTools.defaultFontPixelHeight / 4
+
+            QGCLabel {
+                id:                     systemTimeLabel
+                anchors.centerIn:       parent
+                text:                   "00:00:00"
+                color:                  qgcPal.text
+                font.pointSize:         ScreenTools.defaultFontPointSize
+            }
+
+            Timer {
+                interval:       1000
+                repeat:         true
+                running:        true
+                onTriggered: {
+                    var now = new Date()
+                    var h = ("0" + now.getHours()).slice(-2)
+                    var m = ("0" + now.getMinutes()).slice(-2)
+                    var s = ("0" + now.getSeconds()).slice(-2)
+                    systemTimeLabel.text = h + ":" + m + ":" + s
+                }
+            }
+
+            MouseArea {
+                id:                 systemTimeMouseArea
+                anchors.fill:       parent
+                hoverEnabled:       true
+            }
+        }
+
+        Rectangle {
+            width:                  flightTimeLabel.width + (ScreenTools.defaultFontPixelWidth * 4)
+            //height:                 flightTimeLabel.height + (ScreenTools.defaultFontPixelHeight)
+            height:                 parent.height / 2
+            color:                  flightTimeMouseArea.pressed ? qgcPal.buttonHighlight : (flightTimeMouseArea.containsMouse ? qgcPal.button : "transparent")
+            radius:                 ScreenTools.defaultFontPixelHeight / 4
+
+            QGCLabel {
+                id:                     flightTimeLabel
+                anchors.centerIn:       parent
+                text:                   "00:00:00"
+                color:                  qgcPal.text
+                font.pointSize:         ScreenTools.defaultFontPointSize
+            }
+
+            Timer {
+                interval:       1000
+                repeat:         true
+                running:        true
+                onTriggered: {
+                    if(_activeVehicle && _activeVehicle.vehicle) {
+                        var flightSecs = _activeVehicle.vehicle.flightTime
+                        var hrs = Math.floor(flightSecs / 3600)
+                        var mins = Math.floor((flightSecs % 3600) / 60)
+                        var secs = flightSecs % 60
+                        var h = ("0" + hrs).slice(-2)
+                        var m = ("0" + mins).slice(-2)
+                        var s = ("0" + secs).slice(-2)
+                        flightTimeLabel.text = h + ":" + m + ":" + s
+                    } else {
+                        flightTimeLabel.text = "00:00:00"
+                    }
+                }
+            }
+
+            MouseArea {
+                id:                 flightTimeMouseArea
+                anchors.fill:       parent
+                hoverEnabled:       true
+            }
+        }
+    }
+
     // middle/right: Indicator Area (including native indicators + our custom buttons)
     QGCFlickable {
         id:                     toolsFlickable
@@ -76,7 +163,7 @@ Item {
         anchors.leftMargin:     ScreenTools.defaultFontPixelWidth * ScreenTools.largeFontPointRatio * 1.5
         anchors.rightMargin:    ScreenTools.defaultFontPixelWidth / 2
         // avoid overlap
-        anchors.left:           viewButtonRow.right
+        anchors.left:           timeIndicator.right
         anchors.bottomMargin:   1
         // fill parent
         anchors.top:            parent.top
@@ -115,22 +202,6 @@ Item {
             // Add the new RC RSSI Indicator here
             RCRSSIIndicator { }
 
-            // Firmware Type Indicator
-            // Rectangle {
-            //     height:         parent.height
-            //     width:          firmwareLabel.width + (ScreenTools.defaultFontPixelWidth * 2)
-            //     color:          qgcPal.button
-            //     radius:         ScreenTools.defaultFontPixelHeight / 4
-            //     visible:        _activeVehicle
-            //
-            //     QGCLabel {
-            //         id:                 firmwareLabel
-            //         anchors.centerIn:   parent
-            //         text:               _activeVehicle ? _activeVehicle.firmwareTypeString : ""
-            //         color:              qgcPal.text
-            //     }
-            // }
-
             // GPS Indicator
             GPSIndicator { }
 
@@ -145,49 +216,8 @@ Item {
             // Battery Indicator
             BatteryIndicator { }
 
-            QGCLabel {
-                text: _activeVehicle ? _activeVehicle.fuelCell.loadVoltage.valueString + " V" : "N/A"
-            }
         }
     }
-
-    //-- Time Display Indicator --//
-    // Rectangle {
-    //     id:                         timeIndicator
-    //     anchors.top:                parent.top
-    //     anchors.bottom:             parent.bottom
-    //     anchors.horizontalCenter:   parent.horizontalCenter
-    //     width:                      timeLabel.width + (ScreenTools.defaultFontPixelWidth * 4)
-    //     color:                      timeMouseArea.pressed ? qgcPal.buttonHighlight : (timeMouseArea.containsMouse ? qgcPal.button : "transparent")
-    //     radius:                     ScreenTools.defaultFontPixelHeight / 4
-    //
-    //     QGCLabel {
-    //         id:                     timeLabel
-    //         anchors.centerIn:       parent
-    //         text:                   "00:00:00"
-    //         color:                  qgcPal.text
-    //         font.pointSize:         ScreenTools.defaultFontPointSize
-    //     }
-    //
-    //     Timer {
-    //         interval:       1000
-    //         repeat:         true
-    //         running:        true
-    //         onTriggered: {
-    //             var now = new Date()
-    //             var h = ("0" + now.getHours()).slice(-2)
-    //             var m = ("0" + now.getMinutes()).slice(-2)
-    //             var s = ("0" + now.getSeconds()).slice(-2)
-    //             timeLabel.text = h + ":" + m + ":" + s
-    //         }
-    //     }
-    //
-    //     MouseArea {
-    //         id:                 timeMouseArea
-    //         anchors.fill:       parent
-    //         hoverEnabled:       true
-    //     }
-    // }
 
     // brandImageIndoor/outdoor on the right side
     Image {

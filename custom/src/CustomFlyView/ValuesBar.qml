@@ -46,10 +46,11 @@ Item {
 
     // Background Rectangle
     Rectangle {
-        id: backgroundRect
+        id:           backgroundRect
         anchors.fill: parent
-        color: qgcPal.window
-        opacity: 0.75
+        color:        qgcPal.window
+        opacity:      0.75
+        radius:       ScreenTools.defaultFontPixelHeight / 4
     }
 
     property real _leftMargin: _toolsMargin + (_root.parentToolInsets ? _root.parentToolInsets.bottomEdgeLeftInset : 0)
