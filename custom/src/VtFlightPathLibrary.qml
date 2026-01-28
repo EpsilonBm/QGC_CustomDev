@@ -13,6 +13,7 @@ import QGroundControl.FactSystem 1.0
 import QGroundControl.Vehicle 1.0
 import QGroundControl.MultiVehicleManager 1.0
 
+import QtQuick.Dialogs 1.3
 
 Item {
     id: root
@@ -33,6 +34,81 @@ Item {
 
     // 用于跟踪当前选中的航线
     property var selectedRouteForExport: null
+
+    // 删除确认对话框组件
+    Component {
+        id: deleteRouteDialogComponent
+        
+        QGCPopupDialog {
+            id: deleteRouteDialog
+            title: qsTr("删除航线")
+            buttons: Dialog.Yes | Dialog.No
+            
+            property string routeFilePath
+            property var deleteCallback
+            
+            onAccepted: {
+                console.log("删除对话框确认事件被触发");
+                if (routeFilePath) {
+                    console.log("准备删除文件路径:", routeFilePath);
+                    
+                    // 确保文件存在
+                    var fileExistsBefore = fileDialogController.fileExists(routeFilePath);
+                    console.log("文件是否存在:", fileExistsBefore);
+                    
+                    if (fileExistsBefore) {
+                        console.log("调用fileDialogController.deleteFile: " + routeFilePath);
+                        try {
+                            // 执行删除操作
+                            fileDialogController.deleteFile(routeFilePath);
+                            console.log("fileDialogController.deleteFile调用完成");
+                            
+                            // 验证删除结果
+                            setTimeout(function() {
+                                var fileExistsAfter = fileDialogController.fileExists(routeFilePath);
+                                console.log("删除后文件是否存在:", fileExistsAfter);
+                                
+                                if (!fileExistsAfter) {
+                                    console.log("文件删除成功");
+                                } else {
+                                    console.log("文件删除失败");
+                                }
+                                
+                                if (deleteCallback) {
+                                    console.log("调用删除回调函数");
+                                    deleteCallback();
+                                }
+                            }, 200); // 增加延时以确保删除操作完成
+                            
+                        } catch (error) {
+                            console.log("删除文件时发生错误: " + error.message);
+                        }
+                    } else {
+                        console.log("文件不存在，跳过删除操作");
+                        if (deleteCallback) {
+                            console.log("调用删除回调函数");
+                            deleteCallback();
+                        }
+                    }
+                }
+            }
+            
+            ColumnLayout {
+                QGCLabel {
+                    text: qsTr("确定要删除这条航线吗？")
+                    Layout.preferredWidth: Math.max(mainWindow.width / 3, headerMinWidth)
+                    wrapMode: Text.WordWrap
+                }
+                
+                QGCLabel {
+                    text: qsTr("此操作无法撤销。")
+                    color: qgcPal.warningText
+                    Layout.preferredWidth: Math.max(mainWindow.width / 3, headerMinWidth)
+                    wrapMode: Text.WordWrap
+                }
+            }
+        }
+    }
 
     // 半透明背景，让用户知道覆盖层已显示
     Rectangle {
@@ -495,9 +571,131 @@ Item {
 
     function deleteFlightPath(index) {
         // 删除航线的逻辑
-        console.log("删除航线: " + flightPathModel.get(index).name);
-        flightPathModel.remove(index);
-        updateFilteredModel();
+        var flightPath = flightPathModel.get(index);
+        console.log("=== 开始删除调试 ===");
+        console.log("准备删除航线: " + flightPath.name);
+        console.log("文件路径:", flightPath.filePath);
+        
+        // 检查是否有文件路径，如果有则需要删除物理文件
+        if (flightPath.filePath && flightPath.filePath !== "") {
+            // 确保文件存在
+            var fileExistsBefore = fileDialogController.fileExists(flightPath.filePath);
+            console.log("文件是否存在:", fileExistsBefore);
+            if (!fileExistsBefore) {
+                console.log("文件不存在或路径错误:", flightPath.filePath);
+                // 即使文件不存在，也从模型中移除条目
+                flightPathModel.remove(index);
+                updateFilteredModel();
+                console.log("航线已从模型中移除（文件不存在）: " + flightPath.name);
+                return;
+            }
+            
+            // 检查是否可以通过MainWindow的showMessageDialog方法显示确认对话框
+            if (typeof mainWindow !== 'undefined' && mainWindow && typeof mainWindow.showMessageDialog === 'function') {
+                // 使用MainWindow的简化方法
+                console.log("使用MainWindow.showMessageDialog方法");
+                mainWindow.showMessageDialog(
+                    qsTr("删除航线"), 
+                    qsTr("确定要删除这条航线吗？此操作无法撤销。"), 
+                    Dialog.Yes | Dialog.No,
+                    function() {
+                        console.log("确认删除，执行删除操作");
+                        try {
+                            // 执行删除操作
+                            fileDialogController.deleteFile(flightPath.filePath);
+                            console.log("删除命令已执行");
+                            
+                            // 验证删除结果
+                            setTimeout(function() {
+                                var fileExistsAfter = fileDialogController.fileExists(flightPath.filePath);
+                                console.log("删除后文件是否存在:", fileExistsAfter);
+                                
+                                if (!fileExistsAfter) {
+                                    console.log("文件删除成功");
+                                    // 从模型中移除条目
+                                    flightPathModel.remove(index);
+                                    updateFilteredModel();
+                                    console.log("航线已从模型中移除: " + flightPath.name);
+                                } else {
+                                    console.log("文件删除失败");
+                                    // 即使文件删除失败，也从模型中移除条目，但给出警告
+                                    flightPathModel.remove(index);
+                                    updateFilteredModel();
+                                    console.log("航线已从模型中移除（但文件未删除）: " + flightPath.name);
+                                }
+                                
+                                // 参考QGC官方实现，刷新整个列表
+                                setTimeout(function() {
+                                    console.log("刷新航线列表");
+                                    loadFlightPathsFromStorage();
+                                }, 300); // 稍微延时以确保删除操作彻底完成
+                                
+                            }, 200); // 增加延时以确保删除操作完成
+                            
+                        } catch (e) {
+                            console.log("删除失败:", e.message);
+                            // 即使删除失败，也从模型中移除条目，但给出警告
+                            flightPathModel.remove(index);
+                            updateFilteredModel();
+                        }
+                    }
+                );
+            } else {
+                // 使用自定义对话框组件
+                console.log("使用自定义对话框组件");
+                var deleteDialog = deleteRouteDialogComponent.createObject(root, {
+                    routeFilePath: flightPath.filePath,
+                    deleteCallback: function() {
+                        console.log("自定义对话框删除回调函数被调用");
+                        // 删除成功后的回调，刷新列表
+                        flightPathModel.remove(index);
+                        updateFilteredModel();
+                        console.log("航线删除成功: " + flightPath.name);
+                        
+                        // 参考QGC官方实现，刷新整个列表
+                        setTimeout(function() {
+                            console.log("刷新航线列表");
+                            loadFlightPathsFromStorage();
+                        }, 300); // 稍微延时以确保删除操作彻底完成
+                    }
+                });
+                if (deleteDialog) {
+                    console.log("打开删除确认对话框");
+                    deleteDialog.open();
+                } else {
+                    console.log("无法创建删除对话框，直接删除");
+                    // 直接执行删除
+                    fileDialogController.deleteFile(flightPath.filePath);
+                    // 验证删除结果
+                    setTimeout(function() {
+                        var fileExistsAfter = fileDialogController.fileExists(flightPath.filePath);
+                        console.log("直接删除后文件是否存在:", fileExistsAfter);
+                        
+                        if (!fileExistsAfter) {
+                            console.log("文件直接删除成功");
+                        } else {
+                            console.log("文件直接删除失败");
+                        }
+                        
+                        // 从模型中移除条目
+                        flightPathModel.remove(index);
+                        updateFilteredModel();
+                        
+                        // 参考QGC官方实现，刷新整个列表
+                        setTimeout(function() {
+                            console.log("刷新航线列表");
+                            loadFlightPathsFromStorage();
+                        }, 300); // 稍微延时以确保删除操作彻底完成
+                    }, 200);
+                }
+            }
+        } else {
+            // 没有文件路径，直接删除模型中的条目
+            flightPathModel.remove(index);
+            updateFilteredModel();
+            console.log("航线已删除（无文件）: " + flightPath.name);
+        }
+        console.log("=== 删除调试结束 ===");
     }
 
     function importFlightPath(filePath) {
@@ -606,69 +804,115 @@ Item {
             return;
         }
         
-        // 使用 QGC 的文件系统 API
+        // 使用 QGCFileDialogController 的 getFiles 方法扫描文件
         try {
-            // 使用 QML 的 FolderListModel 扫描文件
-            var folderModel = Qt.createQmlObject('import Qt.labs.folderlistmodel 2.1; FolderListModel {}',
-                                               root, "folderModel");
-            folderModel.folder = missionDir;
-            folderModel.nameFilters = ["*.plan"];
-            
-            var planFiles = [];
-            for (var i = 0; i < folderModel.count; i++) {
-                var fileName = folderModel.get(i).fileName;
-                if (fileName.endsWith(".plan")) {
-                    var filePath = missionDir + "/" + fileName;
-                    planFiles.push(filePath);
-                }
-            }
+            // 使用 QGCFileDialogController 扫描.plan文件
+            var planFiles = QGCFileDialogController.getFiles(missionDir, ["*.plan"]);
+            var missionFiles = QGCFileDialogController.getFiles(missionDir, ["*.mission"]);
             
             console.log("找到 " + planFiles.length + " 个.plan文件: ", planFiles);
+            console.log("找到 " + missionFiles.length + " 个.mission文件: ", missionFiles);
             
             // 更新航线模型
             flightPathModel.clear();
+            
+            // 添加.plan文件
             for (var j = 0; j < planFiles.length; j++) {
-                var fileName = planFiles[j].split('/').pop().replace('.plan', '');
+                var fileName = planFiles[j].split('/').pop().split('\\').pop().replace('.plan', '');
+                // 解析任务信息
+                var missionInfo = parseMissionInfo(planFiles[j]);
+                
                 flightPathModel.append({
                     "name": fileName,
                     "filePath": planFiles[j],
                     "date": new Date().toISOString().split('T')[0],
-                    "distance": "未知",
-                    "waypoints": 0
+                    "distance": missionInfo.isValid ? formatDistance(missionInfo.totalDistance) : "未知",
+                    "waypoints": missionInfo.isValid ? missionInfo.waypointCount : 0
                 });
             }
             
-            folderModel.destroy();
+            // 添加.mission文件
+            for (var k = 0; k < missionFiles.length; k++) {
+                var fileName = missionFiles[k].split('/').pop().split('\\').pop().replace('.mission', '');
+                // 解析任务信息
+                var missionInfo = parseMissionInfo(missionFiles[k]);
+                
+                flightPathModel.append({
+                    "name": fileName,
+                    "filePath": missionFiles[k],
+                    "date": new Date().toISOString().split('T')[0],
+                    "distance": missionInfo.isValid ? formatDistance(missionInfo.totalDistance) : "未知",
+                    "waypoints": missionInfo.isValid ? missionInfo.waypointCount : 0
+                });
+            }
             
         } catch (e) {
-            console.log("扫描文件失败: " + e.message);
+            console.log("使用QGCFileDialogController扫描文件失败: " + e.message);
             
-            // 备用方案：如果FolderListModel不可用，则保留原有逻辑
+            // 备用方案：如果QGCFileDialogController不可用，则使用原来的方案
             console.log("使用备用方案扫描文件...");
             
-            // 保留示例数据
-            flightPathModel.clear();
-            flightPathModel.append({
-                name: "测试航线1",
-                date: "2024-01-15",
-                distance: "15.2 km",
-                waypoints: 8,
-                filePath: ""
-            });
-            flightPathModel.append({
-                name: "测试航线2",
-                date: "2024-01-10",
-                distance: "8.7 km",
-                waypoints: 5,
-                filePath: ""
-            });
-            flightPathModel.append({
-                name: "测试航线3",
-                date: "2024-01-05",
-                distance: "22.3 km",
-                waypoints: 12,
-                filePath: ""
-            });
+            try {
+                // 使用 QML 的 FolderListModel 扫描文件
+                var folderModel = Qt.createQmlObject('import Qt.labs.folderlistmodel 2.1; FolderListModel {}',
+                                                   root, "folderModel");
+                folderModel.folder = missionDir;
+                folderModel.nameFilters = ["*.plan"];
+                
+                var planFiles = [];
+                for (var i = 0; i < folderModel.count; i++) {
+                    var fileName = folderModel.get(i).fileName;
+                    if (fileName.endsWith(".plan")) {
+                        var filePath = missionDir + "/" + fileName;
+                        planFiles.push(filePath);
+                    }
+                }
+                
+                console.log("通过FolderListModel找到 " + planFiles.length + " 个.plan文件: ", planFiles);
+                
+                // 更新航线模型
+                flightPathModel.clear();
+                for (var j = 0; j < planFiles.length; j++) {
+                    var fileName = planFiles[j].split('/').pop().replace('.plan', '');
+                    flightPathModel.append({
+                        "name": fileName,
+                        "filePath": planFiles[j],
+                        "date": new Date().toISOString().split('T')[0],
+                        "distance": "未知",
+                        "waypoints": 0
+                    });
+                }
+                
+                folderModel.destroy();
+                
+            } catch (folderError) {
+                console.log("FolderListModel方案也失败: " + folderError.message);
+                
+                // 最终备用方案：显示示例数据
+                console.log("使用示例数据");
+                flightPathModel.clear();
+                flightPathModel.append({
+                    name: "测试航线1",
+                    date: "2024-01-15",
+                    distance: "15.2 km",
+                    waypoints: 8,
+                    filePath: ""
+                });
+                flightPathModel.append({
+                    name: "测试航线2",
+                    date: "2024-01-10",
+                    distance: "8.7 km",
+                    waypoints: 5,
+                    filePath: ""
+                });
+                flightPathModel.append({
+                    name: "测试航线3",
+                    date: "2024-01-05",
+                    distance: "22.3 km",
+                    waypoints: 12,
+                    filePath: ""
+                });
+            }
         }
         
         // 更新过滤模型
