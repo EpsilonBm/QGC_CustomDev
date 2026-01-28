@@ -152,10 +152,8 @@ Item {
                     return ScreenTools.defaultFontPointSize
                 }else if(count === 2){
                     return ScreenTools.mediumFontPointSize
-                }else if(count === 3){
-                    return ScreenTools.smallFontPointSize
                 }else{
-                    return null
+                    return ScreenTools.smallFontPointSize
                 }
             }
 
@@ -300,23 +298,20 @@ Item {
             SettingsGroupLayout {
                 heading: qsTr("Display Options")
 
-                FactCheckBoxSlider {
-                    text:           qsTr("Show percentage")
-                    fact:           _showPercentage
-                    visible:        _showPercentage.visible
-                    property  Fact  _showPercentage : control._fuelCellSettings.PercentageDisplay
+                FactCheckBoxSlider { // Use QGCSwitch if you only need a toggle
+                    text:           qsTr("Show Percentage")
+                    fact:           control._showPercentage
+                    visible:        control._showPercentage ? control._showPercentage.visible : false
                 }
                 FactCheckBoxSlider {
-                    text:           qsTr("Show voltage")
-                    fact:           _showVoltage
-                    visible:        _showVoltage.visible
-                    property  Fact  _showVoltage : control._fuelCellSettings.VoltageDisplay
+                    text:           qsTr("Show Voltage")
+                    fact:           control._showVoltage
+                    visible:        control._showVoltage ? control._showVoltage.visible : false
                 }
                 FactCheckBoxSlider {
-                    text:           qsTr("Show remaining time")
-                    fact:           _showRemainingTime
-                    visible:        _showRemainingTime.visible
-                    property  Fact  _showRemainingTime : control._fuelCellSettings.RemainingTimeDisplay
+                    text:           qsTr("Show Remaining Time")
+                    fact:           control._showRemainingTime
+                    visible:        control._showRemainingTime ? control._showRemainingTime.visible : false
                 }
             }
         }

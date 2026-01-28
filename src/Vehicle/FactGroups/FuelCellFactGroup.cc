@@ -4,8 +4,28 @@
 
 FuelCellFactGroup::FuelCellFactGroup(QObject* parent)
     : FactGroup(1000, ":/json/Vehicle/FuelCellFact.json", parent)
-    // Should be loaded via json, or U can init like this:
-    // , _systemStatusFact(0, "systemStatus", FactMetaData::valueTypeUint16,this)
+    , _systemStatusFact         (0, "systemStatus",         FactMetaData::valueTypeUint16,  this)
+    , _loadVoltageFact          (0, "loadVoltage",          FactMetaData::valueTypeDouble,  this)
+    , _errorCodeFact            (0, "errorCode",            FactMetaData::valueTypeUint16,  this)
+    , _highestTemperatureIdFact (0, "highestTemperatureId", FactMetaData::valueTypeUint16,  this)
+    , _highestTemperatureFact   (0, "highestTemperature",   FactMetaData::valueTypeDouble,  this)
+    , _highestFanSpeedFact      (0, "highestFanSpeed",      FactMetaData::valueTypeUint16,  this)
+    , _lowestVoltageIdFact      (0, "lowestVoltageId",      FactMetaData::valueTypeUint16,  this)
+    , _lowestVoltageFact        (0, "lowestVoltage",        FactMetaData::valueTypeDouble,  this)
+    , _faultIdFact              (0, "faultId",              FactMetaData::valueTypeUint16,  this)
+    , _faultDcFlagFact          (0, "faultDcFlag",          FactMetaData::valueTypeUint16,  this)
+    , _faultFcFlagFact          (0, "faultFcFlag",          FactMetaData::valueTypeUint16,  this)
+    , _dcOutputCurrentFact      (0, "dcOutputCurrent",      FactMetaData::valueTypeDouble,  this)
+    , _dcInputPowerFact         (0, "dcInputPower",         FactMetaData::valueTypeDouble,  this)
+    , _dcOutputPowerFact        (0, "dcOutputPower",        FactMetaData::valueTypeDouble,  this)
+    , _pressureLowestIdFact     (0, "pressureLowestId",     FactMetaData::valueTypeUint16,  this)
+    , _pressureLowestFact       (0, "pressureLowest",       FactMetaData::valueTypeDouble,  this)
+    , _pressureTotalFact        (0, "pressureTotal",        FactMetaData::valueTypeDouble,  this)
+    , _instantPowerFact         (0, "instantPower",         FactMetaData::valueTypeDouble,  this)
+    , _remainingEnergyFact      (0, "remainingEnergy",      FactMetaData::valueTypeDouble,  this)
+    , _remainingTimeFact        (0, "remainingTime",        FactMetaData::valueTypeDouble,  this)
+    , _percentRemainingFact     (0, "percentRemaining",     FactMetaData::valueTypeDouble,  this)
+    , _bottleCapacityFact       (0, "bottleCapacity",       FactMetaData::valueTypeDouble,  this)
     , _bottleCapacity(9.0)      // 默认9L氢气瓶
     , _maxEnergy(3.0)           // 默认3度电
     , _avgPower(0.0)            // 平均功率初始化为0
