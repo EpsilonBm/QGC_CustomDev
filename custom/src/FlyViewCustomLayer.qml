@@ -350,7 +350,21 @@ Item {
 
                                 // 尝试设置默认文件名，如果支持的话
                                 try {
-                                    exportFileDialog.selectedName = selectedFlightPath.name + ".plan";
+                                    // 如果航线有文件路径，则使用该路径的文件名
+                                    if (selectedFlightPath.filePath && selectedFlightPath.filePath !== "") {
+                                        var fileName = selectedFlightPath.filePath.substring(selectedFlightPath.filePath.lastIndexOf("/") + 1);
+                                        // 检查是否已经以.plan结尾
+                                        if (fileName.toLowerCase().indexOf(".plan") !== fileName.length - 5) {
+                                            // 如果没有.plan扩展名，则添加
+                                            exportFileDialog.selectedName = fileName;
+                                        } else {
+                                            // 如果已经有.plan扩展名，则直接使用
+                                            exportFileDialog.selectedName = fileName;
+                                        }
+                                    } else {
+                                        // 如果没有文件路径，则使用航线名称
+                                        exportFileDialog.selectedName = selectedFlightPath.name + ".plan";
+                                    }
                                 } catch (err) {
                                     console.log("设置默认文件名失败: " + err);
                                     // 即使设置默认文件名失败，也要继续打开对话框
@@ -576,20 +590,6 @@ Item {
                                     }
                                 }
 
-                                QGCButton {
-                                    text: qsTr("编辑")
-                                    onClicked: {
-                                        console.log("【DEBUG】编辑按钮被点击 - 航线: " + name);
-                                        console.log("【DEBUG】当前索引: " + index);
-
-                                        // 选中当前项
-                                        flightPathList.currentIndex = index;
-                                        console.log("【DEBUG】设置flightPathList.currentIndex为: " + index);
-
-                                        console.log("【DEBUG】调用editFlightPath函数");
-                                        editFlightPath(index);
-                                    }
-                                }
 
                                 QGCButton {
                                     text: qsTr("删除")
@@ -666,13 +666,7 @@ Item {
         updateFilteredModel();
     }
 
-    function editFlightPath(index) {
-        // 编辑航线的逻辑
-        console.log("编辑航线: " + flightPathModel.get(index).name);
-        // 这里可以打开一个编辑对话框或跳转到编辑页面
-        // 暂时先提示用户
-        console.log("编辑航线功能待实现: " + flightPathModel.get(index).name);
-    }
+
 
     function loadFlightPath(index) {
         var flightPath = flightPathModel.get(index);
@@ -849,148 +843,43 @@ Item {
         console.log("成功导入航线: " + nameWithoutExt);
     }
 
-    function exportFlightPath(index, filePath) {
-        // 导出航线文件的逻辑
-        console.log("开始导出航线: " + flightPathModel.get(index).name + " 到 " + filePath);
+    PlanMasterController {
+        id: _planMasterController
+        Component.onCompleted: start()
+    }
 
-        try {
-            // 获取选中的航线数据
-            var flightPath = flightPathModel.get(index);
-            console.log("导出的航线信息: ", flightPath);
+    function exportFlightPath(index) {
+        var flightPath = flightPathModel.get(index)
+        if (!flightPath || !flightPath.filePath)
+            return
 
-            // 尝试使用QGC的PlanMasterController来保存文件
-            try {
-                // 检查是否可以从MainWindow或其他地方获取PlanMasterController
-                if (typeof mainWindow !== 'undefined' && mainWindow) {
-                    // 尝试创建临时的PlanMasterController并保存任务
-                    var tempController = Qt.createQmlObject(
-                        'import QGroundControl.Controllers 1.0; PlanMasterController {}',
-                        flightPathLibrary,
-                        'tempPlanController'
-                    );
+        var sourcePath = flightPath.filePath
+        console.log("准备导出航线:", flightPath.name, sourcePath)
 
-                    if (tempController) {
-                        console.log("临时PlanMasterController创建成功，尝试保存到: " + filePath);
-                        tempController.start(); // 启动控制器
-
-                        // 使用PlanMasterController的saveToFile方法，这是QGC标准的保存方法
-                        tempController.saveToFile(filePath);
-
-                        // 销毁临时控制器
-                        tempController.destroy();
-
-                        console.log("航线文件导出成功: " + filePath);
-
-                        // 显示成功消息
-                        if (typeof mainWindow !== 'undefined' && mainWindow && typeof mainWindow.showMessageDialog === 'function') {
-                            mainWindow.showMessageDialog(
-                                qsTr("导出成功"),
-                                qsTr("航线已成功导出到: %1").arg(filePath)
-                            );
-                        }
-                    } else {
-                        console.log("无法创建临时PlanMasterController");
-
-                        // 备选方案：构造一个基本的.plan文件内容
-                        var planContent = {
-                            "version": 1,
-                            "type": "Plan",
-                            "mavC27Config": {},
-                            "firmwareType": 3,
-                            "geoFence": {},
-                            "mission": {
-                                "cruiseSpeed": -1,
-                                "hoverSpeed": 5,
-                                "items": [],
-                                "vehicleType": 2,
-                                "missionItems": []
-                            },
-                            "rallyPoints": {
-                                "items": []
-                            },
-                            "complexItems": {}
-                        };
-
-                        var jsonString = JSON.stringify(planContent, null, 4);
-
-                        var success = fileDialogController.writeFile(filePath, jsonString);
-                        if (success) {
-                            console.log("基本航线文件导出成功: " + filePath);
-                            if (typeof mainWindow !== 'undefined' && mainWindow && typeof mainWindow.showMessageDialog === 'function') {
-                                mainWindow.showMessageDialog(
-                                    qsTr("导出成功"),
-                                    qsTr("航线已成功导出到: %1 (空任务文件)").arg(filePath)
-                                );
-                            }
-                        } else {
-                            console.log("基本航线文件导出失败");
-
-                            // 最后的备选：使用QGC的全局方法
-                            console.log("无法导出文件，建议使用QGC内置的保存功能");
-
-                            if (typeof mainWindow !== 'undefined' && mainWindow && typeof mainWindow.showMessageDialog === 'function') {
-                                mainWindow.showMessageDialog(
-                                    qsTr("导出失败"),
-                                    qsTr("无法导出航线到文件: %1\n请在计划视图中使用保存功能").arg(filePath)
-                                );
-                            }
-                        }
-                    }
-                } else {
-                    console.log("mainWindow不可用，使用备选方法");
-
-                    // 构造基本的.plan文件内容
-                    var planContent = {
-                        "version": 1,
-                        "type": "Plan",
-                        "mavC27Config": {},
-                        "firmwareType": 3,
-                        "geoFence": {},
-                        "mission": {
-                            "cruiseSpeed": -1,
-                            "hoverSpeed": 5,
-                            "items": [],
-                            "vehicleType": 2,
-                            "missionItems": []
-                        },
-                        "rallyPoints": {
-                            "items": []
-                        },
-                        "complexItems": {}
-                    };
-
-                    var jsonString = JSON.stringify(planContent, null, 4);
-                    var success = fileDialogController.writeFile(filePath, jsonString);
-                    if (success) {
-                        console.log("基本航线文件导出成功: " + filePath);
-                    } else {
-                        console.log("基本航线文件导出也失败");
-                    }
-                }
-            } catch (planErr) {
-                console.log("使用PlanMasterController保存失败: " + planErr.message);
-
-                // 显示错误消息
-                if (typeof mainWindow !== 'undefined' && mainWindow && typeof mainWindow.showMessageDialog === 'function') {
-                    mainWindow.showMessageDialog(
-                        qsTr("导出失败"),
-                        qsTr("无法从当前任务获取数据，请确保已在计划视图中创建了任务").arg(filePath)
-                    );
-                }
-            }
-
-        } catch (e) {
-            console.log("导出过程中发生错误: " + e.message);
-            console.log("错误详情: ", e);
-
-            // 显示错误消息
-            if (typeof mainWindow !== 'undefined' && mainWindow && typeof mainWindow.showMessageDialog === 'function') {
-                mainWindow.showMessageDialog(
-                    qsTr("导出错误"),
-                    qsTr("导出过程中发生错误: %1").arg(e.message)
-                );
-            }
+        if (!fileDialogController.fileExists(sourcePath)) {
+            console.warn("源航线不存在:", sourcePath)
+            return
         }
+
+        // 1. 加载原始航线
+        _planMasterController.loadFromFile(sourcePath)
+
+        // 2. 构造目标文件名（推荐加时间戳，避免覆盖）
+        var timeStr = Qt.formatDateTime(new Date(), "yyyyMMdd_hhmmss")
+        var fileName = flightPath.name + "_" + timeStr + ".plan"
+
+        // 3. 目标路径（Android 安全）
+        var targetPath =
+            QGCFileDialogController.defaultSavePath()
+            + "/" + fileName
+
+        console.log("导出目标路径:", targetPath)
+
+        // 4. 保存
+        _planMasterController.saveToFile(targetPath)
+
+        // 5. 可选：提示
+        qgcApp.showMessage("航线已导出到:\n" + targetPath)
     }
 
     function loadFlightPathsFromStorage() {

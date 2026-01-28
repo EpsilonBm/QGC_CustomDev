@@ -190,7 +190,21 @@ Item {
                             
                             // 尝试设置默认文件名，如果支持的话
                             try {
-                                exportFileDialog.selectedName = selectedFlightPath.name + ".plan";
+                                // 如果航线有文件路径，则使用该路径的文件名
+                                if (selectedFlightPath.filePath && selectedFlightPath.filePath !== "") {
+                                    var fileName = selectedFlightPath.filePath.substring(selectedFlightPath.filePath.lastIndexOf("/") + 1);
+                                    // 检查是否已经以.plan结尾
+                                    if (fileName.toLowerCase().indexOf(".plan") !== fileName.length - 5) {
+                                        // 如果没有.plan扩展名，则添加
+                                        exportFileDialog.selectedName = fileName;
+                                    } else {
+                                        // 如果已经有.plan扩展名，则直接使用
+                                        exportFileDialog.selectedName = fileName;
+                                    }
+                                } else {
+                                    // 如果没有文件路径，则使用航线名称
+                                    exportFileDialog.selectedName = selectedFlightPath.name + ".plan";
+                                }
                             } catch (err) {
                                 console.log("设置默认文件名失败: " + err);
                                 // 即使设置默认文件名失败，也要继续打开对话框
@@ -372,15 +386,7 @@ Item {
                                 }
                             }
 
-                            QGCButton {
-                                text: qsTr("编辑")
-                                onClicked: {
-                                    console.log("编辑航线: " + name);
-                                    ListView.view.currentIndex = index;
-                                    // 实现编辑航线的逻辑
-                                    editFlightPath(index);
-                                }
-                            }
+
 
                             QGCButton {
                                 text: qsTr("删除")
@@ -564,10 +570,7 @@ Item {
         }
     }
 
-    function editFlightPath(index) {
-        // 编辑航线的逻辑
-        console.log("编辑航线: " + flightPathModel.get(index).name);
-    }
+
 
     function deleteFlightPath(index) {
         // 删除航线的逻辑
@@ -720,77 +723,43 @@ Item {
         console.log("成功导入航线: " + nameWithoutExt);
     }
 
-    function exportFlightPath(index, filePath) {
-        // 导出航线文件的逻辑
-        console.log("开始导出航线: " + flightPathModel.get(index).name + " 到 " + filePath);
-        
-        try {
-            // 获取选中的航线数据
-            var flightPath = flightPathModel.get(index);
-            console.log("导出的航线信息: ", flightPath);
-            
-            // 构造简单的.plan文件内容
-            var planContent = {
-                "version": 1,
-                "mavC27Config": {},
-                "firmwareType": 3,
-                "geoFence": {},
-                "mission": {
-                    "cruiseSpeed": -1,
-                    "hoverSpeed": 5,
-                    "items": [],
-                    "vehicleType": 2,
-                    "missionItems": []
-                },
-                "rallyPoints": {
-                    "items": []
-                },
-                "complexItems": {}
-            };
-            
-            // 将planContent转换为JSON字符串
-            var jsonString = JSON.stringify(planContent, null, 4);
-            
-            // 尝试使用QGCFileDialogController写入文件
-            try {
-                // 检查fileDialogController是否支持writeFile方法
-                if (fileDialogController && typeof fileDialogController.writeFile === 'function') {
-                    var success = fileDialogController.writeFile(filePath, jsonString);
-                    if (success) {
-                        console.log("航线文件导出成功: " + filePath);
-                    } else {
-                        console.log("航线文件导出失败: " + filePath);
-                    }
-                } else {
-                    console.log("fileDialogController.writeFile方法不可用");
-                    
-                    // 尝试其他可能的文件写入方法
-                    if (fileDialogController && typeof fileDialogController.writeFileContent === 'function') {
-                        var success = fileDialogController.writeFileContent(filePath, jsonString);
-                        if (success) {
-                            console.log("航线文件导出成功: " + filePath);
-                        } else {
-                            console.log("航线文件导出失败: " + filePath);
-                        }
-                    } else {
-                        console.log("fileDialogController.writeFileContent方法也不可用");
-                        
-                        // 作为最后的手段，显示提示信息给用户
-                        console.log("无法导出文件到: " + filePath);
-                        console.log("可能需要通过QGC的内置功能来保存任务");
-                        
-                        // 输出文件内容到控制台，供用户参考
-                        console.log("文件内容:\n", jsonString);
-                    }
-                }
-            } catch (writeErr) {
-                console.log("写入文件时发生错误: " + writeErr.message);
-            }
-            
-        } catch (e) {
-            console.log("导出过程中发生错误: " + e.message);
-            console.log("错误详情: ", e);
+    PlanMasterController {
+        id: _planMasterController
+        Component.onCompleted: start()
+    }
+
+    function exportFlightPath(index) {
+        var flightPath = flightPathModel.get(index)
+        if (!flightPath || !flightPath.filePath)
+            return
+
+        var sourcePath = flightPath.filePath
+        console.log("准备导出航线:", flightPath.name, sourcePath)
+
+        if (!fileDialogController.fileExists(sourcePath)) {
+            console.warn("源航线不存在:", sourcePath)
+            return
         }
+
+        // 1. 加载原始航线
+        _planMasterController.loadFromFile(sourcePath)
+
+        // 2. 构造目标文件名（推荐加时间戳，避免覆盖）
+        var timeStr = Qt.formatDateTime(new Date(), "yyyyMMdd_hhmmss")
+        var fileName = flightPath.name + "_" + timeStr + ".plan"
+
+        // 3. 目标路径（Android 安全）
+        var targetPath =
+            QGCFileDialogController.defaultSavePath()
+            + "/" + fileName
+
+        console.log("导出目标路径:", targetPath)
+
+        // 4. 保存
+        _planMasterController.saveToFile(targetPath)
+
+        // 5. 可选：提示
+        qgcApp.showMessage("航线已导出到:\n" + targetPath)
     }
 
     function loadFlightPathsFromStorage() {
