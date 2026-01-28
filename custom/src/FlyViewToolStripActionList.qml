@@ -11,6 +11,7 @@ import QtQml.Models
 
 import QGroundControl
 import QGroundControl.Controls
+import Custom.ToolStrip
 
 ToolStripActionList {
     id: _root
@@ -24,12 +25,8 @@ ToolStripActionList {
         GuidedActionRTL { },
         GuidedActionPause { },
         FlyViewAdditionalActionsButton { },
-        GuidedToolStripAction {
-            text:       _guidedController._customController.customButtonTitle
-            iconSource: "/res/gear-white.svg"
-            visible:    true
-            enabled:    true
-            actionID:   _guidedController._customController.actionCustomButton
-}
+        CameraSwitch { } ,
+        LoadControl { }
+
     ]
 }

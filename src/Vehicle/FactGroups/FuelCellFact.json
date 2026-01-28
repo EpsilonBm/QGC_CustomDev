@@ -1,0 +1,176 @@
+{
+    "version": 1,
+    "fileType": "FactMetaData",
+    "QGC.MetaData.Facts": [
+        {
+            "name": "systemStatus",
+            "type": "uint16",
+            "shortDescription": "System Status",
+            "longDescription": "Overall status of the fuel cell system."
+        },
+        {
+            "name": "loadVoltage",
+            "type": "double",
+            "shortDescription": "Load Voltage",
+            "longDescription": "Voltage at the load.",
+            "units": "V",
+            "decimalPlaces": 2
+        },
+        {
+            "name": "errorCode",
+            "type": "uint16",
+            "shortDescription": "Error Code",
+            "longDescription": "System error code."
+        },
+        {
+            "name": "highestTemperatureId",
+            "type": "uint16",
+            "shortDescription": "Highest Temp ID",
+            "longDescription": "ID of the stack with the highest temperature."
+        },
+        {
+            "name": "highestTemperature",
+            "type": "double",
+            "shortDescription": "Highest Temp",
+            "longDescription": "Highest temperature in the stack.",
+            "units": "°C",
+            "decimalPlaces": 2
+        },
+        {
+            "name": "highestFanSpeed",
+            "type": "uint16",
+            "shortDescription": "Highest Fan Speed",
+            "longDescription": "Speed of the fan for the hottest stack.",
+            "units": "rpm"
+        },
+        {
+            "name": "lowestVoltageId",
+            "type": "uint16",
+            "shortDescription": "Lowest Voltage ID",
+            "longDescription": "ID of the stack with the lowest voltage."
+        },
+        {
+            "name": "lowestVoltage",
+            "type": "double",
+            "shortDescription": "Lowest Voltage",
+            "longDescription": "Lowest voltage in the stack.",
+            "units": "V",
+            "decimalPlaces": 2
+        },
+        {
+            "name": "faultId",
+            "type": "uint16",
+            "shortDescription": "Fault ID",
+            "longDescription": "Identifier for the current fault."
+        },
+        {
+            "name": "faultDcFlag",
+            "type": "uint16",
+            "shortDescription": "Fault DC Flag",
+            "longDescription": "Flag indicating a DC-side fault."
+        },
+        {
+            "name": "faultFcFlag",
+            "type": "uint16",
+            "shortDescription": "Fault FC Flag",
+            "longDescription": "Flag indicating a fuel cell-side fault."
+        },
+        {
+            "name": "dcOutputCurrent",
+            "type": "double",
+            "shortDescription": "Output Current",
+            "longDescription": "Total DC output current.",
+            "units": "A",
+            "decimalPlaces": 2
+        },
+        {
+            "name": "dcInputPower",
+            "type": "double",
+            "shortDescription": "Input Power",
+            "longDescription": "Total DC input power.",
+            "units": "W",
+            "decimalPlaces": 2
+        },
+        {
+            "name": "dcOutputPower",
+            "type": "double",
+            "shortDescription": "Output Power",
+            "longDescription": "Total DC output power.",
+            "units": "W",
+            "decimalPlaces": 2
+        },
+        {
+            "name": "pressureLowestId",
+            "type": "uint16",
+            "shortDescription": "Lowest Pressure ID",
+            "longDescription": "ID of the hydrogen bottle with the lowest pressure."
+        },
+        {
+            "name": "pressureLowest",
+            "type": "double",
+            "shortDescription": "Lowest Pressure",
+            "longDescription": "Lowest pressure among hydrogen bottles.",
+            "units": "bar",
+            "decimalPlaces": 2
+        },
+        {
+            "name": "pressureTotal",
+            "type": "double",
+            "shortDescription": "Total Pressure",
+            "longDescription": "Total or average pressure of hydrogen bottles.",
+            "units": "bar",
+            "decimalPlaces": 2
+        },
+        {
+            "name": "instantPower",
+            "type": "double",
+            "shortDescription": "Instantaneous Power",
+            "units": "W",
+            "decimalPlaces": 1
+        },
+        {
+            "name": "remainingEnergy",
+            "type": "double",
+            "shortDescription": "Remaining Energy",
+            "units": "kWh",
+            "decimalPlaces": 2
+        },
+        {
+            "name": "remainingTime",
+            "type": "double",
+            "shortDescription": "Remaining Time",
+            "units": "h",
+            "decimalPlaces": 2
+        },
+        {
+            "name": "percentRemaining",
+            "type": "double",
+            "shortDescription": "Percent Remaining",
+            "units": "%",
+            "decimalPlaces": 0
+        },
+        {
+            "name": "bottleCapacity",
+            "type": "double",
+            "shortDescription": "Bottle Capacity",
+            "units": "L",
+            "decimalPlaces": 1
+        },
+        {
+            "name": "maxEnergy",
+            "type": "double",
+            "shortDescription": "Max Energy",
+            "longDescription": "Maximum energy of the fuel cell system determined by the bottle capacity.",
+            "units": "kWh",
+            "decimalPlaces": 1
+        },
+        {
+            "name": "avgPower",
+            "type": "double",
+            "shortDescription": "Average Power",
+            "longDescription": "Average power of the fuel cell system.",
+            "units": "W",
+            "decimalPlaces": 1
+        }
+    ]
+}

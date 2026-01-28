@@ -45,17 +45,7 @@
 #include "VehicleVibrationFactGroup.h"
 #include "VehicleWindFactGroup.h"
 #include "GimbalController.h"
-// 在其他MAVLink相关包含之后添加
-#include "all/mavlink.h"
-
-// 包含自定义MAVLink消息头文件
-#ifdef QGC_CUSTOM_BUILD
-#include "custom_messages/mavlink_msg_fuel_cell_status.h"
-#include "custom_messages/mavlink_msg_payload_command.h"
-#include "custom_messages/mavlink_msg_payload_status.h"
-#include "FuelCell/FuelCellManager.h"
-#endif
-
+#include "FuelCellFactGroup.h"
 
 class Actuators;
 class AutoPilotPlugin;
@@ -280,6 +270,7 @@ public:
     Q_PROPERTY(FactGroup*           hygrometer      READ hygrometerFactGroup        CONSTANT)
     Q_PROPERTY(FactGroup*           generator       READ generatorFactGroup         CONSTANT)
     Q_PROPERTY(FactGroup*           efi             READ efiFactGroup               CONSTANT)
+    Q_PROPERTY(FactGroup*           fuelCell        READ fuelCellFactGroup          CONSTANT)
     Q_PROPERTY(QmlObjectListModel*  batteries       READ batteries                  CONSTANT)
     Q_PROPERTY(Actuators*           actuators       READ actuators                  CONSTANT)
     Q_PROPERTY(HealthAndArmingCheckReport* healthAndArmingCheckReport READ healthAndArmingCheckReport CONSTANT)
@@ -403,7 +394,7 @@ public:
     Q_ENUM(PIDTuningTelemetryMode)
 
     Q_INVOKABLE void setPIDTuningTelemetryMode(PIDTuningTelemetryMode mode);
-    
+
     Q_INVOKABLE void forceArm           ();
 
     /// Sends PARAM_MAP_RC message to vehicle
@@ -425,24 +416,6 @@ public:
     Q_INVOKABLE void saveJoystickSettings(void);
 
     Q_INVOKABLE void sendSetupSigning();
-
-    // 在这里添加FuelCellManager的QML访问方法
-    Q_INVOKABLE QObject* fuelCellManager() const {
-        #ifdef QGC_CUSTOM_BUILD
-                return _fuelCellManager;
-        #else
-                return nullptr;
-        #endif
-    }
-
-    Q_INVOKABLE void setFuelCellBottleCapacity(double capacity) {
-    #ifdef QGC_CUSTOM_BUILD
-        if (_fuelCellManager) {
-            double maxEnergy = (capacity / 9.0) * 3.0; // 9L→3度电的比例关系
-            _fuelCellManager->setBottleCapacity(capacity, maxEnergy);
-        }
-    #endif
-}
 
     bool    isInitialConnectComplete() const;
     bool    guidedModeSupported     () const;
@@ -639,6 +612,7 @@ public:
     FactGroup* generatorFactGroup           () { return &_generatorFactGroup; }
     FactGroup* efiFactGroup                 () { return &_efiFactGroup; }
     FactGroup* rpmFactGroup                 () { return &_rpmFactGroup; }
+    FactGroup* fuelCellFactGroup            () { return &_fuelCellFactGroup; }
     QmlObjectListModel* batteries           () { return &_batteryFactGroupListModel; }
 
     MissionManager*                 missionManager      () { return _missionManager; }
@@ -704,7 +678,7 @@ public:
     // Callback info for sendMavCommandWithHandler
     typedef struct MavCmdAckHandlerInfo_s {
         MavCmdResultHandler     resultHandler;          ///> nullptr for no handler
-        void*                   resultHandlerData; 
+        void*                   resultHandlerData;
         MavCmdProgressHandler   progressHandler;
         void*                   progressHandlerData;    ///> nullptr for no handler
     } MavCmdAckHandlerInfo_t;
@@ -712,7 +686,7 @@ public:
     /// Sends the command and calls the callback with the result
     void sendMavCommandWithHandler(
         const MavCmdAckHandlerInfo_t* ackHandlerInfo,   ///> nullptr to signale no handlers
-        int compId, MAV_CMD command, 
+        int compId, MAV_CMD command,
         float param1 = 0.0f, float param2 = 0.0f, float param3 = 0.0f, float param4 = 0.0f, float param5 = 0.0f, float param6 = 0.0f, float param7 = 0.0f);
 
     /// Sends the command and calls the callback with the result
@@ -720,7 +694,7 @@ public:
     ///     @param resultHandleData Opaque data passed through callback
     void sendMavCommandIntWithHandler(
         const MavCmdAckHandlerInfo_t* ackHandlerInfo,   ///> nullptr to signale no handlers
-        int compId, MAV_CMD command, MAV_FRAME frame, 
+        int compId, MAV_CMD command, MAV_FRAME frame,
         float param1 = 0.0f, float param2 = 0.0f, float param3 = 0.0f, float param4 = 0.0f, double param5 = 0.0f, double param6 = 0.0f, float param7 = 0.0f);
 
     /// Sends the command and calls the fallback lambda function in
@@ -977,8 +951,6 @@ private slots:
     void _doSetHomeTerrainReceived          (bool success, QList<double> heights);
     void _updateAltAboveTerrain             ();
     void _altitudeAboveTerrainReceived      (bool sucess, QList<double> heights);
-    // 添加FuelCell数据更新槽函数
-    void onFuelCellDataUpdated(const FuelCellManager::ProcessedFuelCellData& data);
 
 private:
     void _loadJoystickSettings          ();
@@ -1242,9 +1214,9 @@ private:
     static const int                _mavCommandAckTimeoutMSecsHighLatency   = 120000;
 
     void _sendMavCommandWorker  (
-            bool commandInt, bool showError, 
+            bool commandInt, bool showError,
             const MavCmdAckHandlerInfo_t* ackHandlerInfo,   ///> nullptr to signale no handlers
-            int compId, MAV_CMD command, MAV_FRAME frame, 
+            int compId, MAV_CMD command, MAV_FRAME frame,
             float param1, float param2, float param3, float param4, double param5, double param6, float param7);
     void _sendMavCommandFromList(int index);
     int  _findMavCommandListEntryIndex(int targetCompId, MAV_CMD command);
@@ -1282,6 +1254,7 @@ private:
     const QString _generatorFactGroupName =          QStringLiteral("generator");
     const QString _efiFactGroupName =                QStringLiteral("efi");
     const QString _rpmFactGroupName =                QStringLiteral("rpm");
+    const QString _fuelCellFactGroupName =           QStringLiteral("fuelCell");
 
     VehicleFactGroup*               _vehicleFactGroup;
     VehicleGPSFactGroup             _gpsFactGroup;
@@ -1300,6 +1273,7 @@ private:
     VehicleGeneratorFactGroup       _generatorFactGroup;
     VehicleEFIFactGroup             _efiFactGroup;
     VehicleRPMFactGroup             _rpmFactGroup;
+    FuelCellFactGroup               _fuelCellFactGroup;
     TerrainFactGroup                _terrainFactGroup;
     QmlObjectListModel              _batteryFactGroupListModel;
 
@@ -1366,12 +1340,6 @@ public:
 private:
     void _handleControlStatus(const mavlink_message_t& message);
     void _handleCommandRequestOperatorControl(const mavlink_command_long_t commandLong);
-    // 在private部分添加处理方法
-    void _handleFuelCellStatus(const mavlink_message_t& message);
-    void _handlePayloadCommand(const mavlink_message_t& message);
-    void _handlePayloadStatus(const mavlink_message_t& message);
-    // 燃料电池管理器指针
-    FuelCellManager* _fuelCellManager;
     static void _requestOperatorControlAckHandler(void* resultHandlerData, int compId, const mavlink_command_ack_t& ack, MavCmdResultFailureCode_t failureCode);
 
     Q_PROPERTY(uint8_t sysidInControl                        READ sysidInControl                        NOTIFY gcsControlStatusChanged)
@@ -1390,7 +1358,7 @@ private:
     int     requestOperatorControlRemainingMsecs() const { return _timerRequestOperatorControl.remainingTime(); }
     bool    sendControlRequestAllowed() const { return _sendControlRequestAllowed; }
     void    requestOperatorControlStartTimer(int requestTimeoutMsecs);
-    
+
     uint8_t _sysid_in_control = 0;
     uint8_t _gcsControlStatusFlags = 0;
     bool    _gcsControlStatusFlags_SystemManager = 0;
@@ -1404,10 +1372,6 @@ signals:
     void gcsControlStatusChanged();
     void requestOperatorControlReceived(int sysIdRequestingControl, int allowTakeover, int requestTimeoutSecs);
     void sendControlRequestAllowedChanged(bool sendControlRequestAllowed);
-    void fuelCellStatusReceived(const mavlink_fuel_cell_status_t& status);
-    void payloadCommandReceived(const mavlink_payload_command_t& command);
-    void payloadStatusReceived(const mavlink_payload_status_t& status);
-    void fuelCellDataUpdated(const QString& efficiency, const QString& remainingTime, const QString& status);
 
 /*===========================================================================*/
 /*                         STATUS TEXT HANDLER                               */

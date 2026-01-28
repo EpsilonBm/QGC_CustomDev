@@ -50,6 +50,7 @@ set_source_files_properties(res/Custom/Widgets/CustomQuickButton.qml PROPERTIES 
 set_source_files_properties(res/Custom/Widgets/CustomSignalStrength.qml PROPERTIES QT_RESOURCE_ALIAS CustomSignalStrength.qml)
 set_source_files_properties(res/Custom/Widgets/CustomToolBarButton.qml PROPERTIES QT_RESOURCE_ALIAS CustomToolBarButton.qml)
 set_source_files_properties(res/Custom/Widgets/CustomVehicleButton.qml PROPERTIES QT_RESOURCE_ALIAS CustomVehicleButton.qml)
+set_source_files_properties(res/Custom/Widgets/CustomToolBarButton2.qml PROPERTIES QT_RESOURCE_ALIAS CustomToolBarButton2.qml)
 
 qt_add_qml_module(CustomModule
     URI Custom.Widgets
@@ -64,6 +65,59 @@ qt_add_qml_module(CustomModule
         res/Custom/Widgets/CustomSignalStrength.qml
         res/Custom/Widgets/CustomToolBarButton.qml
         res/Custom/Widgets/CustomVehicleButton.qml
+        res/Custom/Widgets/CustomToolBarButton2.qml
+    NO_PLUGIN
+)
+
+qt_add_library(CustomQmlControlsModule STATIC)
+
+set_source_files_properties(src/CustomQmlControls/CustomToolbarIndicator.qml PROPERTIES QT_RESOURCE_ALIAS CustomToolbarIndicator.qml)
+set_source_files_properties(src/CustomQmlControls/RCRSSIIndicator.qml PROPERTIES QT_RESOURCE_ALIAS RCRSSIIndicator.qml)
+set_source_files_properties(src/CustomQmlControls/GPSIndicator.qml PROPERTIES QT_RESOURCE_ALIAS GPSIndicator.qml)
+set_source_files_properties(src/CustomQmlControls/MessageIndicator.qml PROPERTIES QT_RESOURCE_ALIAS MessageIndicator)
+set_source_files_properties(src/CustomQmlControls/FuelCellIndicator.qml PROPERTIES QT_RESOURCE_ALIAS FuelCellIndicator)
+
+qt_add_qml_module(CustomQmlControlsModule
+    URI Custom.QmlControls
+    VERSION 1.0
+    RESOURCE_PREFIX /qml
+    QML_FILES
+        src/CustomQmlControls/CustomToolbarIndicator.qml
+        src/CustomQmlControls/RCRSSIIndicator.qml
+        src/CustomQmlControls/GPSIndicator.qml
+        src/CustomQmlControls/MessageIndicator.qml
+        src/CustomQmlControls/FuelCellIndicator.qml
+    NO_PLUGIN
+)
+
+qt_add_library(CustomToolStripModule STATIC)
+
+set_source_files_properties(src/CustomToolStrip/CameraSwitch.qml PROPERTIES QT_RESOURCE_ALIAS CameraSwitch.qml)
+set_source_files_properties(src/CustomToolStrip/LoadControl.qml PROPERTIES QT_RESOURCE_ALIAS LoadControl.qml)
+
+
+qt_add_qml_module(CustomToolStripModule
+    URI Custom.ToolStrip
+    VERSION 1.0
+    RESOURCE_PREFIX /qml
+    QML_FILES
+        src/CustomToolStrip/CameraSwitch.qml
+        src/CustomToolStrip/LoadControl.qml
+    NO_PLUGIN
+)
+
+qt_add_library(CustomFlyViewModule STATIC)
+
+set_source_files_properties(src/CustomFlyView/CustomPanel.qml PROPERTIES QT_RESOURCE_ALIAS CustomPanel.qml)
+set_source_files_properties(src/CustomFlyView/ValuesBar.qml PROPERTIES QT_RESOURCE_ALIAS ValuesBar.qml)
+
+qt_add_qml_module(CustomFlyViewModule
+    URI Custom.FlyView
+    VERSION 1.0
+    RESOURCE_PREFIX /qml
+    QML_FILES
+        src/CustomFlyView/CustomPanel.qml
+        src/CustomFlyView/ValuesBar.qml
     NO_PLUGIN
 )
 
@@ -76,13 +130,14 @@ set(CUSTOM_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FirmwarePlugin/CustomFirmwarePlugin.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FirmwarePlugin/CustomFirmwarePluginFactory.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FirmwarePlugin/CustomFirmwarePluginFactory.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/FuelCell/FuelCellManager.cc  # 添加这一行
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/FuelCell/FuelCellManager.h  # 添加这一行
         CACHE INTERNAL "" FORCE
 )
 
 set(CUSTOM_LIBRARIES
     CustomModule # Explicitly link QML module, needed by Qt 6.6.3, TODO: Remove when support for this version is dropped
+    CustomQmlControlsModule
+    CustomToolStripModule
+    CustomFlyViewModule
     CACHE INTERNAL "" FORCE
 )
 

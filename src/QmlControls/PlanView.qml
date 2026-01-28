@@ -93,8 +93,17 @@ Item {
     onVisibleChanged: {
         if(visible) {
             editorMap.zoomLevel = QGroundControl.flightMapZoom
-            editorMap.center    = QGroundControl.flightMapPosition
-            if (!_planMasterController.containsItems) {
+            editorMap.center = QGroundControl.flightMapPosition
+            
+            // 检查是否有待加载的文件
+            if(QGroundControl.planFilePathToLoad) {
+                console.log("检测到待加载文件: " + QGroundControl.planFilePathToLoad)
+                _planMasterController.loadFromFile(QGroundControl.planFilePathToLoad)
+                _planMasterController.fitViewportToItems()
+                _missionController.setCurrentPlanViewSeqNum(0, true)
+                // 清除待加载文件标记
+                QGroundControl.planFilePathToLoad = ""
+            } else if (!_planMasterController.containsItems) {
                 toolStrip.simulateClick(toolStrip.fileButtonIndex)
             }
         }
@@ -330,6 +339,8 @@ Item {
         id:                     planToolBar
         planMasterController:   _planMasterController
     }
+
+
 
     Item {
         id:             panel

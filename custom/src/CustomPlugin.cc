@@ -42,7 +42,7 @@ bool CustomFlyViewOptions::showMultiVehicleList(void) const
 // This custom build has it's own custom instrument panel. Don't show regular one.
 bool CustomFlyViewOptions::showInstrumentPanel(void) const
 {
-    return true;
+    return false;
 }
 
 CustomOptions::CustomOptions(CustomPlugin *plugin, QObject *parent)
@@ -130,12 +130,19 @@ QGCOptions* CustomPlugin::options()
 
 QString CustomPlugin::brandImageIndoor(void) const
 {
-    return QStringLiteral("/custom/img/dronecode-white.svg");
+    return QStringLiteral("/custom/img/px4.png");
 }
 
 QString CustomPlugin::brandImageOutdoor(void) const
 {
-    return QStringLiteral("/custom/img/dronecode-black.svg");
+    return QStringLiteral("/custom/img/px4.png");
+}
+
+const QVariantList& CustomPlugin::toolBarIndicators(void)
+{
+    static const QVariantList toolBarIndicatorList;
+
+    return toolBarIndicatorList;
 }
 
 bool CustomPlugin::overrideSettingsGroupVisibility(const QString &name)

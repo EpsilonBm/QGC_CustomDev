@@ -113,6 +113,8 @@ public:
     Q_PROPERTY(bool     hasAPMSupport           READ hasAPMSupport              CONSTANT)
     Q_PROPERTY(bool     hasMAVLinkInspector     READ hasMAVLinkInspector        CONSTANT)
 
+    Q_PROPERTY(QString planFilePathToLoad READ planFilePathToLoad WRITE setPlanFilePathToLoad NOTIFY planFilePathToLoadChanged)
+
 
     //-------------------------------------------------------------------------
     // Elevation Provider
@@ -221,6 +223,9 @@ public:
 
     static QString qgcVersion();
 
+    QString planFilePathToLoad() const { return _planFilePathToLoad; }
+    void setPlanFilePathToLoad(const QString& filePath);
+
 #ifdef QGC_UTM_ADAPTER
     UTMSPManager* utmspManager() {return _utmspManager;}
     bool utmspSupported() { return true; }
@@ -233,6 +238,7 @@ signals:
     void mavlinkSystemIDChanged         (int id);
     void flightMapPositionChanged       (QGeoCoordinate flightMapPosition);
     void flightMapZoomChanged           (double flightMapZoom);
+    void planFilePathToLoadChanged();
 
 private:
     QGCMapEngineManager*    _mapEngineManager       = nullptr;
@@ -263,6 +269,8 @@ private:
     static QGeoCoordinate   _coord;
     static double           _zoom;
     QTimer                  _flightMapPositionSettledTimer;
+
+    QString               _planFilePathToLoad;
 
     static constexpr const char* kQmlGlobalKeyName = "QGCQml";
 

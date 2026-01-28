@@ -58,6 +58,7 @@
 #include "GimbalController.h"
 #include "MavlinkSettings.h"
 #include "APM.h"
+#include "mavlink_msg_fuel_cell_status.h"
 
 #ifdef QGC_UTM_ADAPTER
 #include "UTMSPVehicle.h"
@@ -78,7 +79,7 @@ QGC_LOGGING_CATEGORY(VehicleLog, "VehicleLog")
 #define SET_HOME_TERRAIN_ALT_MIN -500
 
 // After a second GCS has requested control and we have given it permission to takeover, we will remove takeover permission automatically after this timeout
-// If the second GCS didn't get control 
+// If the second GCS didn't get control
 #define REQUEST_OPERATOR_CONTROL_ALLOW_TAKEOVER_TIMEOUT_MSECS 10000
 
 const QString guided_mode_not_supported_by_vehicle = QObject::tr("Guided mode not supported by Vehicle.");
@@ -116,8 +117,8 @@ Vehicle::Vehicle(LinkInterface*             link,
     , _generatorFactGroup           (this)
     , _efiFactGroup                 (this)
     , _rpmFactGroup                 (this)
+    , _fuelCellFactGroup            (this)
     , _terrainFactGroup             (this)
-    , _fuelCellManager              (nullptr)
     , _terrainProtocolHandler       (new TerrainProtocolHandler(this, &_terrainFactGroup, this))
 {
     connect(JoystickManager::instance(), &JoystickManager::activeJoystickChanged, this, &Vehicle::_loadJoystickSettings);
@@ -142,19 +143,7 @@ Vehicle::Vehicle(LinkInterface*             link,
     connect(this, &Vehicle::remoteControlRSSIChanged,   this, &Vehicle::_remoteControlRSSIChanged);
 
     _commonInit();
-    // 初始化燃料电池管理器
-    #ifdef QGC_CUSTOM_BUILD
-        _fuelCellManager = new FuelCellManager(this);
-    #else
-        _fuelCellManager = nullptr;
-    #endif
-    #ifdef QGC_CUSTOM_BUILD
-        if (_fuelCellManager) {
-            // 连接FuelCellManager的信号到Vehicle的槽
-            connect(_fuelCellManager, &FuelCellManager::processedDataUpdated,
-                    this, &Vehicle::onFuelCellDataUpdated);
-        }
-    #endif
+
     _vehicleLinkManager->_addLink(link);
 
     // Set video stream to udp if running ArduSub and Video is disabled
@@ -232,6 +221,7 @@ Vehicle::Vehicle(MAV_AUTOPILOT              firmwareType,
     , _distanceSensorFactGroup          (this)
     , _localPositionFactGroup           (this)
     , _localPositionSetpointFactGroup   (this)
+    , _fuelCellFactGroup                (this)
 {
     // This will also set the settings based firmware/vehicle types. So it needs to happen first.
     if (_firmwareType == MAV_AUTOPILOT_TRACK) {
@@ -350,6 +340,7 @@ void Vehicle::_commonInit()
     _addFactGroup(&_generatorFactGroup,         _generatorFactGroupName);
     _addFactGroup(&_efiFactGroup,               _efiFactGroupName);
     _addFactGroup(&_rpmFactGroup,               _rpmFactGroupName);
+    _addFactGroup(&_fuelCellFactGroup,          _fuelCellFactGroupName);
     _addFactGroup(&_terrainFactGroup,           _terrainFactGroupName);
 
     // Add firmware-specific fact groups, if provided
@@ -384,13 +375,7 @@ void Vehicle::_commonInit()
 Vehicle::~Vehicle()
 {
     qCDebug(VehicleLog) << "~Vehicle" << this;
-    // 清理FuelCellManager
-    #ifdef QGC_CUSTOM_BUILD
-        if (_fuelCellManager) {
-            delete _fuelCellManager;
-            _fuelCellManager = nullptr;
-        }
-    #endif
+
     delete _missionManager;
     _missionManager = nullptr;
 
@@ -613,13 +598,7 @@ void Vehicle::_mavlinkMessageReceived(LinkInterface* link, mavlink_message_t mes
         _handleFenceStatus(message);
         break;
     case MAVLINK_MSG_ID_FUEL_CELL_STATUS:
-         _handleFuelCellStatus(message);
-         break;
-    case MAVLINK_MSG_ID_PAYLOAD_COMMAND:
-        _handlePayloadCommand(message);
-        break;
-    case MAVLINK_MSG_ID_PAYLOAD_STATUS:
-        _handlePayloadStatus(message);
+        _fuelCellFactGroup.handleMessage(this, message);
         break;
 
     case MAVLINK_MSG_ID_EVENT:
@@ -681,7 +660,7 @@ void Vehicle::_mavlinkMessageReceived(LinkInterface* link, mavlink_message_t mes
     }
     case MAVLINK_MSG_ID_CONTROL_STATUS:
         _handleControlStatus(message);
-        break;   
+        break;
     case MAVLINK_MSG_ID_COMMAND_LONG:
         _handleCommandLong(message);
         break;
@@ -2157,8 +2136,8 @@ double Vehicle::minimumEquivalentAirspeed()
     return _firmwarePlugin->minimumEquivalentAirspeed(this);
 }
 
-bool Vehicle::hasGripper()  const 
-{ 
+bool Vehicle::hasGripper()  const
+{
     return _firmwarePlugin->hasGripper(this);
 }
 
@@ -2657,12 +2636,12 @@ bool Vehicle::_commandCanBeDuplicated(MAV_CMD command)
 }
 
 void Vehicle::_sendMavCommandWorker(
-    bool        commandInt, 
-    bool        showError, 
+    bool        commandInt,
+    bool        showError,
     const MavCmdAckHandlerInfo_t* ackHandlerInfo,
-    int         targetCompId, 
-    MAV_CMD     command, 
-    MAV_FRAME   frame, 
+    int         targetCompId,
+    MAV_CMD     command,
+    MAV_FRAME   frame,
     float param1, float param2, float param3, float param4, double param5, double param6, float param7)
 {
     // We can't send commands to compIdAll using this method. The reason being that we would get responses back possibly from multiple components
@@ -2955,7 +2934,7 @@ void Vehicle::_waitForMavlinkMessageMessageReceivedHandler(const mavlink_message
         // We use any incoming message as a trigger to check timeouts on message requests
 
         for (auto& compIdEntry : _requestMessageInfoMap) {
-            for (auto requestMessageInfo : compIdEntry) {    
+            for (auto requestMessageInfo : compIdEntry) {
                 if (requestMessageInfo->messageWaitElapsedTimer.isValid() && requestMessageInfo->messageWaitElapsedTimer.elapsed() > (qgcApp()->runningUnitTests() ? 50 : 1000)) {
                     auto resultHandler      = requestMessageInfo->resultHandler;
                     auto resultHandlerData  = requestMessageInfo->resultHandlerData;
@@ -3696,8 +3675,8 @@ void Vehicle::doSetHome(const QGeoCoordinate& coord)
             disconnect(_currentDoSetHomeTerrainAtCoordinateQuery, &TerrainAtCoordinateQuery::terrainDataReceived, this, &Vehicle::_doSetHomeTerrainReceived);
             _currentDoSetHomeTerrainAtCoordinateQuery = nullptr;
         }
-        // Save the coord for using when our terrain data arrives. If there was a pending terrain query paired with an older coordinate it is safe to 
-        // Override now, as we just disconnected the signal that would trigger the command sending 
+        // Save the coord for using when our terrain data arrives. If there was a pending terrain query paired with an older coordinate it is safe to
+        // Override now, as we just disconnected the signal that would trigger the command sending
         _doSetHomeCoordinate = coord;
         // Now setup and trigger the new terrain query
         _currentDoSetHomeTerrainAtCoordinateQuery = new TerrainAtCoordinateQuery(true /* autoDelet */);
@@ -3977,7 +3956,7 @@ void Vehicle::sendGripperAction(QGCMAVLink::GRIPPER_OPTIONS gripperOption)
         case QGCMAVLink::Invalid_option:
             qDebug("unknown function");
             break;
-        default: 
+        default:
             break;
     }
 }
@@ -4036,7 +4015,7 @@ void Vehicle::startTimerRevertAllowTakeover()
     _timerRevertAllowTakeover.setInterval(operatorControlTakeoverTimeoutMsecs());
     // Disconnect any previous connections to avoid multiple handlers
     disconnect(&_timerRevertAllowTakeover, &QTimer::timeout, nullptr, nullptr);
-    
+
     connect(&_timerRevertAllowTakeover, &QTimer::timeout, this, [this](){
         if (MAVLinkProtocol::instance()->getSystemId() == _sysid_in_control) {
             this->requestOperatorControl(false);
@@ -4090,12 +4069,12 @@ void Vehicle::_requestOperatorControlAckHandler(void* resultHandlerData, int com
         default:
             break;
     }
-    
+
     Vehicle* vehicle = static_cast<Vehicle*>(resultHandlerData);
     if (!vehicle) {
         return;
     }
-    
+
     if (ack.result == MAV_RESULT_ACCEPTED) {
         qCDebug(VehicleLog) << "Operator control request accepted";
     } else {
@@ -4428,67 +4407,3 @@ MAVLinkLogManager *Vehicle::mavlinkLogManager() const
 }
 
 /*---------------------------------------------------------------------------*/
-/*===========================================================================*/
-/*                         Hydrogen fuel cell processing                               */
-/*===========================================================================*/
-void Vehicle::_handleFuelCellStatus(const mavlink_message_t& message)
-{
-    mavlink_fuel_cell_status_t fuelCellStatus;
-    mavlink_msg_fuel_cell_status_decode(&message, &fuelCellStatus);
-
-    // 记录原始数据
-    qCDebug(VehicleLog) << "Fuel Cell Status received:"
-                        << "Time:" << fuelCellStatus.time_boot_ms
-                        << "Voltage:" << fuelCellStatus.voltage_v
-                        << "Current:" << fuelCellStatus.current_a
-                        << "Pressure:" << fuelCellStatus.hydrogen_pressure_bar
-                        << "Temp:" << fuelCellStatus.stack_temperature_c;
-
-    // 发射原始数据信号
-    emit fuelCellStatusReceived(fuelCellStatus);
-
-    // 使用FuelCellManager进行高级处理
-    #ifdef QGC_CUSTOM_BUILD
-    if (_fuelCellManager) {
-        _fuelCellManager->handleFuelCellStatus(fuelCellStatus);
-    }
-    #endif
-}
-
-void Vehicle::_handlePayloadCommand(const mavlink_message_t& message)
-{
-    mavlink_payload_command_t payloadCmd;
-    mavlink_msg_payload_command_decode(&message, &payloadCmd);
-
-    qCDebug(VehicleLog) << "Payload Command received:"
-                        << "ID:" << payloadCmd.payload_id
-                        << "Command:" << payloadCmd.command
-                        << "Param:" << payloadCmd.param;
-
-    emit payloadCommandReceived(payloadCmd);
-}
-
-void Vehicle::_handlePayloadStatus(const mavlink_message_t& message)
-{
-    mavlink_payload_status_t payloadStatus;
-    mavlink_msg_payload_status_decode(&message, &payloadStatus);
-
-    qCDebug(VehicleLog) << "Payload Status received:"
-                        << "ID:" << payloadStatus.payload_id
-                        << "State:" << payloadStatus.state
-                        << "Value:" << payloadStatus.value
-                        << "Errors:" << payloadStatus.error_flags;
-
-    emit payloadStatusReceived(payloadStatus);
-}
-
-// 在Vehicle.cc中添加槽函数实现
-void Vehicle::onFuelCellDataUpdated(const FuelCellManager::ProcessedFuelCellData& data)
-{
-    // 发射信号到QML
-    emit fuelCellDataUpdated(
-        QString::number(data.efficiency, 'f', 2),
-        QString::number(data.remaining_time_hours, 'f', 2),
-        data.status_description
-    );
-}
