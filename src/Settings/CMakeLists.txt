@@ -44,6 +44,9 @@ target_sources(${CMAKE_PROJECT_NAME}
         MapsSettings.h
         Viewer3DSettings.cc
         Viewer3DSettings.h
+
+        FuelCellIndicatorSettings.cc
+        FuelCellIndicatorSettings.h
 )
 
 if(NOT QGC_DISABLE_APM_MAVLINK)

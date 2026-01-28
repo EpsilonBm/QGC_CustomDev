@@ -31,6 +31,7 @@
 #include "UnitsSettings.h"
 #include "VideoSettings.h"
 #include "MavlinkSettings.h"
+#include "FuelCellIndicatorSettings.h"
 #ifdef QGC_VIEWER3D
 #include "Viewer3DSettings.h"
 #endif
@@ -88,6 +89,7 @@ void SettingsManager::init()
     _rtkSettings = new RTKSettings(this);
     _videoSettings = new VideoSettings(this);
     _mavlinkSettings = new MavlinkSettings(this);
+    _fuelCellIndicatorSettings = new FuelCellIndicatorSettings(this);
 #ifdef QGC_VIEWER3D
     _viewer3DSettings = new Viewer3DSettings(this);
 #endif
@@ -115,6 +117,7 @@ RTKSettings *SettingsManager::rtkSettings() const { return _rtkSettings; }
 UnitsSettings *SettingsManager::unitsSettings() const { return _unitsSettings; }
 VideoSettings *SettingsManager::videoSettings() const { return _videoSettings; }
 MavlinkSettings *SettingsManager::mavlinkSettings() const { return _mavlinkSettings; }
+FuelCellIndicatorSettings *SettingsManager::fuelCellIndicatorSettings() const { return _fuelCellIndicatorSettings; }
 #ifdef QGC_VIEWER3D
 Viewer3DSettings *SettingsManager::viewer3DSettings() const { return _viewer3DSettings; }
 #endif

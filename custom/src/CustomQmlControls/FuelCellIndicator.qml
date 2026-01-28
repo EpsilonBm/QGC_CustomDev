@@ -32,19 +32,14 @@ Item {
     property bool       waitForParameters:  false   // UI won't show until parameters are ready
     property Component  expandedPageComponent
 
-    property var    _activeVehicle:     QGroundControl.multiVehicleManager.activeVehicle
-    property var    _batterySettings:   QGroundControl.settingsManager.batteryIndicatorSettings
-    // TODO: Add fuelcell indicator setting and replace these all
-    // property Fact   _indicatorDisplay:  _batterySettings.valueDisplay
-    // property bool   _showPercentage:    _indicatorDisplay.rawValue === 0
-    // property bool   _showVoltage:       _indicatorDisplay.rawValue === 1
-    // property bool   _showBoth:          _indicatorDisplay.rawValue === 2
+    property var    _activeVehicle:      QGroundControl.multiVehicleManager.activeVehicle
+    property var    _fuelCellSettings:   QGroundControl.settingsManager.fuelCellIndicatorSettings
+    property Fact   _showPercentage:     _fuelCellSettings.PercentageDisplay
+    property Fact   _showVoltage:        _fuelCellSettings.VoltageDisplay
+    property Fact   _showRemainingTime:  _fuelCellSettings.RemainingTimeDisplay
+
     // fuelCell object
     property var fuelCell: _activeVehicle ? _activeVehicle.fuelCell : null
-
-    // Properties to hold the thresholds
-    // property int threshold1: _batterySettings.threshold1.rawValue
-    // property int threshold2: _batterySettings.threshold2.rawValue
 
     // fuelCellIndicatorRow
     Row {
@@ -123,7 +118,6 @@ Item {
 
             function getBatteryPercentageText() {
                 if (fuelCell && fuelCell.percentRemaining) {
-                    // 直接显示百分比数值
                     return fuelCell.percentRemaining.valueString + "%"
                 }
                 return qsTr("n/a")
@@ -131,10 +125,38 @@ Item {
 
             function getBatteryVoltageText() {
                 if (fuelCell && fuelCell.loadVoltage) {
-                    // Use loadVoltage from the new FactGroup
                     return fuelCell.loadVoltage.valueString + " " + fuelCell.loadVoltage.units
                 }
                 return qsTr("n/a")
+            }
+
+            function getRemainingTimeText() {
+                if (fuelCell && fuelCell.remainingTime) {
+                    return fuelCell.remainingTime.valueString + " " + fuelCell.remainingTime.units
+                }
+                return qsTr("n/a")
+            }
+
+            function getVisibleCount(){
+                var count = 0
+                if(control._showPercentage && control._showPercentage.rawValue){
+                    count += 1
+                }
+                if(control._showVoltage && control._showVoltage.rawValue){
+                    count += 1
+                }
+                if(control._showRemainingTime && control._showRemainingTime.rawValue){
+                    count += 1
+                }
+                if(count === 1){
+                    return ScreenTools.defaultFontPointSize
+                }else if(count === 2){
+                    return ScreenTools.mediumFontPointSize
+                }else if(count === 3){
+                    return ScreenTools.smallFontPointSize
+                }else{
+                    return null
+                }
             }
 
             QGCColoredImage {
@@ -147,7 +169,7 @@ Item {
                 color:              getBatteryColor()
             }
 
-           ColumnLayout {
+            ColumnLayout {
                 id:                     batteryInfoColumn
                 anchors.top:            parent.top
                 anchors.bottom:         parent.bottom
@@ -158,21 +180,25 @@ Item {
                     verticalAlignment:      Text.AlignVCenter
                     color:                  qgcPal.text
                     text:                   getBatteryPercentageText()
-                    // TODO: add switching logic after setting is added
-                    //font.pointSize:         _showBoth ? ScreenTools.defaultFontPointSize : ScreenTools.mediumFontPointSize
-                    //visible:                _showBoth || _showPercentage
-                    font.pointSize:         ScreenTools.defaultFontPointSize
-                    visible:                true
+                    font.pointSize:         getVisibleCount()
+                    visible:                _showPercentage ? _showPercentage.rawValue : false
                 }
-
-                // TODO: add switching logic after setting is added
-                // QGCLabel {
-                //     Layout.alignment:       Qt.AlignHCenter
-                //     font.pointSize:         _showBoth ? ScreenTools.defaultFontPointSize : ScreenTools.mediumFontPointSize
-                //     color:                  qgcPal.text
-                //     text:                   getBatteryVoltageText()
-                //     visible:                _showBoth || _showVoltage
-                // }
+                QGCLabel {
+                    Layout.alignment:       Qt.AlignHCenter
+                    verticalAlignment:      Text.AlignVCenter
+                    color:                  qgcPal.text
+                    text:                   getBatteryVoltageText()
+                    font.pointSize:         getVisibleCount()
+                    visible:                _showVoltage ? _showVoltage.rawValue : false
+                }
+                QGCLabel {
+                    Layout.alignment:       Qt.AlignHCenter
+                    verticalAlignment:      Text.AlignVCenter
+                    color:                  qgcPal.text
+                    text:                   getRemainingTimeText()
+                    font.pointSize:         getVisibleCount()
+                    visible:                _showRemainingTime ? _showRemainingTime.rawValue : false
+                }
             }
         }
     }
@@ -269,6 +295,29 @@ Item {
                 label:      qsTr("Bottle Capacity")
                 labelText:  control.fuelCell.bottleCapacity.valueString + " " + control.fuelCell.bottleCapacity.units
                 visible:    expandedValuesAvailable.bottleCapacityAvailable
+            }
+
+            SettingsGroupLayout {
+                heading: qsTr("Display Options")
+
+                FactCheckBoxSlider {
+                    text:           qsTr("Show percentage")
+                    fact:           _showPercentage
+                    visible:        _showPercentage.visible
+                    property  Fact  _showPercentage : control._fuelCellSettings.PercentageDisplay
+                }
+                FactCheckBoxSlider {
+                    text:           qsTr("Show voltage")
+                    fact:           _showVoltage
+                    visible:        _showVoltage.visible
+                    property  Fact  _showVoltage : control._fuelCellSettings.VoltageDisplay
+                }
+                FactCheckBoxSlider {
+                    text:           qsTr("Show remaining time")
+                    fact:           _showRemainingTime
+                    visible:        _showRemainingTime.visible
+                    property  Fact  _showRemainingTime : control._fuelCellSettings.RemainingTimeDisplay
+                }
             }
         }
     }

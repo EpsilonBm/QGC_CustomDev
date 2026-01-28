@@ -114,6 +114,7 @@
         <file alias="CameraMetaData.json">src/Camera/CameraMetaData.json</file>
 
         <file alias="Vehicle/FuelCellFact.json">src/Vehicle/FactGroups/FuelCellFact.json</file>
+        <file alias="FuelCellIndicator.SettingsGroup.json">src/Settings/FuelCellIndicator.SettingsGroup.json</file>
     </qresource>
     <qresource prefix="/MockLink">
         <file alias="APMArduSubMockLink.params">src/Comms/MockLink/APMArduSubMockLink.params</file>

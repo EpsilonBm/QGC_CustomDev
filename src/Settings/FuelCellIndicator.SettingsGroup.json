@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "fileType": "FactMetaData",
+  "QGC.MetaData.Facts": [
+    {
+      "name": "PercentageDisplay",
+      "shortDesc": "Choose if show percentage in FuelCell indicator",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "name": "VoltageDisplay",
+      "shortDesc": "Choose if show Voltage in FuelCell indicator",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "name": "RemainingTimeDisplay",
+      "shortDesc": "Choose if show Remaining Time in FuelCell indicator",
+      "type": "bool",
+      "default": false
+    }
+  ]
+}
