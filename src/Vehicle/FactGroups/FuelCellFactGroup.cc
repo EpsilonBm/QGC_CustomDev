@@ -52,22 +52,22 @@ void FuelCellFactGroup::handleMessage(Vehicle* /*vehicle*/, mavlink_message_t& m
     mavlink_msg_fuel_cell_status_decode(&message, &status);
 
     _systemStatusFact.setRawValue(status.system_status);
-    _loadVoltageFact.setRawValue(status.load_voltage / 100.0);
+    _loadVoltageFact.setRawValue(status.load_voltage / 10.0);
     _errorCodeFact.setRawValue(status.error_code);
     _highestTemperatureIdFact.setRawValue(status.highest_temperature_id);
-    _highestTemperatureFact.setRawValue(status.highest_temperature / 100.0);
+    _highestTemperatureFact.setRawValue(status.highest_temperature / 10.0);
     _highestFanSpeedFact.setRawValue(status.highest_fan_speed);
     _lowestVoltageIdFact.setRawValue(status.lowest_voltage_id);
-    _lowestVoltageFact.setRawValue(status.lowest_voltage / 100.0);
+    _lowestVoltageFact.setRawValue(status.lowest_voltage / 10.0);
     _faultIdFact.setRawValue(status.fault_id);
     _faultDcFlagFact.setRawValue(status.fault_dc_flag);
     _faultFcFlagFact.setRawValue(status.fault_fc_flag);
-    _dcOutputCurrentFact.setRawValue(status.dc_output_current / 100.0);
-    _dcInputPowerFact.setRawValue(status.dc_input_power / 100.0);
-    _dcOutputPowerFact.setRawValue(status.dc_output_power / 100.0);
+    _dcOutputCurrentFact.setRawValue(status.dc_output_current / 10.0);
+    _dcInputPowerFact.setRawValue(status.dc_input_power / 10.0);
+    _dcOutputPowerFact.setRawValue(status.dc_output_power / 10.0);
     _pressureLowestIdFact.setRawValue(status.pressure_lowest_id);
-    _pressureLowestFact.setRawValue(status.pressure_lowest / 100.0);
-    _pressureTotalFact.setRawValue(status.pressure_total / 100.0);
+    _pressureLowestFact.setRawValue(status.pressure_lowest / 10.0);
+    _pressureTotalFact.setRawValue(status.pressure_total / 10.0);
 
     // 1. Calculate instantaneous power (W)
     double instantaneous_power_w = _loadVoltageFact.rawValue().toDouble() * _dcOutputCurrentFact.rawValue().toDouble();
@@ -88,7 +88,7 @@ void FuelCellFactGroup::handleMessage(Vehicle* /*vehicle*/, mavlink_message_t& m
     double min_pressure = 2.0;
     double max_pressure = 35.0;
     double pressure_range = max_pressure - min_pressure;
-    double percentage = qBound(0.0, ((_pressureLowestFact.rawValue().toDouble() - min_pressure) / pressure_range) * 100.0, 100.0);
+    double percentage = qBound(0.0, ((_pressureTotalFact.rawValue().toDouble() - min_pressure) / pressure_range) * 100.0, 100.0);
     double remaining_energy = (_maxEnergy * percentage) / 100.0;
     _percentRemainingFact.setRawValue(percentage);
     _remainingEnergyFact.setRawValue(remaining_energy);

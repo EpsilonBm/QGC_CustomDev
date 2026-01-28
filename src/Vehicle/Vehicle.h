@@ -417,6 +417,14 @@ public:
 
     Q_INVOKABLE void sendSetupSigning();
 
+    // 燃料电池控制命令发送
+    Q_INVOKABLE void sendFuelCellCommand(uint16_t runtime_command, uint16_t requested_power, uint16_t startup_mode);
+    Q_INVOKABLE void sendFuelCellStart();
+    Q_INVOKABLE void sendFuelCellStop();
+    Q_INVOKABLE void sendFuelCellPowerRequest(uint16_t power_request);
+    Q_INVOKABLE void sendFuelCellStartupMode(uint16_t startup_mode);
+
+
     bool    isInitialConnectComplete() const;
     bool    guidedModeSupported     () const;
     bool    pauseVehicleSupported   () const;
@@ -1457,5 +1465,16 @@ private:
     MAVLinkLogManager *_mavlinkLogManager = nullptr;
 
 /*---------------------------------------------------------------------------*/
+// 在Vehicle.h的私有成员区域添加
+private:
+    QTimer* _speechTimer = nullptr;              ///< 语音循环播放定时器
+    int _speechCounter = 0;                      ///< 语音播放计数器
+    static const int _speechDurationSeconds = 10; ///< 播放持续时间（秒）
+    static const int _speechIntervalMs = 2000;    ///< 播放间隔（毫秒）
+
+    // 添加辅助方法声明
+    void _startSpeechPlayback();
+    bool _isUdpConnection();
+    void _playRepeatedSpeech();
 };
 Q_DECLARE_METATYPE(Vehicle::MavCmdResultFailureCode_t)
