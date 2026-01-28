@@ -187,77 +187,29 @@ Item {
         ColumnLayout {
             spacing: ScreenTools.defaultFontPixelHeight / 2
 
-            Component {
-                id: fuelCellValuesAvailableComponent
+            property var fuelCellDataList: [
+                { label: qsTr("Voltage"),             fact: "loadVoltage" },
+                { label: qsTr("Current"),             fact: "dcOutputCurrent" },
+                { label: qsTr("Pressure"),            fact: "pressureLowest" },
+                { label: qsTr("Highest temperature"), fact: "highestTemperature" },
+                { label: qsTr("Instant power"),       fact: "instantPower" },
+                { label: qsTr("Remaining Energy"),    fact: "remainingEnergy" },
+                { label: qsTr("Remaining Time"),      fact: "remainingTime" }
+            ]
 
-                QtObject {
-                    property bool voltageAvailable:          control.fuelCell && control.fuelCell.loadVoltage
-                    property bool currentAvailable:          control.fuelCell && control.fuelCell.dcOutputCurrent
-                    property bool pressureAvailable:         control.fuelCell && control.fuelCell.pressureLowest
-                    property bool temperatureAvailable:      control.fuelCell && control.fuelCell.highestTemperature
-                    property bool powerAvailable:            control.fuelCell && control.fuelCell.instantPower // This is the calculated power
-                    property bool remainingEnergyAvailable:  control.fuelCell && control.fuelCell.remainingEnergy
-                    property bool remainingTimeAvailable:    control.fuelCell && control.fuelCell.remainingTime
-                }
-            }
+            SettingsGroupLayout {
+                heading:        qsTr("Fuel Cell Status")
+                contentSpacing: 0
+                showDividers:   false
 
-            Repeater {
-                model: 1
-
-                SettingsGroupLayout {
-                    heading:        qsTr("Fuel Cell Status")
-                    contentSpacing: 0
-                    showDividers:   false
-
-                    property var fuelCellValuesAvailable: fuelCellValuesAvailableLoader.item
-
-                    Loader {
-                        id:                 fuelCellValuesAvailableLoader
-                        sourceComponent:    fuelCellValuesAvailableComponent
-
-                        property var fuelCell: parent.fuelCell
-                    }
+                Repeater {
+                    model: fuelCellDataList
 
                     LabelledLabel {
-                        label:      qsTr("Voltage")
-                        labelText:  fuelCell.loadVoltage.valueString + " " + fuelCell.loadVoltage.units
-                        visible:    fuelCellValuesAvailable.voltageAvailable
-                    }
-
-                    LabelledLabel {
-                        label:      qsTr("Current")
-                        labelText:  fuelCell.dcOutputCurrent.valueString + " " + fuelCell.dcOutputCurrent.units
-                        visible:    fuelCellValuesAvailable.currentAvailable
-                    }
-
-                    LabelledLabel {
-                        label:      qsTr("Pressure")
-                        labelText:  fuelCell.pressureLowest.valueString + " " + fuelCell.pressureLowest.units
-                        visible:    fuelCellValuesAvailable.pressureAvailable
-                    }
-
-                    LabelledLabel {
-                        label:      qsTr("Highest temperature")
-                        labelText:  fuelCell.highestTemperature.valueString + " " + fuelCell.highestTemperature.units
-                        visible:    fuelCellValuesAvailable.temperatureAvailable
-                    }
-
-                    LabelledLabel {
-                        label:      qsTr("Instant power")
-                        labelText:  fuelCell.instantPower.valueString + " " + fuelCell.instantPower.units
-                        visible:    fuelCellValuesAvailable.powerAvailable
-                    }
-
-                    LabelledLabel {
-                        label:      qsTr("Remaining Energy")
-                        labelText:  fuelCell.remainingEnergy.valueString + " " + fuelCell.remainingEnergy.units
-                        visible:    fuelCellValuesAvailable.remainingEnergyAvailable
-                    }
-
-                    LabelledLabel {
-                        label:      qsTr("Remaining Time")
-                        labelText:  fuelCell.remainingTime.valueString + " " + fuelCell.remainingTime.units
-                        visible:    fuelCellValuesAvailable.remainingTimeAvailable
+                        property var factObj: control.fuelCell ? control.fuelCell[modelData.fact] : null
+                        label:      modelData.label
+                        labelText:  factObj ? (factObj.valueString + " " + factObj.units) : "N/A"
+                        visible:    factObj !== null
                     }
                 }
             }
