@@ -1260,24 +1260,12 @@ Item {
 
                         // 计算距离可能会失败，但我们仍要确保航点数被记录
                         try {
-                            // 检查QGC内置计算是否合理（如果距离异常大，使用备选方法）
-                            // 注意：当distance为0时，可能只是尚未计算完成，我们仍尝试备选方法
-                            if (info.totalDistance > 10000000) {
-                                console.log("QGC内置距离异常，使用修复后的备选方法计算距离，当前距离: " + info.totalDistance);
+                            // 直接使用QGC计算的距离，单位已经是米
+                            // 只有当距离为0或异常时才使用备选方法
+                            if (info.totalDistance === 0 || info.totalDistance > 100000) {  // 超过100km认为是异常值
+                                console.log("QGC内置距离异常或为0，使用备选方法计算距离，当前距离: " + info.totalDistance);
                                 info.totalDistance = calculateTotalDistanceFromVisualItems(visualItems);
                                 console.log("备选方法计算结果: " + info.totalDistance);
-                            } else if (info.totalDistance === 0) {
-                                // 当内置距离为0时，使用备选方法计算
-                                console.log("QGC内置距离为0，使用修复后的备选方法计算距离");
-                                info.totalDistance = calculateTotalDistanceFromVisualItems(visualItems);
-                                console.log("备选方法计算结果: " + info.totalDistance);
-                            } else {
-                                // 如果QGC内置计算在合理范围内，但看起来像以米为单位（大于1000米），则转换为公里
-                                if (info.totalDistance > 1000 && info.totalDistance <= 10000000) {
-                                    // 假设这个值是以米为单位，转换为公里
-                                    info.totalDistance = info.totalDistance / 1000;
-                                    console.log("QGC内置距离看起来是以米为单位，转换为公里: " + info.totalDistance);
-                                }
                             }
 
                             info.isValid = true; // 如果距离计算成功，设置为有效
@@ -1311,6 +1299,38 @@ Item {
         }
 
         return info;
+    }
+
+    // 从距离字符串中提取数值（考虑单位）
+    function extractDistanceValue(distanceStr) {
+        if (typeof distanceStr !== 'string' && typeof distanceStr !== 'number') {
+            return NaN;
+        }
+
+        if (typeof distanceStr === 'number') {
+            return distanceStr;
+        }
+
+        // 移除所有空格
+        var cleanStr = distanceStr.trim();
+
+        if (cleanStr === "未知") {
+            return NaN;
+        }
+
+        // 检查是否包含单位
+        if (cleanStr.includes("km")) {
+            // 提取km单位的数值
+            var kmValue = parseFloat(cleanStr.replace(/km/gi, "").trim());
+            return isNaN(kmValue) ? NaN : kmValue * 1000;  // 转换为米
+        } else if (cleanStr.includes("m")) {
+            // 提取m单位的数值
+            var mValue = parseFloat(cleanStr.replace(/m/gi, "").trim());
+            return mValue;  // 保持为米
+        } else {
+            // 假设纯数字是米
+            return parseFloat(cleanStr);
+        }
     }
 
     // 修复后的距离计算函数
@@ -1377,34 +1397,17 @@ Item {
 
     // 格式化距离显示
     function formatDistance(distance) {
-        // 确保距离是有效的数字
         var distNum = Number(distance);
 
         if (isNaN(distNum) || distNum <= 0) {
             return "未知";
         }
-
-        console.log("【DEBUG】原始距离值: " + distNum);
-
-        // 优化的单位转换逻辑
-        // 如果距离大于1000000（假设是毫米或厘米单位）
-        if (distNum > 10000000) {  // 超过10000km，几乎不可能是正常的飞行距离
-            distNum = distNum / 100000;  // 假设是厘米，转换为公里
-            console.log("【DEBUG】检测到超大距离值，转换为公里: " + distNum);
-        } else if (distNum > 100000) {  // 超过100km，可能需要单位转换
-            // 这里可能是以米为单位的大距离
-            distNum = distNum / 1000;  // 转换为公里
-            console.log("【DEBUG】转换为公里: " + distNum);
-        } else if (distNum > 1000) {  // 超过1km，可能是以米为单位
-            distNum = distNum / 1000;  // 转换为公里
-            console.log("【DEBUG】转换为公里: " + distNum);
-        }
-
-        // 如果距离看起来像是以米为单位的较大数值，转换为合适的单位
+        
+        // 直接以米为单位进行格式化
         if (distNum < 1000) {
             return Math.round(distNum) + " m";
         } else {
-            return (distNum).toFixed(2) + " km";
+            return (distNum / 1000).toFixed(2) + " km";
         }
     }
 }
