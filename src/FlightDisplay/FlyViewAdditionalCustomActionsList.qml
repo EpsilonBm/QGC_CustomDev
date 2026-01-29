@@ -15,6 +15,9 @@ Item {
 
     property var guidedController
 
+    // 指示当前飞行器是否有可用的自定义操作
     property bool anyActionAvailable: false
+    
+    // 包含自定义操作列表的模型
     property var model: [ ]
 }

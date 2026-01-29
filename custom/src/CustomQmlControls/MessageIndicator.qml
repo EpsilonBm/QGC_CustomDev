@@ -20,12 +20,12 @@ import QGroundControl.ScreenTools
 import QGroundControl.Palette
 
 //-------------------------------------------------------------------------
-//-- Message Indicator
+// 消息指示器
 Item {
     id:             _root
-    // Set height to fill the parent toolbar row.
+    // 设置高度以填充父工具栏行
     height: parent.height
-    // Set width to fit the content.
+    // 设置宽度以适应内容
     width:  height
 
     property bool showIndicator: true
@@ -33,10 +33,13 @@ Item {
     property var    _activeVehicle:         QGroundControl.multiVehicleManager.activeVehicle
     property bool   _isMessageImportant:    _activeVehicle ? !_activeVehicle.messageTypeNormal && !_activeVehicle.messageTypeNone : false
 
+    /// 显示消息指示器抽屉/弹窗
     function dropMessageIndicator() {
         mainWindow.showIndicatorDrawer(vehicleMessagesPopup, _root);
     }
 
+    /// 根据当前消息类型返回适当的颜色
+    /// @return {color} 表示消息类型的颜色
     function getMessageColor() {
         if (_activeVehicle) {
             if (_activeVehicle.messageTypeNone)
@@ -47,14 +50,15 @@ Item {
                 return qgcPal.colorOrange;
             if (_activeVehicle.messageTypeError)
                 return qgcPal.colorRed;
-            // Cannot be so make it obnoxious to show error
-            console.warn("MessageIndicator.qml:getMessageColor Invalid vehicle message type", _activeVehicle.messageTypeNone)
+            // 这种情况不应该发生，但如果发生了，使用醒目的颜色来表示错误
+            console.warn("MessageIndicator.qml:getMessageColor 无效的载具类型", _activeVehicle.messageTypeNone)
             return "purple";
         }
-        //-- It can only get here when closing (vehicle gone while window active)
+        // 此条件发生在窗口仍活动时车辆关闭的情况下
         return qgcPal.colorGrey
     }
 
+    // 重要消息图标 - 当有重要消息时显示
     Image {
         id:                 criticalMessageIcon
         anchors.centerIn:   parent
@@ -67,6 +71,7 @@ Item {
         visible:            _activeVehicle && _activeVehicle.messageCount > 0 && _isMessageImportant
     }
 
+    // 常规消息图标 - 当有消息但不重要时显示
     QGCColoredImage {
         anchors.centerIn:   parent
         height:             parent.height * 0.6
@@ -78,11 +83,13 @@ Item {
         visible:            !criticalMessageIcon.visible
     }
 
+    // 处理点击事件以打开消息弹窗
     MouseArea {
         anchors.fill:   parent
         onClicked:      dropMessageIndicator()
     }
 
+    // 用于显示车辆消息的弹窗组件
     Component {
         id: vehicleMessagesPopup
 
@@ -94,11 +101,10 @@ Item {
                     spacing: ScreenTools.defaultFontPixelHeight / 2
 
                     SettingsGroupLayout {
-                        heading:            qsTr("Vehicle Messages")
+                        heading:            qsTr("载具信息")
                         Layout.fillWidth:   true
 
-                        // Use Loader to load VehicleMessageList to ensure we get the correct component
-                        // from the standard QGC controls.
+                        // 使用Loader加载VehicleMessageList以确保我们从标准QGC控件获取正确的组件
                         Loader {
                             Layout.fillWidth: true
                             source: "qrc:/qml/QGroundControl/Controls/VehicleMessageList.qml"
@@ -106,7 +112,7 @@ Item {
                     }
 
                     QGCButton {
-                        text:               qsTr("Clear Messages")
+                        text:               qsTr("清除信息")
                         Layout.alignment:   Qt.AlignRight
                         onClicked: {
                             if (_activeVehicle) {

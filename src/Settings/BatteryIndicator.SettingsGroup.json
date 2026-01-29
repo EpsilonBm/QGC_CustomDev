@@ -5,7 +5,7 @@
         {
             "name": "valueDisplay",
             "shortDesc": "Select values to display in indicator",
-            "enumStrings": "Percentage,Voltage,Percentage and Voltage",
+            "enumStrings": "百分比,电压,百分比和电压",
             "enumValues": "0,1,2",
             "type": "uint32",
             "default": false

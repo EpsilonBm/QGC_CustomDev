@@ -120,6 +120,7 @@ Item {
 
             function getBatteryPercentageText() {
                 if (fuelCell && fuelCell.percentRemaining) {
+                    // 直接显示百分比数值
                     return fuelCell.percentRemaining.valueString + "%"
                 }
                 return qsTr("n/a")
@@ -127,6 +128,7 @@ Item {
 
             function getBatteryVoltageText() {
                 if (fuelCell && fuelCell.loadVoltage) {
+                    // Use loadVoltage from the new FactGroup
                     return fuelCell.loadVoltage.valueString + " " + fuelCell.loadVoltage.units
                 }
                 return qsTr("n/a")
@@ -253,7 +255,7 @@ Item {
         // The expanded view now directly shows specific fuel cell status details.
         // The complex settings UI has been removed as requested.
         SettingsGroupLayout {
-            heading: qsTr("Details")
+            heading: qsTr("详情")
 
             property var fuelCell: _activeVehicle ? _activeVehicle.fuelCell : null
             property var expandedValuesAvailable: expandedValuesAvailableLoader.item
@@ -293,7 +295,7 @@ Item {
 
             // Display the bottle capacity
             LabelledLabel {
-                label:      qsTr("Bottle Capacity")
+                label:      qsTr("氢瓶容量")
                 labelText:  (control.fuelCell && control.fuelCell.bottleCapacity) ? (control.fuelCell.bottleCapacity.valueString + " " + control.fuelCell.bottleCapacity.units) : ""
                 visible:    expandedValuesAvailable.bottleCapacityAvailable
             }
