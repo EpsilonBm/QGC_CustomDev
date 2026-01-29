@@ -63,7 +63,7 @@ Item {
 
         QGCButton {
             id:                 disconnectButton
-            text:               qsTr("Disconnect")
+            text:               qsTr("未连接")
             onClicked:          _activeVehicle.closeVehicle()
             visible:            _activeVehicle && _communicationLost
         }
@@ -271,6 +271,7 @@ Item {
             function onActiveVehicleChanged(activeVehicle) { largeProgressBar._userHide = false }
         }
 
+        // 进度条 - 显示参数下载进度
         Rectangle {
             anchors.top:    parent.top
             anchors.bottom: parent.bottom
@@ -278,23 +279,26 @@ Item {
             color:          qgcPal.colorGreen
         }
 
+        // 下载状态文本显示
         QGCLabel {
             anchors.centerIn:   parent
-            text:               qsTr("Downloading")
+            text:               qsTr("正在下载")  // 显示"正在下载"文本
             font.pointSize:     ScreenTools.largeFontPointSize
         }
 
+        // 隐藏提示文本
         QGCLabel {
             anchors.margins:    _margin
             anchors.right:      parent.right
             anchors.bottom:     parent.bottom
-            text:               qsTr("Click anywhere to hide")
+            text:               qsTr("点击任意位置隐藏")  // 点击任意位置隐藏提示
             property real _margin: ScreenTools.defaultFontPixelWidth / 2
         }
 
+        // 鼠标点击区域 - 用于隐藏进度条
         MouseArea {
             anchors.fill:   parent
-            onClicked:      largeProgressBar._userHide = true
+            onClicked:      largeProgressBar._userHide = true  // 点击时隐藏大进度条
         }
     }
 }

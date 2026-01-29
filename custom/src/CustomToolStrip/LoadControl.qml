@@ -7,7 +7,7 @@ import QGroundControl.Palette
 import QGroundControl.ScreenTools
 
 ToolStripAction {
-    text:           qsTr("Load")
+    text:           qsTr("加载")
     iconSource:     "/qmlimages/Gears.svg"
     visible:        QGroundControl.multiVehicleManager.activeVehicle
     enabled:        visible
@@ -19,7 +19,7 @@ ToolStripAction {
             spacing: ScreenTools.defaultFontPixelWidth
 
             QGCButton {
-                text:               "sec1"
+                text:               "云台"
                 iconSource:         "qrc:/custom/img/distance.svg"
                 Layout.fillWidth:   true
                 onClicked: {
