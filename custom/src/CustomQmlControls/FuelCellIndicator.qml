@@ -28,15 +28,17 @@ Item {
     anchors.bottom: parent.bottom
     width:          fuelCellIndicatorRow.width
 
+    QGCPalette { id: qgcPal }
+
     property bool       showIndicator:      true
     property bool       waitForParameters:  false   // UI won't show until parameters are ready
     property Component  expandedPageComponent
 
     property var    _activeVehicle:      QGroundControl.multiVehicleManager.activeVehicle
     property var    _fuelCellSettings:   QGroundControl.settingsManager.fuelCellIndicatorSettings
-    property Fact   _showPercentage:     _fuelCellSettings.PercentageDisplay
-    property Fact   _showVoltage:        _fuelCellSettings.VoltageDisplay
-    property Fact   _showRemainingTime:  _fuelCellSettings.RemainingTimeDisplay
+    property var    _showPercentage:     _fuelCellSettings ? _fuelCellSettings.PercentageDisplay : null
+    property var    _showVoltage:        _fuelCellSettings ? _fuelCellSettings.VoltageDisplay : null
+    property var    _showRemainingTime:  _fuelCellSettings ? _fuelCellSettings.RemainingTimeDisplay : null
 
     // fuelCell object
     property var fuelCell: _activeVehicle ? _activeVehicle.fuelCell : null
@@ -138,7 +140,7 @@ Item {
             }
 
             function getVisibleCount(){
-                var count = 0
+                let count = 0
                 if(control._showPercentage && control._showPercentage.rawValue){
                     count += 1
                 }
@@ -292,7 +294,7 @@ Item {
             // Display the bottle capacity
             LabelledLabel {
                 label:      qsTr("Bottle Capacity")
-                labelText:  control.fuelCell.bottleCapacity.valueString + " " + control.fuelCell.bottleCapacity.units
+                labelText:  (control.fuelCell && control.fuelCell.bottleCapacity) ? (control.fuelCell.bottleCapacity.valueString + " " + control.fuelCell.bottleCapacity.units) : ""
                 visible:    expandedValuesAvailable.bottleCapacityAvailable
             }
 
