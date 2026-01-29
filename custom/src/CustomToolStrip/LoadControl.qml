@@ -5,6 +5,7 @@ import QGroundControl
 import QGroundControl.Controls
 import QGroundControl.Palette
 import QGroundControl.ScreenTools
+import Custom.ToolStrip 1.0
 
 ToolStripAction {
     text:           qsTr("Load")
@@ -19,11 +20,12 @@ ToolStripAction {
             spacing: ScreenTools.defaultFontPixelWidth
 
             QGCButton {
-                text:               "sec1"
-                iconSource:         "qrc:/custom/img/distance.svg"
+                id:                 gimbalButton
+                text:               "gimbal"
+                iconSource:         "qrc:/custom/img/gimbal.svg"
                 Layout.fillWidth:   true
                 onClicked: {
-                    _guidedController.executeAction(_guidedController._customController.actionLoadSec1, null, null, false)
+                    mainWindow.showIndicatorDrawer(gimbalPageComponent, gimbalButton)
                     dropPanel.hide()
                 }
             }
@@ -48,5 +50,9 @@ ToolStripAction {
                 }
             }
         }
+    }
+
+    property Component gimbalPageComponent: Component {
+        GimbalPage {}
     }
 }

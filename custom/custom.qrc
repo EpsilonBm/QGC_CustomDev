@@ -33,6 +33,7 @@
         <file alias="camera_video.svg">res/Images/camera_video.svg</file>
         <file alias="camera_photo.svg">res/Images/camera_photo.svg</file>
         <file alias="px4.png">res/Images/px4.png</file>
+        <file alias="gimbal.svg">res/Images/gimbal.svg</file>
     </qresource>
     <qresource prefix="/Custom/qmlimages">
         <file alias="PaperPlane.svg">res/Images/CustomVehicleIcon.svg</file>

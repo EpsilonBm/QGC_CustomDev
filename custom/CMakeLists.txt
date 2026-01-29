@@ -94,6 +94,7 @@ qt_add_library(CustomToolStripModule STATIC)
 
 set_source_files_properties(src/CustomToolStrip/CameraSwitch.qml PROPERTIES QT_RESOURCE_ALIAS CameraSwitch.qml)
 set_source_files_properties(src/CustomToolStrip/LoadControl.qml PROPERTIES QT_RESOURCE_ALIAS LoadControl.qml)
+set_source_files_properties(src/CustomToolStrip/GimbalPage.qml PROPERTIES QT_RESOURCE_ALIAS GimbalPage.qml)
 
 
 qt_add_qml_module(CustomToolStripModule
@@ -103,6 +104,7 @@ qt_add_qml_module(CustomToolStripModule
     QML_FILES
         src/CustomToolStrip/CameraSwitch.qml
         src/CustomToolStrip/LoadControl.qml
+        src/CustomToolStrip/GimbalPage.qml
     NO_PLUGIN
 )
 

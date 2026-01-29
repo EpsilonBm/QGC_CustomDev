@@ -9,8 +9,8 @@ import QGroundControl.MultiVehicleManager
 import QGroundControl.ScreenTools
 import QGroundControl.Controllers
 import QGroundControl.Vehicle
-import Custom.QmlControls
 
+import Custom.QmlControls
 import Custom.Widgets
 
 // Custom Toolbar Indicator
@@ -215,7 +215,6 @@ Item {
 
             // Battery Indicator
             BatteryIndicator { }
-
         }
     }
 
