@@ -4475,7 +4475,7 @@ void Vehicle::sendFuelCellStartupMode(uint16_t startup_mode)
     sendFuelCellCommand(3, 0, startup_mode);
 }
 
-// 添加连接方法实现
+// 链接Vehicle和FuelCellFactGroup，传递语音信息
 void Vehicle::_connectFuelCellVoiceAlerts()
 {
     connect(&_fuelCellFactGroup, &FuelCellFactGroup::fuelLevelAnnouncementNeeded,
