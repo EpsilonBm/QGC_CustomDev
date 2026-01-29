@@ -76,6 +76,7 @@ class TrajectoryPoints;
 class VehicleBatteryFactGroup;
 class VehicleObjectAvoidance;
 class GimbalController;
+class SpeechManager;
 #ifdef QGC_UTM_ADAPTER
 class UTMSPVehicle;
 #endif
@@ -1083,6 +1084,7 @@ private:
     VehicleObjectAvoidance*         _objectAvoidance                = nullptr;
     Autotune*                       _autotune                       = nullptr;
     GimbalController*               _gimbalController               = nullptr;
+    SpeechManager*                  _speechManager                  = nullptr;
 
 #ifdef QGC_UTM_ADAPTER
     UTMSPVehicle*                    _utmspVehicle                    = nullptr;
@@ -1465,16 +1467,4 @@ private:
     MAVLinkLogManager *_mavlinkLogManager = nullptr;
 
 /*---------------------------------------------------------------------------*/
-// 在Vehicle.h的私有成员区域添加
-private:
-    QTimer* _speechTimer = nullptr;              ///< 语音循环播放定时器
-    int _speechCounter = 0;                      ///< 语音播放计数器
-    static const int _speechDurationSeconds = 10; ///< 播放持续时间（秒）
-    static const int _speechIntervalMs = 2000;    ///< 播放间隔（毫秒）
-
-    // 添加辅助方法声明
-    void _startSpeechPlayback();
-    bool _isUdpConnection();
-    void _playRepeatedSpeech();
 };
-Q_DECLARE_METATYPE(Vehicle::MavCmdResultFailureCode_t)

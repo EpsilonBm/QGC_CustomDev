@@ -72,6 +72,7 @@
 #include <QTimer>
 #include "LinkInterface.h"
 #include "UDPLink.h"
+#include  "SpeechManager.h"
 
 QGC_LOGGING_CATEGORY(VehicleLog, "VehicleLog")
 
@@ -196,17 +197,12 @@ Vehicle::Vehicle(LinkInterface*             link,
     // Start timer to limit altitude above terrain queries
     _altitudeAboveTerrQueryTimer.restart();
 
-    // 初始化语音定时器
-    _speechTimer = new QTimer(this);
-    _speechTimer->setSingleShot(false);
-    connect(_speechTimer, &QTimer::timeout, this, &Vehicle::_playRepeatedSpeech);
+    // 创建语音管理器
+    _speechManager = new SpeechManager(this, this);
 
-    // 在适当的位置连接到初始连接完成信号以开始语音播放
-    // 在Vehicle构造函数中连接正确的信号
-    connect(vehicleLinkManager(), &VehicleLinkManager::primaryLinkChanged,
-        this, &Vehicle::_startSpeechPlayback);
-    if (_isUdpConnection()) {
-        _startSpeechPlayback();
+    // 如果是UDP连接则启动语音播放
+    if (_speechManager->_isUdpConnection()) {
+        _speechManager->startSpeechPlayback();
     }
 }
 
@@ -397,11 +393,6 @@ Vehicle::~Vehicle()
 
     delete _autopilotPlugin;
     _autopilotPlugin = nullptr;
-
-    if (_speechTimer && _speechTimer->isActive()) {
-        _speechTimer->stop();
-        _speechTimer->deleteLater();
-    }
 }
 
 void Vehicle::prepareDelete()
@@ -4479,51 +4470,3 @@ void Vehicle::sendFuelCellStartupMode(uint16_t startup_mode)
     // 发送启动模式设置命令 (runtime_command = 3)
     sendFuelCellCommand(3, 0, startup_mode);
 }
-
-bool Vehicle::_isUdpConnection()
-{
-    if (vehicleLinkManager() && vehicleLinkManager()->primaryLink().lock()) {
-        auto link = vehicleLinkManager()->primaryLink().lock();
-        auto config = link->linkConfiguration();
-
-        if (config && config->type() == LinkConfiguration::TypeUdp) {
-            return true;
-        }
-    }
-    return false;
-}
-
-// 实现语音播放方法
-void Vehicle::_playRepeatedSpeech()
-{
-    // 计算最大播放次数（总时长10秒，每2秒播放一次，所以最多播放5次）
-    int maxPlays = (_speechDurationSeconds * 1000) / _speechIntervalMs;
-
-    if (_speechCounter < maxPlays) {
-        AudioOutput::instance()->say(QStringLiteral("宋兄好厉害"));
-        _speechCounter++;
-        qCDebug(VehicleLog) << "Playing speech, count:" << _speechCounter << "/" << maxPlays;
-    } else {
-        // 播放结束，停止定时器
-        if (_speechTimer && _speechTimer->isActive()) {
-            _speechTimer->stop();
-            qCDebug(VehicleLog) << "Stopped repeated speech playback after 10 seconds";
-        }
-    }
-}
-
-// 实现启动语音播放方法
-void Vehicle::_startSpeechPlayback()
-{
-    // 只在连接到UDP端口时启动语音播放
-    if (_isUdpConnection()) {
-        _speechCounter = 0;
-        if (!_speechTimer) {
-            _speechTimer = new QTimer(this);
-            connect(_speechTimer, &QTimer::timeout, this, &Vehicle::_playRepeatedSpeech);
-        }
-        _speechTimer->start(_speechIntervalMs); // 每2秒播放一次
-        qCDebug(VehicleLog) << "Started repeated speech playback for UDP connection";
-    }
-}
-
