@@ -71,8 +71,7 @@
 #include <QtCore/QDateTime>
 #include <QTimer>
 #include "LinkInterface.h"
-#include "UDPLink.h"
-#include  "SpeechManager.h"
+//#include  "SpeechManager.h"
 
 QGC_LOGGING_CATEGORY(VehicleLog, "VehicleLog")
 
@@ -197,13 +196,17 @@ Vehicle::Vehicle(LinkInterface*             link,
     // Start timer to limit altitude above terrain queries
     _altitudeAboveTerrQueryTimer.restart();
 
-    // 创建语音管理器
-    _speechManager = new SpeechManager(this, this);
+    // // 创建语音管理器
+    // _speechManager = new SpeechManager(this, this);
 
-    // 如果是UDP连接则启动语音播放
-    if (_speechManager->_isUdpConnection()) {
-        _speechManager->startSpeechPlayback();
-    }
+    // 在添加燃料电池FactGroup后连接语音信号
+    _addFactGroup(&_fuelCellFactGroup, _fuelCellFactGroupName);
+
+    // 连接燃料电池语音播报信号
+    connect(&_fuelCellFactGroup, &FuelCellFactGroup::fuelLevelAnnouncementNeeded,
+            this, [this](const QString& announcement) {
+        _say(announcement);
+    });
 }
 
 // Disconnected Vehicle for offline editing
@@ -1115,6 +1118,7 @@ void Vehicle::_setHomePosition(QGeoCoordinate& homeCoord)
     if (homeCoord != _homePosition) {
         _homePosition = homeCoord;
         qCDebug(VehicleLog) << "new home location set at coordinate: " << homeCoord;
+        AudioOutput::instance()->say(tr("返航点已刷新"));
         emit homePositionChanged(_homePosition);
     }
 }
@@ -4469,4 +4473,13 @@ void Vehicle::sendFuelCellStartupMode(uint16_t startup_mode)
 {
     // 发送启动模式设置命令 (runtime_command = 3)
     sendFuelCellCommand(3, 0, startup_mode);
+}
+
+// 添加连接方法实现
+void Vehicle::_connectFuelCellVoiceAlerts()
+{
+    connect(&_fuelCellFactGroup, &FuelCellFactGroup::fuelLevelAnnouncementNeeded,
+            this, [this](const QString& announcement) {
+        _say(announcement);
+    });
 }
