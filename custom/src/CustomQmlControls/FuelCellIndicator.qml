@@ -202,6 +202,7 @@ Item {
                     visible:                _showRemainingTime ? _showRemainingTime.rawValue : false
                 }
             }
+            // TODO: Add Temperature showing, Statues and warning
         }
     }
 
@@ -218,7 +219,7 @@ Item {
             property var fuelCellDataList: [
                 { label: qsTr("Voltage"),             fact: "loadVoltage" },
                 { label: qsTr("Current"),             fact: "dcOutputCurrent" },
-                { label: qsTr("Pressure"),            fact: "pressureLowest" },
+                { label: qsTr("Pressure"),            fact: "pressureTotal" },
                 { label: qsTr("Highest temperature"), fact: "highestTemperature" },
                 { label: qsTr("Instant power"),       fact: "instantPower" },
                 { label: qsTr("Remaining Energy"),    fact: "remainingEnergy" },
@@ -276,24 +277,8 @@ Item {
                 }
             }
 
-            // Display the current status
-            // TODO: Get the statue code definition from the SEEEX
-            // TODO: Get the data calculate way from the SEEEX
-            // LabelledLabel {
-            //     label:      qsTr("Status")
-            //     labelText:  control.fuelCell.status.valueString
-            //     labelText:  control.fuelCell.status
-            //     visible:    expandedValuesAvailable.statusAvailable
-            // }
-            //
-            // // Display alert information based on status
-            // LabelledLabel {
-            //     label:      qsTr("Alerts")
-            //     labelText:  control.fuelCell.status.valueString === "NORMAL" ? qsTr("No Alerts") : qsTr("Check Status!")
-            //     visible:    expandedValuesAvailable.statusAvailable
-            // }
-
             // Display the bottle capacity
+            // TODO: Add the bottle capacity choosing logic
             LabelledLabel {
                 label:      qsTr("氢瓶容量")
                 labelText:  (control.fuelCell && control.fuelCell.bottleCapacity) ? (control.fuelCell.bottleCapacity.valueString + " " + control.fuelCell.bottleCapacity.units) : ""

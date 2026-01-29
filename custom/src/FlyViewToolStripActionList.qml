@@ -27,6 +27,7 @@ ToolStripActionList {
         FlyViewAdditionalActionsButton { },
         CameraSwitch { } ,
         LoadControl { } ,
+        // TODO: Change the way of this button
         FuelCellCommand { }
 
     ]
