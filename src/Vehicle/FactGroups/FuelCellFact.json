@@ -147,7 +147,7 @@
             "type": "double",
             "shortDescription": "Percent Remaining",
             "units": "%",
-            "decimalPlaces": 0
+            "decimalPlaces": 1
         },
         {
             "name": "bottleCapacity",

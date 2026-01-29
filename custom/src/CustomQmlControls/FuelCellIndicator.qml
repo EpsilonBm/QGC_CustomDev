@@ -251,7 +251,7 @@ Item {
         // The expanded view now directly shows specific fuel cell status details.
         // The complex settings UI has been removed as requested.
         SettingsGroupLayout {
-            heading: qsTr("Details & Alerts")
+            heading: qsTr("Details")
 
             property var fuelCell: _activeVehicle ? _activeVehicle.fuelCell : null
             property var expandedValuesAvailable: expandedValuesAvailableLoader.item
@@ -273,7 +273,8 @@ Item {
             }
 
             // Display the current status
-            // TODO: Get the statue code define from the SEEEX
+            // TODO: Get the statue code definition from the SEEEX
+            // TODO: Get the data calculate way from the SEEEX
             // LabelledLabel {
             //     label:      qsTr("Status")
             //     labelText:  control.fuelCell.status.valueString

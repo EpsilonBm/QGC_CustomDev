@@ -52,6 +52,9 @@ FuelCellFactGroup::FuelCellFactGroup(QObject* parent)
     _addFact(&_remainingTimeFact,        _remainingTimeFact.name());
     _addFact(&_percentRemainingFact,     _percentRemainingFact.name());
     _addFact(&_bottleCapacityFact,       _bottleCapacityFact.name());
+
+    // Initialize default values
+    _bottleCapacityFact.setRawValue(_bottleCapacity);
 }
 
 void FuelCellFactGroup::setBottleCapacity(double capacity, double maxEnergy)
