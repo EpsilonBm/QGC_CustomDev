@@ -26,7 +26,8 @@ ToolStripActionList {
         GuidedActionPause { },
         FlyViewAdditionalActionsButton { },
         CameraSwitch { } ,
-        LoadControl { }
+        LoadControl { } ,
+        FuelCellCommand { }
 
     ]
 }

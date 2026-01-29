@@ -13,6 +13,9 @@ public:
 
     // 设置氢气瓶容量和最大电量
     void setBottleCapacity(double capacity, double maxEnergy);
+    // 添加语音播报相关方法
+    void setVoiceAlertThresholds(const QList<double>& thresholds);
+    void checkAndAnnounceFuelLevel();
 
     Q_PROPERTY(Fact* systemStatus         READ systemStatus         CONSTANT)
     Q_PROPERTY(Fact* loadVoltage          READ loadVoltage          CONSTANT)
@@ -71,7 +74,7 @@ signals:
     void temperatureAlert(double temperature);
     void pressureAlert(double pressure);
     void faultDetected(uint32_t fault_flags);
-
+    void fuelLevelAnnouncementNeeded(const QString& announcement);  // 添加此行
 private:
     Fact _systemStatusFact;
     Fact _loadVoltageFact;
@@ -101,4 +104,9 @@ private:
     double _maxEnergy;           // 最大电量 (kWh)
     double _avgPower;            // 平均功率 (kW)
     QQueue<double> _powerHistory; // 功率历史数据队列
+
+    // 语音播报相关成员
+    double _lastAnnouncedPercentage = -1.0;  // 上次播报的百分比
+    QList<double> _voiceAlertThresholds;     // 语音播报阈值列表
+    static constexpr double _announcementTolerance = 2.0; // 百分比容差，避免频繁播报
 };

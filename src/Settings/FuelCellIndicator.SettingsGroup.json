@@ -19,6 +19,28 @@
       "shortDesc": "Choose if show Remaining Time in FuelCell indicator",
       "type": "bool",
       "default": false
+    },
+    {
+      "name": "RuntimeCommand",
+      "shortDesc": "Command send 1",
+      "enumStrings": "example1, example2, example3",
+      "enumValues": "0,1,2",
+      "type": "uint16",
+      "default": false
+    },
+    {
+      "name": "RequestedPower",
+      "shortDesc": "Command send 2",
+      "type": "uint16",
+      "default": 0
+    },
+    {
+      "name": "StartupMode",
+      "shortDesc": "Command send 3",
+      "enumStrings": "example1, example2",
+      "enumValues": "0,1",
+      "type": "uint16",
+      "default": false
     }
   ]
 }

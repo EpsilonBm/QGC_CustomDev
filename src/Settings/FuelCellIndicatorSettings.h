@@ -14,4 +14,7 @@ public:
     DEFINE_SETTINGFACT(PercentageDisplay)
     DEFINE_SETTINGFACT(VoltageDisplay)
     DEFINE_SETTINGFACT(RemainingTimeDisplay)
+    DEFINE_SETTINGFACT(RuntimeCommand)
+    DEFINE_SETTINGFACT(RequestedPower)
+    DEFINE_SETTINGFACT(StartupMode)
 };

@@ -76,6 +76,7 @@ class TrajectoryPoints;
 class VehicleBatteryFactGroup;
 class VehicleObjectAvoidance;
 class GimbalController;
+class SpeechManager;
 #ifdef QGC_UTM_ADAPTER
 class UTMSPVehicle;
 #endif
@@ -416,6 +417,14 @@ public:
     Q_INVOKABLE void saveJoystickSettings(void);
 
     Q_INVOKABLE void sendSetupSigning();
+
+    // 燃料电池控制命令发送
+    Q_INVOKABLE void sendFuelCellCommand(uint16_t runtime_command, uint16_t requested_power, uint16_t startup_mode);
+    Q_INVOKABLE void sendFuelCellStart();
+    Q_INVOKABLE void sendFuelCellStop();
+    Q_INVOKABLE void sendFuelCellPowerRequest(uint16_t power_request);
+    Q_INVOKABLE void sendFuelCellStartupMode(uint16_t startup_mode);
+
 
     bool    isInitialConnectComplete() const;
     bool    guidedModeSupported     () const;
@@ -975,6 +984,7 @@ private:
     void _handleObstacleDistance        (const mavlink_message_t& message);
     void _handleFenceStatus             (const mavlink_message_t& message);
     void _handleEvent(uint8_t comp_id, std::unique_ptr<events::parser::ParsedEvent> event);
+    void _connectFuelCellVoiceAlerts();
     // ArduPilot dialect messages
 #if !defined(QGC_NO_ARDUPILOT_DIALECT)
     void _handleCameraFeedback          (const mavlink_message_t& message);
@@ -1075,6 +1085,7 @@ private:
     VehicleObjectAvoidance*         _objectAvoidance                = nullptr;
     Autotune*                       _autotune                       = nullptr;
     GimbalController*               _gimbalController               = nullptr;
+    SpeechManager*                  _speechManager                  = nullptr;
 
 #ifdef QGC_UTM_ADAPTER
     UTMSPVehicle*                    _utmspVehicle                    = nullptr;
@@ -1458,4 +1469,3 @@ private:
 
 /*---------------------------------------------------------------------------*/
 };
-Q_DECLARE_METATYPE(Vehicle::MavCmdResultFailureCode_t)

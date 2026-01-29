@@ -69,6 +69,9 @@
 #endif
 
 #include <QtCore/QDateTime>
+#include <QTimer>
+#include "LinkInterface.h"
+//#include  "SpeechManager.h"
 
 QGC_LOGGING_CATEGORY(VehicleLog, "VehicleLog")
 
@@ -192,6 +195,18 @@ Vehicle::Vehicle(LinkInterface*             link,
 
     // Start timer to limit altitude above terrain queries
     _altitudeAboveTerrQueryTimer.restart();
+
+    // // 创建语音管理器
+    // _speechManager = new SpeechManager(this, this);
+
+    // 在添加燃料电池FactGroup后连接语音信号
+    _addFactGroup(&_fuelCellFactGroup, _fuelCellFactGroupName);
+
+    // 连接燃料电池语音播报信号
+    connect(&_fuelCellFactGroup, &FuelCellFactGroup::fuelLevelAnnouncementNeeded,
+            this, [this](const QString& announcement) {
+        _say(announcement);
+    });
 }
 
 // Disconnected Vehicle for offline editing
@@ -1103,6 +1118,7 @@ void Vehicle::_setHomePosition(QGeoCoordinate& homeCoord)
     if (homeCoord != _homePosition) {
         _homePosition = homeCoord;
         qCDebug(VehicleLog) << "new home location set at coordinate: " << homeCoord;
+        AudioOutput::instance()->say(tr("返航点已刷新"));
         emit homePositionChanged(_homePosition);
     }
 }
@@ -4407,3 +4423,63 @@ MAVLinkLogManager *Vehicle::mavlinkLogManager() const
 }
 
 /*---------------------------------------------------------------------------*/
+/*===========================================================================*/
+/*                         FuelCell Command                                  */
+/*===========================================================================*/
+
+void Vehicle::sendFuelCellCommand(uint16_t runtime_command, uint16_t requested_power, uint16_t startup_mode)
+{
+    // 创建并发送 FUEL_CELL_COMMAND 消息
+    mavlink_message_t msg;
+
+    mavlink_msg_fuel_cell_command_pack(
+        static_cast<uint8_t>(MAVLinkProtocol::instance()->getSystemId()),
+        static_cast<uint8_t>(MAVLinkProtocol::getComponentId()),
+        &msg,
+        runtime_command,  // 运行时命令
+        requested_power,  // 请求功率
+        startup_mode      // 启动模式
+    );
+
+    // 通过主链路发送消息
+    SharedLinkInterfacePtr sharedLink = vehicleLinkManager()->primaryLink().lock();
+    if (!sharedLink) {
+        qCWarning(VehicleLog) << "sendFuelCellCommand: primary link gone!";
+        return;
+    }
+
+    sendMessageOnLinkThreadSafe(sharedLink.get(), msg);
+}
+
+void Vehicle::sendFuelCellStart()
+{
+    // 发送启动命令 (runtime_command = 1)
+    sendFuelCellCommand(1, 0, 0);
+}
+
+void Vehicle::sendFuelCellStop()
+{
+    // 发送停止命令 (runtime_command = 0)
+    sendFuelCellCommand(0, 0, 0);
+}
+
+void Vehicle::sendFuelCellPowerRequest(uint16_t power_request)
+{
+    // 发送功率请求命令 (runtime_command = 2)
+    sendFuelCellCommand(2, power_request, 0);
+}
+
+void Vehicle::sendFuelCellStartupMode(uint16_t startup_mode)
+{
+    // 发送启动模式设置命令 (runtime_command = 3)
+    sendFuelCellCommand(3, 0, startup_mode);
+}
+
+// 链接Vehicle和FuelCellFactGroup，传递语音信息
+void Vehicle::_connectFuelCellVoiceAlerts()
+{
+    connect(&_fuelCellFactGroup, &FuelCellFactGroup::fuelLevelAnnouncementNeeded,
+            this, [this](const QString& announcement) {
+        _say(announcement);
+    });
+}
