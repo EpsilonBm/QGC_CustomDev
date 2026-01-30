@@ -30,25 +30,25 @@ ToolStripAction {
                 }
             }
 
-            QGCButton {
-                text:               "sec2"
-                iconSource:         "qrc:/custom/img/chronometer.svg"
-                Layout.fillWidth:   true
-                onClicked: {
-                    _guidedController.executeAction(_guidedController._customController.actionLoadSec2, null, null, false)
-                    dropPanel.hide()
-                }
-            }
-
-            QGCButton {
-                text:               "sec3"
-                iconSource:         "qrc:/custom/img/Gps.svg"
-                Layout.fillWidth:   true
-                onClicked: {
-                    _guidedController.executeAction(_guidedController._customController.actionLoadSec3, null, null, false)
-                    dropPanel.hide()
-                }
-            }
+            // QGCButton {
+            //     text:               "sec2"
+            //     iconSource:         "qrc:/custom/img/chronometer.svg"
+            //     Layout.fillWidth:   true
+            //     onClicked: {
+            //         _guidedController.executeAction(_guidedController._customController.actionLoadSec2, null, null, false)
+            //         dropPanel.hide()
+            //     }
+            // }
+            //
+            // QGCButton {
+            //     text:               "sec3"
+            //     iconSource:         "qrc:/custom/img/Gps.svg"
+            //     Layout.fillWidth:   true
+            //     onClicked: {
+            //         _guidedController.executeAction(_guidedController._customController.actionLoadSec3, null, null, false)
+            //         dropPanel.hide()
+            //     }
+            // }
         }
     }
 

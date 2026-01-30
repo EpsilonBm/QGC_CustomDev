@@ -33,7 +33,6 @@ QtObject {
     property var    _fuelCell:           _activeVehicle ? _activeVehicle.fuelCell : null
     property var    _fuelCellSettings:   QGroundControl.settingsManager.fuelCellIndicatorSettings
 
-    // TODO: Add -1 and 3 camera mode
     property string cameraSwitchIcon: {
         if (_currentCamera) {
             // 1 = Video Mode, 0 = Photo Mode
