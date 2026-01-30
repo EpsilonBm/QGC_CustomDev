@@ -76,6 +76,7 @@ set_source_files_properties(src/CustomQmlControls/RCRSSIIndicator.qml PROPERTIES
 set_source_files_properties(src/CustomQmlControls/GPSIndicator.qml PROPERTIES QT_RESOURCE_ALIAS GPSIndicator.qml)
 set_source_files_properties(src/CustomQmlControls/MessageIndicator.qml PROPERTIES QT_RESOURCE_ALIAS MessageIndicator)
 set_source_files_properties(src/CustomQmlControls/FuelCellIndicator.qml PROPERTIES QT_RESOURCE_ALIAS FuelCellIndicator)
+set_source_files_properties(src/CustomQmlControls/CustomCompassAttitude.qml PROPERTIES QT_RESOURCE_ALIAS CustomCompassAttitude)
 
 qt_add_qml_module(CustomQmlControlsModule
     URI Custom.QmlControls
@@ -87,6 +88,7 @@ qt_add_qml_module(CustomQmlControlsModule
         src/CustomQmlControls/GPSIndicator.qml
         src/CustomQmlControls/MessageIndicator.qml
         src/CustomQmlControls/FuelCellIndicator.qml
+        src/CustomQmlControls/CustomCompassAttitude.qml
     NO_PLUGIN
 )
 
