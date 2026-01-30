@@ -3,7 +3,6 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.4
 import QtLocation 5.9
 import QtPositioning 5.5
-import Qt.labs.platform 1.1 as LabsPlatform
 
 import QGroundControl.Palette 1.0
 import QGroundControl.Controllers 1.0
@@ -13,7 +12,7 @@ import QGroundControl.FactSystem 1.0
 import QGroundControl.Vehicle 1.0
 import QGroundControl.MultiVehicleManager 1.0
 
-import QtQuick.Dialogs 1.3
+import QGroundControl
 
 Item {
     id: root
@@ -138,7 +137,10 @@ Item {
         border.color: qgcPal.windowText
         border.width: 1
 
-        QGCPalette { id: qgcPal }
+        QGCPalette { 
+            id: qgcPal 
+            colorGroupEnabled: enabled  // 确保启用颜色组
+        }
 
         // 主布局
         ColumnLayout {
@@ -318,59 +320,98 @@ Item {
                     id: listItem
                     width: ListView.view.width
                     height: 60
-                    // 根据是否为当前选中项设置颜色
-                    color: {
-                        if (index === ListView.view.currentIndex) {
-                            return qgcPal.highlight;
-                        } else {
-                            return index % 2 ? qgcPal.window : qgcPal.windowShade;
-                        }
-                    }
-                    // 边框颜色根据选中状态设置
-                    border.color: {
-                        if (mouseArea.containsMouse && index !== ListView.view.currentIndex) {
-                            return "lightblue";  // 悬停但未选中
-                        } else if (index === ListView.view.currentIndex) {
-                            return "white";  // 选中时为白色边框
-                        } else {
-                            return qgcPal.windowText || "#000000";  // 默认状态
-                        }
-                    }
-                    // 边框宽度根据选中状态设置
-                    border.width: (index === ListView.view.currentIndex) ? 2 : 1
+
+                    // 保持统一的背景色，选中状态通过边框体现
+                    color: qgcPalDelegate.window || "#ffffff"  // 总是使用窗口背景色
+                    border.color: (index === flightPathList.currentIndex) ? "white" : "#AAAAAA"  // 选中时为白色边框，未选中时为浅灰色边框
+                    border.width: (index === flightPathList.currentIndex) ? 3 : 1  // 选中时边框更粗，未选中时有细边框
                     radius: 5
 
-                    // 添加一个状态属性来帮助跟踪
-                    property bool isSelected: index === ListView.view.currentIndex
+                    // 在delegate中也需要QGCPalette
+                    QGCPalette { id: qgcPalDelegate; colorGroupEnabled: true }
 
                     RowLayout {
                         anchors.fill: parent
                         anchors.margins: 8
                         spacing: 10
 
-                        QGCLabel {
-                            text: name
-                            font.bold: true
-                            color: qgcPal.text
+                        // 左侧信息区域 - 用于显示信息
+                        Item {
                             Layout.fillWidth: true
-                        }
+                            Layout.preferredHeight: parent.height
 
-                        QGCLabel {
-                            text: date
-                            color: qgcPal.text
-                            Layout.preferredWidth: 100
-                        }
+                            RowLayout {
+                                anchors.fill: parent
+                                spacing: 10
 
-                        QGCLabel {
-                            text: distance
-                            color: qgcPal.text
-                            Layout.preferredWidth: 80
-                        }
+                                QGCLabel {
+                                    text: name
+                                    font.bold: true
+                                    color: qgcPalDelegate.text
+                                    Layout.fillWidth: true
+                                }
 
-                        QGCLabel {
-                            text: qsTr("%1个航点").arg(waypoints)
-                            color: qgcPal.text
-                            Layout.preferredWidth: 80
+                                QGCLabel {
+                                    text: date
+                                    color: qgcPalDelegate.text
+                                    Layout.preferredWidth: 100
+                                }
+
+                                QGCLabel {
+                                    text: distance
+                                    color: qgcPalDelegate.text
+                                    Layout.preferredWidth: 80
+                                }
+
+                                QGCLabel {
+                                    text: qsTr("%1个航点").arg(waypoints)
+                                    color: qgcPalDelegate.text
+                                    Layout.preferredWidth: 80
+                                }
+                            }
+
+                            // 整个信息区域的QGCMouseArea - 用于选择航线
+                            QGCMouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    console.log("【DEBUG】航线项被点击: " + name);
+                                    console.log("【DEBUG】点击的索引: " + index);
+
+                                    // 检查当前是否已经是选中状态
+                                    if (flightPathList.currentIndex === index) {
+                                        // 如果当前项已经是选中状态，则取消选中（设置为-1）
+                                        flightPathList.currentIndex = -1;
+                                        console.log("【DEBUG】取消选中航线项: " + name);
+                                    } else {
+                                        // 如果当前项不是选中状态，则选中它
+                                        flightPathList.currentIndex = index;
+                                        console.log("【DEBUG】设置currentIndex为: " + index);
+                                    }
+
+                                    // 强制触发更新以确保视觉状态同步
+                                    flightPathList.forceLayout();
+
+                                    console.log("【DEBUG】航线项选择完成，当前选中: " + flightPathList.currentIndex);
+                                }
+                                onEntered: {
+                                    console.log("【DEBUG】鼠标进入航线项: " + name);
+                                    // 只有当该项不是当前选中项时才改变颜色
+                                    if (flightPathList && index !== flightPathList.currentIndex && listItem && qgcPalDelegate) {
+                                        listItem.color = qgcPalDelegate.windowShade || "#e6e6e6";  // 使用窗口阴影色作为悬停效果
+                                    }
+                                }
+                                onExited: {
+                                    console.log("【DEBUG】鼠标离开航线项: " + name);
+                                    if (listItem && qgcPalDelegate) {
+                                        // 如果该项是选中项，则保持统一背景色；如果不是选中项，则恢复默认色
+                                        if (flightPathList && index === flightPathList.currentIndex) {
+                                            listItem.color = qgcPalDelegate.window || "#ffffff";  // 选中项也保持统一背景色
+                                        } else {
+                                            listItem.color = qgcPalDelegate.window || "#ffffff";  // 恢复默认背景色
+                                        }
+                                    }
+                                }
+                            }
                         }
 
                         Row {
@@ -379,33 +420,32 @@ Item {
                             QGCButton {
                                 text: qsTr("加载")
                                 onClicked: {
-                                    console.log("加载航线: " + name);
-                                    ListView.view.currentIndex = index;
-                                    // 实现加载航线到地图的逻辑
+                                    console.log("【DEBUG】加载按钮被点击 - 航线: " + name);
+                                    console.log("【DEBUG】当前索引: " + index);
+
+                                    // 选中当前项
+                                    flightPathList.currentIndex = index;
+                                    console.log("【DEBUG】设置flightPathList.currentIndex为: " + index);
+
+                                    console.log("【DEBUG】调用loadFlightPath函数");
                                     loadFlightPath(index);
                                 }
                             }
 
-
-
                             QGCButton {
                                 text: qsTr("删除")
                                 onClicked: {
-                                    console.log("删除航线: " + name);
-                                    ListView.view.currentIndex = index;
-                                    // 实现删除航线的逻辑
+                                    console.log("【DEBUG】删除按钮被点击 - 航线: " + name);
+                                    console.log("【DEBUG】当前索引: " + index);
+
+                                    // 选中当前项
+                                    flightPathList.currentIndex = index;
+                                    console.log("【DEBUG】设置flightPathList.currentIndex为: " + index);
+
+                                    console.log("【DEBUG】调用deleteFlightPath函数");
                                     deleteFlightPath(index);
                                 }
                             }
-                        }
-                    }
-
-                    MouseArea {
-                        id: mouseArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: {
-                            ListView.view.currentIndex = index;
                         }
                     }
                 }
@@ -421,6 +461,7 @@ Item {
                 spacing: 10
 
                 QGCLabel {
+                    id: statusLabel
                     text: qsTr("共 %1 条航线").arg(filteredFlightPathModel.count)
                     color: qgcPal.text
                 }
@@ -444,25 +485,7 @@ Item {
     // 航线库数据模型
     ListModel {
         id: flightPathModel
-        // 示例数据 - 实际应用中应从文件加载
-        ListElement {
-            name: "测试航线1"
-            date: "2024-01-15"
-            distance: "15.2 km"
-            waypoints: 8
-        }
-        ListElement {
-            name: "测试航线2"
-            date: "2024-01-10"
-            distance: "8.7 km"
-            waypoints: 5
-        }
-        ListElement {
-            name: "测试航线3"
-            date: "2024-01-05"
-            distance: "22.3 km"
-            waypoints: 12
-        }
+        // 实际应用中会从文件加载数据
     }
 
     // 过滤后的航线模型
@@ -528,6 +551,8 @@ Item {
     // 初始化时加载航线数据
     Component.onCompleted: {
         console.log("航线库界面已加载");
+        // 调试QGCFileDialogController
+        debugQGCFileDialogController();
         // 从文件系统加载航线数据
         loadFlightPathsFromStorage();
     }
@@ -561,7 +586,6 @@ Item {
             
             // 切换到计划视图
             mainWindow.showPlanView();
-            rightPanelOpen = false;
             
             console.log("已设置全局文件路径: " + flightPath.filePath);
             
@@ -569,8 +593,6 @@ Item {
             root.closeRequested();
         }
     }
-
-
 
     function deleteFlightPath(index) {
         // 删除航线的逻辑
@@ -705,7 +727,7 @@ Item {
         // 导入航线文件的逻辑
         console.log("导入航线文件: " + filePath);
         // 获取文件名（不含扩展名）
-        var fileName = filePath.split('\\\\').pop().split('/').pop();
+        var fileName = filePath.split('/').pop().split('/').pop();
         var nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
         
         // 解析任务信息
@@ -728,7 +750,7 @@ Item {
         Component.onCompleted: start()
     }
 
-    function exportFlightPath(index) {
+    function exportFlightPath(index, targetPath) {
         var flightPath = flightPathModel.get(index)
         if (!flightPath || !flightPath.filePath)
             return
@@ -762,136 +784,118 @@ Item {
         qgcApp.showMessage("航线已导出到:\n" + targetPath)
     }
 
-    function loadFlightPathsFromStorage() {
-        console.log("从存储加载航线 - 开始");
+    function loadFlightPathsFromStorage() {  
+        console.log("从存储加载航线 - 开始");  
+      
+        var missionDir = QGroundControl.settingsManager.appSettings.missionSavePath;  
+        console.log("扫描目录: " + missionDir);  
+      
+        if (!missionDir || missionDir === "") {  
+            console.log("任务保存路径未设置或为空");  
+            return;  
+        }  
+      
+        var planFiles = [];  
+        var missionFiles = [];  
+      
+        try {  
+            // 备选方案：通过实例调用  
+            var controller = fileDialogController;  
+            if (controller && typeof controller.getFiles === 'function') {  
+                planFiles = controller.getFiles(missionDir, ["*.plan"]);  
+                missionFiles = controller.getFiles(missionDir, ["*.mission"]);  
+            } else {  
+                console.log("getFiles方法不可用，尝试其他方案");  
+                // 使用QDir直接扫描  
+                planFiles = scanDirectory(missionDir, "*.plan");  
+                missionFiles = scanDirectory(missionDir, "*.mission");  
+            }  
+      
+            console.log("找到 " + planFiles.length + " 个.plan文件");  
+            console.log("找到 " + missionFiles.length + " 个.mission文件");  
+      
+            // 更新航线模型  
+            flightPathModel.clear();  
+            addFilesToModel(planFiles, ".plan");  
+            addFilesToModel(missionFiles, ".mission");  
+      
+        } catch (e) {  
+            console.log("扫描文件失败: " + e.message);  
+            console.log("错误详情: " + e.stack);  
+        }  
+      
+        updateFilteredModel();  
+        flightPathList.currentIndex = -1;  
+    }  
+      
+    // 备选的目录扫描函数  
+    function scanDirectory(directory, filter) {  
+        var files = [];  
+        try {  
+            // 使用Qt的QDir功能  
+            var dir = directory;  
+            var filterPattern = filter.replace("*.", "");  
+            console.log("扫描目录: " + dir + " 过滤器: " + filter);  
+              
+            // 这里可以实现具体的文件扫描逻辑  
+            // 由于QML限制，可能需要通过C++扩展或其他方式实现  
+              
+        } catch (e) {  
+            console.log("目录扫描失败: " + e.message);  
+        }  
+        return files;  
+    }  
+      
+    function addFilesToModel(files, extension) {  
+        var missionDir = QGroundControl.settingsManager.appSettings.missionSavePath;  
+        for (var i = 0; i < files.length; i++) {  
+            var fileName = files[i].replace(extension, '');  
+            flightPathModel.append({  
+                "name": fileName,  
+                "filePath": missionDir + "/" + files[i],  
+                "date": new Date().toISOString().split('T')[0],  
+                "distance": "未知",  
+                "waypoints": 0  
+            });  
+        }  
+    }
+    
+    function debugQGCFileDialogController() {  
+        console.log("=== QGCFileDialogController 调试信息 ===");  
+        console.log("QGCFileDialogController 类型: " + typeof QGCFileDialogController);  
+        console.log("getFiles 方法类型: " + typeof QGCFileDialogController.getFiles);  
+          
+        // 列出所有可用方法  
+        for (var prop in QGCFileDialogController) {  
+            if (typeof QGCFileDialogController[prop] === 'function') {  
+                console.log("可用方法: " + prop);  
+            }  
+        }  
+          
+        // 检查实例方法  
+        if (fileDialogController) {  
+            console.log("fileDialogController 类型: " + typeof fileDialogController);  
+            console.log("实例getFiles 方法类型: " + typeof fileDialogController.getFiles);  
+        }  
+    }
+    
+    function updateFilteredModel() {
+        // 清空过滤模型
+        filteredFlightPathModel.clear();
         
-        var missionDir = QGroundControl.settingsManager.appSettings.missionSavePath;
-        console.log("扫描目录: " + missionDir);
-        
-        if (!missionDir || missionDir === "") {
-            console.log("任务保存路径未设置或为空");
-            return;
-        }
-        
-        // 使用 QGCFileDialogController 的 getFiles 方法扫描文件
-        try {
-            // 使用 QGCFileDialogController 扫描.plan文件
-            var planFiles = QGCFileDialogController.getFiles(missionDir, ["*.plan"]);
-            var missionFiles = QGCFileDialogController.getFiles(missionDir, ["*.mission"]);
-            
-            console.log("找到 " + planFiles.length + " 个.plan文件: ", planFiles);
-            console.log("找到 " + missionFiles.length + " 个.mission文件: ", missionFiles);
-            
-            // 更新航线模型
-            flightPathModel.clear();
-            
-            // 添加.plan文件
-            for (var j = 0; j < planFiles.length; j++) {
-                var fileName = planFiles[j].split('/').pop().split('\\').pop().replace('.plan', '');
-                // 解析任务信息
-                var missionInfo = parseMissionInfo(planFiles[j]);
-                
-                flightPathModel.append({
-                    "name": fileName,
-                    "filePath": planFiles[j],
-                    "date": new Date().toISOString().split('T')[0],
-                    "distance": missionInfo.isValid ? formatDistance(missionInfo.totalDistance) : "未知",
-                    "waypoints": missionInfo.isValid ? missionInfo.waypointCount : 0
-                });
-            }
-            
-            // 添加.mission文件
-            for (var k = 0; k < missionFiles.length; k++) {
-                var fileName = missionFiles[k].split('/').pop().split('\\').pop().replace('.mission', '');
-                // 解析任务信息
-                var missionInfo = parseMissionInfo(missionFiles[k]);
-                
-                flightPathModel.append({
-                    "name": fileName,
-                    "filePath": missionFiles[k],
-                    "date": new Date().toISOString().split('T')[0],
-                    "distance": missionInfo.isValid ? formatDistance(missionInfo.totalDistance) : "未知",
-                    "waypoints": missionInfo.isValid ? missionInfo.waypointCount : 0
-                });
-            }
-            
-        } catch (e) {
-            console.log("使用QGCFileDialogController扫描文件失败: " + e.message);
-            
-            // 备用方案：如果QGCFileDialogController不可用，则使用原来的方案
-            console.log("使用备用方案扫描文件...");
-            
-            try {
-                // 使用 QML 的 FolderListModel 扫描文件
-                var folderModel = Qt.createQmlObject('import Qt.labs.folderlistmodel 2.1; FolderListModel {}',
-                                                   root, "folderModel");
-                folderModel.folder = missionDir;
-                folderModel.nameFilters = ["*.plan"];
-                
-                var planFiles = [];
-                for (var i = 0; i < folderModel.count; i++) {
-                    var fileName = folderModel.get(i).fileName;
-                    if (fileName.endsWith(".plan")) {
-                        var filePath = missionDir + "/" + fileName;
-                        planFiles.push(filePath);
-                    }
-                }
-                
-                console.log("通过FolderListModel找到 " + planFiles.length + " 个.plan文件: ", planFiles);
-                
-                // 更新航线模型
-                flightPathModel.clear();
-                for (var j = 0; j < planFiles.length; j++) {
-                    var fileName = planFiles[j].split('/').pop().replace('.plan', '');
-                    flightPathModel.append({
-                        "name": fileName,
-                        "filePath": planFiles[j],
-                        "date": new Date().toISOString().split('T')[0],
-                        "distance": "未知",
-                        "waypoints": 0
-                    });
-                }
-                
-                folderModel.destroy();
-                
-            } catch (folderError) {
-                console.log("FolderListModel方案也失败: " + folderError.message);
-                
-                // 最终备用方案：显示示例数据
-                console.log("使用示例数据");
-                flightPathModel.clear();
-                flightPathModel.append({
-                    name: "测试航线1",
-                    date: "2024-01-15",
-                    distance: "15.2 km",
-                    waypoints: 8,
-                    filePath: ""
-                });
-                flightPathModel.append({
-                    name: "测试航线2",
-                    date: "2024-01-10",
-                    distance: "8.7 km",
-                    waypoints: 5,
-                    filePath: ""
-                });
-                flightPathModel.append({
-                    name: "测试航线3",
-                    date: "2024-01-05",
-                    distance: "22.3 km",
-                    waypoints: 12,
-                    filePath: ""
-                });
+        // 复制当前搜索和排序条件下的数据到过滤模型
+        for (let i = 0; i < flightPathModel.count; i++) {
+            let item = flightPathModel.get(i);
+            // 如果当前没有搜索词或搜索词匹配，则添加到过滤模型
+            if (!searchInput || searchInput.text === "" || 
+                item.name.toLowerCase().includes(searchInput.text.toLowerCase()) ||
+                item.date.toLowerCase().includes(searchInput.text.toLowerCase())) {
+                filteredFlightPathModel.append(item);
             }
         }
         
-        // 更新过滤模型
-        updateFilteredModel();
-        
-        // 在加载完数据后，确保currentIndex为-1，避免选中状态残留
-        flightPathList.currentIndex = -1;
-        
-        console.log("完成扫描，当前模型总数: " + flightPathModel.count);
-        console.log("当前filtered模型总数: " + filteredFlightPathModel.count);
+        // 对过滤后的模型进行排序
+        sortFlightPaths(sortComboBox.currentIndex);
     }
 
     function filterFlightPaths(filterText) {
@@ -912,6 +916,7 @@ Item {
                 });
             }
         }
+        statusLabel.text = qsTr("共 %1 条航线").arg(filteredFlightPathModel.count);
     }
 
     function sortFlightPaths(sortIndex) {
@@ -999,271 +1004,29 @@ Item {
         }
     }
 
-    function copyModelData(source, target) {
-        // 复制模型数据的辅助函数
-        target.clear();
-        for (let i = 0; i < source.count; i++) {
-            target.append(source.get(i));
+    function parseMissionInfo(filePath) {
+        // 简单解析任务信息的函数
+        // 这里只是一个模拟实现，实际应用中需要解析.plan文件
+        return {
+            isValid: true,
+            totalDistance: 0,
+            waypointCount: 0
+        };
+    }
+
+    function formatDistance(distance) {
+        // 格式化距离的函数
+        if (distance > 1000) {
+            return (distance / 1000).toFixed(1) + " km";
+        } else {
+            return distance.toFixed(0) + " m";
         }
     }
 
-    function updateFilteredModel() {
-        // 更新过滤模型
-        filterFlightPaths(searchInput.text);
-        // 应用当前排序
-        sortFlightPaths(sortComboBox.currentIndex);
-    }
-    
     function selectRouteForExport(index) {
         // 选择航线用于导出
         if (index >= 0 && index < flightPathModel.count) {
-            var routeData = flightPathModel.get(index);
-            console.log("选择航线用于导出: " + routeData.name);
-            selectedRouteForExport = routeData;
-            
-            // 如果航线有关联的文件路径，尝试从文件加载任务数据到exportController
-            if (routeData.filePath && routeData.filePath !== "") {
-                console.log("从文件加载任务数据: " + routeData.filePath);
-                exportController.loadFromFile(routeData.filePath);
-            } else {
-                console.log("航线没有关联的文件路径，使用当前PlanView中的数据");
-            }
-        }
-    }
-    
-    // 优化后的导航航点计算 - 使用更安全的方法
-    function calculateNavigationWaypoints(visualItems) {
-        var count = 0;
-        try {
-            for (var i = 0; i < visualItems.count; i++) {
-                var item = visualItems.get(i);
-                
-                if (!item) continue; // 确保项目存在
-                
-                // 安全检查isSimpleItem属性
-                var isSimpleItem = false;
-                if (typeof item.isSimpleItem !== 'undefined') {
-                    if (typeof item.isSimpleItem === 'function') {
-                        isSimpleItem = item.isSimpleItem();
-                    } else {
-                        isSimpleItem = Boolean(item.isSimpleItem);
-                    }
-                }
-                
-                // 检查命令是否存在
-                var command = 0;
-                if (typeof item.command !== 'undefined') {
-                    command = Number(item.command);
-                }
-                
-                // 检查是否为SimpleMissionItem且命令为MAV_CMD_NAV_WAYPOINT
-                if (isSimpleItem && command === 16) { // MAV_CMD_NAV_WAYPOINT
-                    count++;
-                }
-            }
-        } catch (e) {
-            console.log("计算航点数时发生错误: " + e.message);
-        }
-        return count;
-    }
-    
-    // 优化后的任务信息解析器
-    function parseMissionInfo(filePath) {
-        var info = {
-            waypointCount: 0,
-            totalDistance: 0,
-            isValid: false,
-            errorString: ""
-        };
-        
-        console.log("开始解析任务文件: " + filePath);
-        
-        try {
-            var tempController = Qt.createQmlObject(
-                'import QGroundControl.Controllers; PlanMasterController {}',
-                root,  // 使用root作为父对象而不是null
-                'tempPlanController'
-            );
-            
-            console.log("PlanMasterController 创建结果: " + (tempController !== null && tempController !== undefined));
-            
-            if (tempController) {
-                tempController.start();
-                
-                tempController.loadFromFile(filePath);
-                
-                console.log("文件加载完成，检查是否包含项目...");
-                
-                if (tempController.containsItems) {
-                    console.log("文件包含项目，获取missionController...");
-                    var missionController = tempController.missionController;
-                    console.log("missionController 获取结果: " + (missionController !== null && missionController !== undefined));
-                    
-                    if (missionController) {
-                        var visualItems = missionController.visualItems;
-                        console.log("visualItems 获取结果: " + (visualItems !== null && visualItems !== undefined) + ", count: " + (visualItems ? visualItems.count : "undefined"));
-                        
-                        // 计算航点数量
-                        if (visualItems && visualItems.count > 0) {
-                            info.waypointCount = calculateNavigationWaypoints(visualItems);
-                            console.log("计算航点数结果: " + info.waypointCount);
-                        }
-                        
-                        // 直接使用QGC计算的距离，无需等待
-                        info.totalDistance = missionController.missionTotalDistance;
-                        console.log("初始距离值: " + info.totalDistance);
-                        
-                        // 计算距离可能会失败，但我们仍要确保航点数被记录
-                        try {
-                            // 直接使用QGC计算的距离，单位已经是米
-                            // 只有当距离为0或异常时才使用备选方法
-                            if (info.totalDistance === 0 || info.totalDistance > 100000) {  // 超过100km认为是异常值
-                                console.log("QGC内置距离异常或为0，使用备选方法计算距离，当前距离: " + info.totalDistance);
-                                info.totalDistance = calculateTotalDistanceFromVisualItems(visualItems);
-                                console.log("备选方法计算结果: " + info.totalDistance);
-                            }
-                            
-                            info.isValid = true; // 如果距离计算成功，设置为有效
-                        } catch (distanceError) {
-                            console.log("距离计算失败: " + distanceError.message);
-                            info.totalDistance = 0; // 重置距离为0
-                            // 即使距离计算失败，如果航点数已经计算出来了，我们仍然标记为部分有效
-                            info.isValid = (info.waypointCount > 0); // 如果有航点数，则部分有效
-                        }
-                        console.log("解析完成 - 航点数: " + info.waypointCount + ", 距离: " + info.totalDistance);
-                    } else {
-                        info.errorString = "无法获取missionController";
-                        console.log("错误：无法获取missionController");
-                    }
-                } else {
-                    info.errorString = "文件为空或无效";
-                    console.log("错误：文件为空或无效");
-                }
-                
-                // 确保清理资源
-                if (tempController.destroy) {
-                    tempController.destroy();
-                }
-            } else {
-                info.errorString = "无法创建PlanMasterController实例";
-                console.log("错误：无法创建PlanMasterController实例");
-            }
-        } catch (e) {
-            info.errorString = "解析失败: " + e.message;
-            console.log("解析任务文件失败: " + e.message + ", 堆栈: " + e.stack);
-        }
-        
-        console.log("parseMissionInfo 最终结果 - isValid: " + info.isValid + ", distance: " + info.totalDistance + ", waypoints: " + info.waypointCount);
-        return info;
-    }
-    
-    // 从距离字符串中提取数值（考虑单位）
-    function extractDistanceValue(distanceStr) {
-        if (typeof distanceStr !== 'string' && typeof distanceStr !== 'number') {
-            return NaN;
-        }
-        
-        if (typeof distanceStr === 'number') {
-            return distanceStr;
-        }
-        
-        // 移除所有空格
-        var cleanStr = distanceStr.trim();
-        
-        if (cleanStr === "未知") {
-            return NaN;
-        }
-        
-        // 检查是否包含单位
-        if (cleanStr.includes("km")) {
-            // 提取km单位的数值
-            var kmValue = parseFloat(cleanStr.replace(/km/gi, "").trim());
-            return isNaN(kmValue) ? NaN : kmValue * 1000;  // 转换为米
-        } else if (cleanStr.includes("m")) {
-            // 提取m单位的数值
-            var mValue = parseFloat(cleanStr.replace(/m/gi, "").trim());
-            return mValue;  // 保持为米
-        } else {
-            // 假设纯数字是米
-            return parseFloat(cleanStr);
-        }
-    }
-    
-    // 修复后的距离计算函数
-    function calculateTotalDistanceFromVisualItems(visualItems) {
-        var totalDistance = 0;
-        var lastCoordinate = null;
-        
-        try {
-            // 从索引1开始，跳过MissionSettingsItem
-            for (var i = 1; i < visualItems.count; i++) {
-                var item = visualItems.get(i);
-                
-                if (!item) continue; // 确保项目存在
-                
-                // 只处理指定坐标的项目
-                // 修复：检查specifiesCoordinate属性是函数还是布尔值
-                var hasCoordinate = false;
-                if (typeof item.specifiesCoordinate !== 'undefined') {
-                    if (typeof item.specifiesCoordinate === 'function') {
-                        hasCoordinate = item.specifiesCoordinate();
-                    } else {
-                        // 如果是布尔值，直接使用它
-                        hasCoordinate = Boolean(item.specifiesCoordinate);
-                    }
-                }
-                
-                if (hasCoordinate) {
-                    // 安全地获取坐标
-                    var coord = null;
-                    try {
-                        coord = item.coordinate;
-                    } catch (e) {
-                        console.log("获取坐标失败: " + e.message);
-                        continue; // 跳过此项目
-                    }
-                    
-                    // 验证坐标有效性
-                    if (coord && typeof coord.isValid !== 'undefined' && coord.isValid && 
-                        !isNaN(coord.latitude) && !isNaN(coord.longitude) &&
-                        Math.abs(coord.latitude) <= 90 && Math.abs(coord.longitude) <= 180) {
-                        
-                        if (lastCoordinate) {
-                            try {
-                                var segmentDistance = lastCoordinate.distanceTo(coord);
-                                // 检查距离是否合理（避免异常值）
-                                if (segmentDistance > 0 && segmentDistance < 1000000) { // 小于1000km
-                                    totalDistance += segmentDistance;
-                                }
-                            } catch (distanceError) {
-                                console.log("计算距离失败: " + distanceError.message);
-                                continue; // 跳过此段距离计算
-                            }
-                        }
-                        lastCoordinate = coord;
-                    }
-                }
-            }
-        } catch (e) {
-            console.log("计算距离时发生错误: " + e.message);
-        }
-        
-        return totalDistance;
-    }
-    
-    // 格式化距离显示
-    function formatDistance(distance) {
-        var distNum = Number(distance);
-        
-        if (isNaN(distNum) || distNum <= 0) {
-            return "未知";
-        }
-        
-        // 直接以米为单位进行格式化
-        if (distNum < 1000) {
-            return Math.round(distNum) + " m";
-        } else {
-            return (distNum / 1000).toFixed(2) + " km";
+            selectedRouteForExport = flightPathModel.get(index);
         }
     }
 }
