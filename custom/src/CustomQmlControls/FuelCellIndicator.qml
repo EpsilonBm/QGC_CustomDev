@@ -153,11 +153,39 @@ Item {
                     count += 1
                 }
                 if(count === 1){
-                    return ScreenTools.defaultFontPointSize
-                }else if(count === 2){
                     return ScreenTools.mediumFontPointSize
+                }else if(count === 2){
+                    return ScreenTools.defaultFontPointSize
                 }else{
                     return ScreenTools.smallFontPointSize
+                }
+            }
+
+            function getSystemStatue(){
+                if (fuelCell && fuelCell.systemStatus) {
+                    switch (fuelCell.systemStatus.value) {
+                        case 0:
+                            return qsTr("停机")
+                        case 1:
+                            return qsTr("热机")
+                        case 2:
+                            return qsTr("运行")
+                        case 3:
+                            return qsTr("故障")
+                    }
+                }
+            }
+
+            function getSystemStatueColor(){
+                if (fuelCell && fuelCell.systemStatus) {
+                    switch (fuelCell.systemStatus.value) {
+                        case 0:
+                        case 1:
+                        case 2:
+                            return qgcPal.text
+                        case 3:
+                            return qgcPal.colorRed
+                    }
                 }
             }
 
@@ -202,7 +230,31 @@ Item {
                     visible:                _showRemainingTime ? _showRemainingTime.rawValue : false
                 }
             }
-            // TODO: Add Temperature showing, Statues and warning
+            ColumnLayout {
+                id:                     batteryInfoColumn2
+                anchors.top:            parent.top
+                anchors.bottom:         parent.bottom
+                spacing:                0
+                // TODO: Add Temperature showing, Statues and warning
+                // Temperature
+                QGCLabel {
+                    Layout.alignment:       Qt.AlignHCenter
+                    verticalAlignment:      Text.AlignVCenter
+                    color:                  qgcPal.text
+                    text:                   fuelCell.highestTemperature ? (fuelCell.highestTemperature.valueString + " " + fuelCell.highestTemperature.units) : "N/A"
+                    font.pointSize:         ScreenTools.defaultFontPointSize
+                    visible:                true
+                }
+                // SystemStatues
+                QGCLabel {
+                    Layout.alignment:       Qt.AlignHCenter
+                    verticalAlignment:      Text.AlignVCenter
+                    color:                  getSystemStatueColor()
+                    text:                   fuelCell ? getSystemStatue() : "无效"
+                    font.pointSize:         ScreenTools.defaultFontPointSize
+                    visible:                true
+                }
+            }
         }
     }
 
@@ -225,6 +277,19 @@ Item {
                 { label: qsTr("Remaining Energy"),    fact: "remainingEnergy" },
                 { label: qsTr("Remaining Time"),      fact: "remainingTime" }
             ]
+            /*
+            property var fuelCellDataList: [
+                "loadVoltage",
+                "dcOutputCurrent",
+                "pressureTotal",
+                "highestTemperature",
+                "instantPower",
+                "remainingEnergy",
+                "remainingTime"
+           ]
+           */
+           // NOTE: the "shortDescription" keys is written in Chinese, but it fails to load just now.
+           // if it can't work, we can use the "label" keys instead.
 
             SettingsGroupLayout {
                 heading:        qsTr("Fuel Cell Status")

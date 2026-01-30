@@ -5,7 +5,7 @@
         {
             "name": "systemStatus",
             "type": "uint16",
-            "shortDescription": "System Status",
+            "shortDescription": "系统状态",
             "longDescription": "Overall status of the fuel cell system.",
             "enumString" : "Stop, Warm-up, Running, Fault",
             "enumValues" : "0,1,2,3"
@@ -13,7 +13,7 @@
         {
             "name": "loadVoltage",
             "type": "double",
-            "shortDescription": "Load Voltage",
+            "shortDescription": "电堆电压",
             "longDescription": "Voltage at the load.",
             "units": "V",
             "decimalPlaces": 2
@@ -21,19 +21,19 @@
         {
             "name": "errorCode",
             "type": "uint16",
-            "shortDescription": "Error Code",
+            "shortDescription": "ECU故障码",
             "longDescription": "System error code."
         },
         {
             "name": "highestTemperatureId",
             "type": "uint16",
-            "shortDescription": "Highest Temp ID",
+            "shortDescription": "最高温度电堆ID",
             "longDescription": "ID of the stack with the highest temperature."
         },
         {
             "name": "highestTemperature",
             "type": "double",
-            "shortDescription": "Highest Temp",
+            "shortDescription": "最高电堆温度",
             "longDescription": "Highest temperature in the stack.",
             "units": "°C",
             "decimalPlaces": 2
@@ -41,20 +41,20 @@
         {
             "name": "highestFanSpeed",
             "type": "uint16",
-            "shortDescription": "Highest Fan Speed",
+            "shortDescription": "最高风扇转速",
             "longDescription": "Speed of the fan for the hottest stack.",
             "units": "rpm"
         },
         {
             "name": "lowestVoltageId",
             "type": "uint16",
-            "shortDescription": "Lowest Voltage ID",
+            "shortDescription": "最低电压电堆ID",
             "longDescription": "ID of the stack with the lowest voltage."
         },
         {
             "name": "lowestVoltage",
             "type": "double",
-            "shortDescription": "Lowest Voltage",
+            "shortDescription": "最低电堆电压",
             "longDescription": "Lowest voltage in the stack.",
             "units": "V",
             "decimalPlaces": 2
@@ -62,25 +62,25 @@
         {
             "name": "faultId",
             "type": "uint16",
-            "shortDescription": "Fault ID",
+            "shortDescription": "故障ID",
             "longDescription": "Identifier for the current fault."
         },
         {
             "name": "faultDcFlag",
             "type": "uint16",
-            "shortDescription": "Fault DC Flag",
+            "shortDescription": "故障DC标志",
             "longDescription": "Flag indicating a DC-side fault."
         },
         {
             "name": "faultFcFlag",
             "type": "uint16",
-            "shortDescription": "Fault FC Flag",
+            "shortDescription": "故障FC标志",
             "longDescription": "Flag indicating a fuel cell-side fault."
         },
         {
             "name": "dcOutputCurrent",
             "type": "double",
-            "shortDescription": "Output Current",
+            "shortDescription": "DC输出总电流",
             "longDescription": "Total DC output current.",
             "units": "A",
             "decimalPlaces": 2
@@ -88,7 +88,7 @@
         {
             "name": "dcInputPower",
             "type": "double",
-            "shortDescription": "Input Power",
+            "shortDescription": "DC输入总功率",
             "longDescription": "Total DC input power.",
             "units": "W",
             "decimalPlaces": 2
@@ -96,7 +96,7 @@
         {
             "name": "dcOutputPower",
             "type": "double",
-            "shortDescription": "Output Power",
+            "shortDescription": "DC输出总功率",
             "longDescription": "Total DC output power.",
             "units": "W",
             "decimalPlaces": 2
@@ -104,13 +104,13 @@
         {
             "name": "pressureLowestId",
             "type": "uint16",
-            "shortDescription": "Lowest Pressure ID",
+            "shortDescription": "最低压力氢瓶ID",
             "longDescription": "ID of the hydrogen bottle with the lowest pressure."
         },
         {
             "name": "pressureLowest",
             "type": "double",
-            "shortDescription": "Lowest Pressure",
+            "shortDescription": "最低氢瓶压力",
             "longDescription": "Lowest pressure among hydrogen bottles.",
             "units": "bar",
             "decimalPlaces": 2
@@ -118,7 +118,7 @@
         {
             "name": "pressureTotal",
             "type": "double",
-            "shortDescription": "Total Pressure",
+            "shortDescription": "氢瓶压力总和",
             "longDescription": "Total or average pressure of hydrogen bottles.",
             "units": "bar",
             "decimalPlaces": 2
@@ -126,42 +126,42 @@
         {
             "name": "instantPower",
             "type": "double",
-            "shortDescription": "Instantaneous Power",
+            "shortDescription": "计算瞬时功率",
             "units": "W",
             "decimalPlaces": 1
         },
         {
             "name": "remainingEnergy",
             "type": "double",
-            "shortDescription": "Remaining Energy",
+            "shortDescription": "预估剩余电量",
             "units": "kWh",
             "decimalPlaces": 2
         },
         {
             "name": "remainingTime",
             "type": "double",
-            "shortDescription": "Remaining Time",
+            "shortDescription": "预估剩余时间",
             "units": "h",
             "decimalPlaces": 2
         },
         {
             "name": "percentRemaining",
             "type": "double",
-            "shortDescription": "Percent Remaining",
+            "shortDescription": "剩余电量百分比",
             "units": "%",
             "decimalPlaces": 1
         },
         {
             "name": "bottleCapacity",
             "type": "double",
-            "shortDescription": "Bottle Capacity",
+            "shortDescription": "氢瓶容量",
             "units": "L",
             "decimalPlaces": 1
         },
         {
             "name": "maxEnergy",
             "type": "double",
-            "shortDescription": "Max Energy",
+            "shortDescription": "最大电量",
             "longDescription": "Maximum energy of the fuel cell system determined by the bottle capacity.",
             "units": "kWh",
             "decimalPlaces": 1
@@ -169,7 +169,7 @@
         {
             "name": "avgPower",
             "type": "double",
-            "shortDescription": "Average Power",
+            "shortDescription": "平均功率",
             "longDescription": "Average power of the fuel cell system.",
             "units": "W",
             "decimalPlaces": 1
