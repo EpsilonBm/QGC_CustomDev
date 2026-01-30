@@ -97,6 +97,7 @@ set_source_files_properties(src/CustomToolStrip/LoadControl.qml PROPERTIES QT_RE
 set_source_files_properties(src/CustomToolStrip/GimbalPage.qml PROPERTIES QT_RESOURCE_ALIAS GimbalPage.qml)
 set_source_files_properties(src/CustomToolStrip/FuelCellCommand.qml PROPERTIES QT_RESOURCE_ALIAS FuelCellCommand.qml)
 set_source_files_properties(src/CustomToolStrip/FuelCellCommandPage.qml PROPERTIES QT_RESOURCE_ALIAS FuelCellCommandPage.qml)
+set_source_files_properties(src/CustomToolStrip/FuelCellStart.qml PROPERTIES QT_RESOURCE_ALIAS FuelCellStart.qml)
 
 qt_add_qml_module(CustomToolStripModule
     URI Custom.ToolStrip
@@ -108,6 +109,7 @@ qt_add_qml_module(CustomToolStripModule
         src/CustomToolStrip/GimbalPage.qml
         src/CustomToolStrip/FuelCellCommand.qml
         src/CustomToolStrip/FuelCellCommandPage.qml
+        src/CustomToolStrip/FuelCellStart.qml
     NO_PLUGIN
 )
 

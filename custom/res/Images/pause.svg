@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72">
+    <!-- 左侧矩形 -->
+    <rect x="21" y="18" width="16" height="42" rx="1.5" ry="1.5" fill="#ff4444"/>
+
+    <!-- 右侧矩形 -->
+    <rect x="45" y="18" width="16" height="42" rx="1.5" ry="1.5" fill="#ff4444"/>
+</svg>

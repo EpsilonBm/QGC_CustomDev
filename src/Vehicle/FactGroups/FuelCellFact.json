@@ -6,7 +6,9 @@
             "name": "systemStatus",
             "type": "uint16",
             "shortDescription": "System Status",
-            "longDescription": "Overall status of the fuel cell system."
+            "longDescription": "Overall status of the fuel cell system.",
+            "enumString" : "Stop, Warm-up, Running, Fault",
+            "enumValues" : "0,1,2,3"
         },
         {
             "name": "loadVoltage",
