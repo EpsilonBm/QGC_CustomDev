@@ -832,13 +832,15 @@ Item {
     function scanDirectory(directory, filter) {  
         var files = [];  
         try {  
-            // 使用Qt的QDir功能  
-            var dir = directory;  
-            var filterPattern = filter.replace("*.", "");  
-            console.log("扫描目录: " + dir + " 过滤器: " + filter);  
-              
-            // 这里可以实现具体的文件扫描逻辑  
-            // 由于QML限制，可能需要通过C++扩展或其他方式实现  
+            console.log("扫描目录: " + directory + " 过滤器: " + filter);  
+            
+            // 使用QGCFileDialogController来扫描文件
+            if (fileDialogController && typeof fileDialogController.getFiles === 'function') {
+                files = fileDialogController.getFiles(directory, [filter]);
+                console.log("通过fileDialogController找到 " + files.length + " 个文件");
+            } else {
+                console.log("fileDialogController.getFiles方法不可用");
+            }
               
         } catch (e) {  
             console.log("目录扫描失败: " + e.message);  
@@ -850,12 +852,17 @@ Item {
         var missionDir = QGroundControl.settingsManager.appSettings.missionSavePath;  
         for (var i = 0; i < files.length; i++) {  
             var fileName = files[i].replace(extension, '');  
+            var filePath = missionDir + "/" + files[i];
+            
+            // 解析任务信息
+            var missionInfo = parseMissionInfo(filePath);
+            
             flightPathModel.append({  
                 "name": fileName,  
-                "filePath": missionDir + "/" + files[i],  
+                "filePath": filePath,  
                 "date": new Date().toISOString().split('T')[0],  
-                "distance": "未知",  
-                "waypoints": 0  
+                "distance": missionInfo.isValid ? formatDistance(missionInfo.totalDistance) : "未知",
+                "waypoints": missionInfo.isValid ? missionInfo.waypointCount : 0
             });  
         }  
     }
@@ -919,6 +926,247 @@ Item {
         statusLabel.text = qsTr("共 %1 条航线").arg(filteredFlightPathModel.count);
     }
 
+    // 优化后的导航航点计算 - 使用更安全的方法
+    function calculateNavigationWaypoints(visualItems) {
+        var count = 0;
+        try {
+            for (var i = 0; i < visualItems.count; i++) {
+                var item = visualItems.get(i);
+
+                if (!item) continue; // 确保项目存在
+
+                // 安全检查isSimpleItem属性
+                var isSimpleItem = false;
+                if (typeof item.isSimpleItem !== 'undefined') {
+                    if (typeof item.isSimpleItem === 'function') {
+                        isSimpleItem = item.isSimpleItem();
+                    } else {
+                        isSimpleItem = Boolean(item.isSimpleItem);
+                    }
+                }
+
+                // 检查命令是否存在
+                var command = 0;
+                if (typeof item.command !== 'undefined') {
+                    command = Number(item.command);
+                }
+
+                // 检查是否为SimpleMissionItem且命令为MAV_CMD_NAV_WAYPOINT
+                if (isSimpleItem && command === 16) { // MAV_CMD_NAV_WAYPOINT
+                    count++;
+                }
+            }
+        } catch (e) {
+            console.log("计算航点数时发生错误: " + e.message);
+        }
+        return count;
+    }
+
+    // 优化后的任务信息解析器
+    function parseMissionInfo(filePath) {
+        var info = {
+            waypointCount: 0,
+            totalDistance: 0,
+            isValid: false,
+            errorString: ""
+        };
+
+        console.log("开始解析任务文件: " + filePath);
+
+        try {
+            var tempController = Qt.createQmlObject(
+                'import QGroundControl.Controllers; PlanMasterController {}',
+                root,  // 使用root作为父对象而不是flightPathLibrary
+                'tempPlanController'
+            );
+
+            console.log("PlanMasterController 创建结果: " + (tempController !== null && tempController !== undefined));
+
+            if (tempController) {
+                tempController.start();
+
+                tempController.loadFromFile(filePath);
+
+                console.log("文件加载完成，检查是否包含项目...");
+
+                if (tempController.containsItems) {
+                    console.log("文件包含项目，获取missionController...");
+                    var missionController = tempController.missionController;
+                    console.log("missionController 获取结果: " + (missionController !== null && missionController !== undefined));
+
+                    if (missionController) {
+                        var visualItems = missionController.visualItems;
+                        console.log("visualItems 获取结果: " + (visualItems !== null && visualItems !== undefined) + ", count: " + (visualItems ? visualItems.count : "undefined"));
+
+                        // 计算航点数量
+                        if (visualItems && visualItems.count > 0) {
+                            info.waypointCount = calculateNavigationWaypoints(visualItems);
+                            console.log("计算航点数结果: " + info.waypointCount);
+                        }
+
+                        // 直接使用QGC计算的距离，无需等待
+                        info.totalDistance = missionController.missionTotalDistance;
+                        console.log("初始距离值: " + info.totalDistance);
+
+                        // 计算距离可能会失败，但我们仍要确保航点数被记录
+                        try {
+                            // 直接使用QGC计算的距离，单位已经是米
+                            // 只有当距离为0或异常时才使用备选方法
+                            if (info.totalDistance === 0 || info.totalDistance > 100000) {  // 超过100km认为是异常值
+                                console.log("QGC内置距离异常或为0，使用备选方法计算距离，当前距离: " + info.totalDistance);
+                                info.totalDistance = calculateTotalDistanceFromVisualItems(visualItems);
+                                console.log("备选方法计算结果: " + info.totalDistance);
+                            }
+
+                            info.isValid = true; // 如果距离计算成功，设置为有效
+                        } catch (distanceError) {
+                            console.log("距离计算失败: " + distanceError.message);
+                            info.totalDistance = 0; // 重置距离为0
+                            // 即使距离计算失败，如果航点数已经计算出来了，我们仍然标记为部分有效
+                            info.isValid = (info.waypointCount > 0); // 如果有航点数，则部分有效
+                        }
+                        console.log("解析完成 - 航点数: " + info.waypointCount + ", 距离: " + info.totalDistance);
+                    } else {
+                        info.errorString = "无法获取missionController";
+                        console.log("错误：无法获取missionController");
+                    }
+                } else {
+                    info.errorString = "文件为空或无效";
+                    console.log("错误：文件为空或无效");
+                }
+
+                // 确保清理资源
+                if (tempController.destroy) {
+                    tempController.destroy();
+                }
+            } else {
+                info.errorString = "无法创建PlanMasterController实例";
+                console.log("错误：无法创建PlanMasterController实例");
+            }
+        } catch (e) {
+            info.errorString = "解析失败: " + e.message;
+            console.log("解析任务文件失败: " + e.message);
+        }
+
+        return info;
+    }
+
+    // 从距离字符串中提取数值（考虑单位）
+    function extractDistanceValue(distanceStr) {
+        if (typeof distanceStr !== 'string' && typeof distanceStr !== 'number') {
+            return NaN;
+        }
+
+        if (typeof distanceStr === 'number') {
+            return distanceStr;
+        }
+
+        // 移除所有空格
+        var cleanStr = distanceStr.trim();
+
+        if (cleanStr === "未知") {
+            return NaN;
+        }
+
+        // 检查是否包含单位
+        if (cleanStr.includes("km")) {
+            // 提取km单位的数值
+            var kmValue = parseFloat(cleanStr.replace(/km/gi, "").trim());
+            return isNaN(kmValue) ? NaN : kmValue * 1000;  // 转换为米
+        } else if (cleanStr.includes("m")) {
+            // 提取m单位的数值
+            var mValue = parseFloat(cleanStr.replace(/m/gi, "").trim());
+            return mValue;  // 保持为米
+        } else {
+            // 假设纯数字是米
+            return parseFloat(cleanStr);
+        }
+    }
+
+    // 修复后的距离计算函数
+    function calculateTotalDistanceFromVisualItems(visualItems) {
+        var totalDistance = 0;
+        var lastCoordinate = null;
+
+        try {
+            // 从索引1开始，跳过MissionSettingsItem
+            for (var i = 1; i < visualItems.count; i++) {
+                var item = visualItems.get(i);
+
+                if (!item) continue; // 确保项目存在
+
+                // 只处理指定坐标的项目
+                // 修复：检查specifiesCoordinate属性是函数还是布尔值
+                var hasCoordinate = false;
+                if (typeof item.specifiesCoordinate !== 'undefined') {
+                    if (typeof item.specifiesCoordinate === 'function') {
+                        hasCoordinate = item.specifiesCoordinate();
+                    } else {
+                        // 如果是布尔值，直接使用它
+                        hasCoordinate = Boolean(item.specifiesCoordinate);
+                    }
+                }
+
+                if (hasCoordinate) {
+                    // 安全地获取坐标
+                    var coord = null;
+                    try {
+                        coord = item.coordinate;
+                    } catch (e) {
+                        console.log("获取坐标失败: " + e.message);
+                        continue; // 跳过此项目
+                    }
+
+                    // 验证坐标有效性
+                    if (coord && typeof coord.isValid !== 'undefined' && coord.isValid &&
+                        !isNaN(coord.latitude) && !isNaN(coord.longitude) &&
+                        Math.abs(coord.latitude) <= 90 && Math.abs(coord.longitude) <= 180) {
+
+                        if (lastCoordinate) {
+                            try {
+                                var segmentDistance = lastCoordinate.distanceTo(coord);
+                                // 检查距离是否合理（避免异常值）
+                                if (segmentDistance > 0 && segmentDistance < 1000000) { // 小于1000km
+                                    totalDistance += segmentDistance;
+                                }
+                            } catch (distanceError) {
+                                console.log("计算距离失败: " + distanceError.message);
+                                continue; // 跳过此段距离计算
+                            }
+                        }
+                        lastCoordinate = coord;
+                    }
+                }
+            }
+        } catch (e) {
+            console.log("计算距离时发生错误: " + e.message);
+        }
+
+        return totalDistance;
+    }
+
+    // 格式化距离显示
+    function formatDistance(distance) {
+        var distNum = Number(distance);
+
+        if (isNaN(distNum) || distNum <= 0) {
+            return "未知";
+        }
+        
+        // 根据距离大小选择合适的单位
+        if (distNum >= 1000) {
+            var kmValue = distNum / 1000;
+            // 如果转换为公里后是整数或小数点后两位非零，则显示公里
+            if (kmValue % 1 === 0) {
+                return kmValue.toFixed(0) + " km";
+            } else {
+                return kmValue.toFixed(2) + " km";
+            }
+        } else {
+            return Math.round(distNum) + " m";
+        }
+    }
+
     function sortFlightPaths(sortIndex) {
         // 记录当前选中的项目（如果有的话），以便在排序后尝试恢复
         var currentSelectedItem = null;
@@ -964,12 +1212,12 @@ Item {
                 break;
             case 2: // 按距离排序
                 tempArray.sort(function(a, b) {
-                    // 提取数字部分进行比较
-                    var numA = parseFloat(a.distance);
-                    var numB = parseFloat(b.distance);
-                    if (isNaN(numA)) numA = Infinity;
-                    if (isNaN(numB)) numB = Infinity;
-                    return numB - numA; // 大距离在前
+                    // 使用统一的单位进行比较
+                    var distA = extractDistanceValue(a.distance);
+                    var distB = extractDistanceValue(b.distance);
+                    if (isNaN(distA)) distA = Infinity;
+                    if (isNaN(distB)) distB = Infinity;
+                    return distB - distA; // 大距离在前
                 });
                 break;
             case 3: // 按航点数排序
@@ -1004,29 +1252,21 @@ Item {
         }
     }
 
-    function parseMissionInfo(filePath) {
-        // 简单解析任务信息的函数
-        // 这里只是一个模拟实现，实际应用中需要解析.plan文件
-        return {
-            isValid: true,
-            totalDistance: 0,
-            waypointCount: 0
-        };
-    }
-
-    function formatDistance(distance) {
-        // 格式化距离的函数
-        if (distance > 1000) {
-            return (distance / 1000).toFixed(1) + " km";
-        } else {
-            return distance.toFixed(0) + " m";
-        }
-    }
-
     function selectRouteForExport(index) {
-        // 选择航线用于导出
-        if (index >= 0 && index < flightPathModel.count) {
-            selectedRouteForExport = flightPathModel.get(index);
+        var flightPath = flightPathModel.get(index);
+        if (!flightPath || !flightPath.filePath) {
+            console.log("无法选择航线用于导出：缺少文件路径");
+            return;
+        }
+        
+        console.log("加载航线到exportController: " + flightPath.filePath);
+        
+        // 加载航线到exportController
+        try {
+            exportController.loadFromFile(flightPath.filePath);
+            console.log("航线成功加载到exportController");
+        } catch (error) {
+            console.log("加载航线到exportController失败: " + error.message);
         }
     }
 }
