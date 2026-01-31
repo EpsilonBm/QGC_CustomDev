@@ -85,10 +85,6 @@ QtObject {
             confirmDialog.title = customButtonTitle
             confirmDialog.message = customButtonMessage
             break
-        case actionCameraSwitch:
-            // We handle execution directly via executeAction override in QML, there is no need for confirm,
-            // but if it falls through here, we don't need a dialog.
-            return false
         case actionFuelCellStart:
             confirmDialog.hideTrigger = true
             confirmDialog.title = startSwitchText
