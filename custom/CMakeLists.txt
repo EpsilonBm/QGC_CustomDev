@@ -119,6 +119,7 @@ qt_add_library(CustomFlyViewModule STATIC)
 
 set_source_files_properties(src/CustomFlyView/CustomPanel.qml PROPERTIES QT_RESOURCE_ALIAS CustomPanel.qml)
 set_source_files_properties(src/CustomFlyView/ValuesBar.qml PROPERTIES QT_RESOURCE_ALIAS ValuesBar.qml)
+set_source_files_properties(src/CustomFlyView/FuelCellValueIndicator.qml PROPERTIES QT_RESOURCE_ALIAS FuelCellValueIndicator.qml)
 
 qt_add_qml_module(CustomFlyViewModule
     URI Custom.FlyView
@@ -127,7 +128,21 @@ qt_add_qml_module(CustomFlyViewModule
     QML_FILES
         src/CustomFlyView/CustomPanel.qml
         src/CustomFlyView/ValuesBar.qml
+        src/CustomFlyView/FuelCellValueIndicator.qml
     NO_PLUGIN
+)
+
+qt_add_library(CustomFuelCell STATIC)
+
+set_source_files_properties(src/FuelCell/FuelCellPage.qml PROPERTIES QT_RESOURCE_ALIAS FuelCellPage)
+
+qt_add_qml_module(CustomFuelCell
+        URI Custom.FuelCell
+        VERSION 1.0
+        RESOURCE_PREFIX /qml
+        QML_FILES
+        src/FuelCell/FuelCellPage.qml
+        NO_PLUGIN
 )
 
 set(CUSTOM_SOURCES
@@ -147,6 +162,7 @@ set(CUSTOM_LIBRARIES
     CustomQmlControlsModule
     CustomToolStripModule
     CustomFlyViewModule
+    CustomFuelCell
     CACHE INTERNAL "" FORCE
 )
 
