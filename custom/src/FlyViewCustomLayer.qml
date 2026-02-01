@@ -174,8 +174,11 @@ Item {
             Button {
                 text: "媒体库"
                 onClicked: {
-                    // 可以复用QGCMediaBrowser组件
-                    console.log("媒体库功能待实现")
+                    // 动态加载媒体库界面
+                    console.log("媒体库按钮被点击");
+                    mediaLibraryLoader.source = "MediaLibraryView.qml";
+                    mediaLibraryLoader.active = true;
+                    rightPanelOpen = false;  // 关闭面板
                 }
             }
 
@@ -231,6 +234,26 @@ Item {
                 item.closeRequested.connect(function() {
                     console.log("收到关闭信号，隐藏航线库");
                     flightPathLibraryLoader.active = false;
+                });
+            }
+        }
+    }
+
+    // 使用Loader动态加载媒体库组件
+    Loader {
+        id: mediaLibraryLoader
+        anchors.fill: parent
+        z: 999  // 确保媒体库显示在最上层
+        active: false  // 默认不激活，只有点击媒体库按钮时才加载
+
+        // 当加载完成后，连接关闭信号
+        onLoaded: {
+            console.log("媒体库组件加载完成");
+            if (item && item.closeRequested) {
+                console.log("连接媒体库关闭信号");
+                item.closeRequested.connect(function() {
+                    console.log("收到媒体库关闭信号，隐藏媒体库");
+                    mediaLibraryLoader.active = false;
                 });
             }
         }

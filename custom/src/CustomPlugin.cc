@@ -371,6 +371,7 @@ QQmlApplicationEngine* CustomPlugin::createQmlApplicationEngine(QObject* parent)
 {
     _qmlEngine = QGCCorePlugin::createQmlApplicationEngine(parent);
     _qmlEngine->addImportPath("qrc:/Custom/Widgets");
+    _qmlEngine->addImportPath("qrc:/Custom/MediaLibrary"); // 添加媒体库路径
     // TODO: Investigate _qmlEngine->setExtraSelectors({"custom"})
 
     _selector = new CustomOverrideInterceptor();
