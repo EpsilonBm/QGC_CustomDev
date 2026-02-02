@@ -27,6 +27,8 @@ Item {
     property real _rollAngle:           _activeVehicle ? _activeVehicle.roll.rawValue  : 0
     property real _pitchAngle:          _activeVehicle ? _activeVehicle.pitch.rawValue : 0
 
+    height:                             valuesBar.height > 0 ? valuesBar.height : ScreenTools.defaultFontPixelHeight * 3
+
     // TODO: Insets changing
     // ValuesBar {
     //     id: valuesBar

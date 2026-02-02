@@ -66,8 +66,8 @@ Item {
         topEdgeCenterInset:     parentToolInsets.topEdgeCenterInset
         topEdgeRightInset:      parentToolInsets.topEdgeRightInset
         bottomEdgeLeftInset:    parentToolInsets.bottomEdgeLeftInset
-        bottomEdgeCenterInset:  parentToolInsets.bottomEdgeCenterInset
-        bottomEdgeRightInset:   parentToolInsets.bottomEdgeRightInset
+        bottomEdgeCenterInset:  customPanel.height + parentToolInsets.bottomEdgeCenterInset
+        bottomEdgeRightInset:   customPanel.height + parentToolInsets.bottomEdgeRightInset
     }
 
     // This is an example of how you can use parent tool insets to position an element on the custom fly view layer
