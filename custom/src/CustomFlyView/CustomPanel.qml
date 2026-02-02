@@ -73,7 +73,7 @@ Item {
                 verticalAlignment:      Text.AlignVCenter
                 color:                  qgcPal.text
                 text:                   "航向角:" + (_activeVehicle ? _heading.toFixed(0) : "-.-") + "°"
-                font.pointSize:         ScreenTools.smallFontPointSize
+                font.pointSize:         ScreenTools.defaultFontPointSize
                 visible:                true
             }
             QGCLabel {
@@ -81,7 +81,7 @@ Item {
                 verticalAlignment:      Text.AlignVCenter
                 color:                  qgcPal.text
                 text:                   "俯仰角:" + (_activeVehicle ? _pitchAngle.toFixed(0) : "-.-") + "°"
-                font.pointSize:         ScreenTools.smallFontPointSize
+                font.pointSize:         ScreenTools.defaultFontPointSize
                 visible:                true
             }
             QGCLabel {
@@ -89,7 +89,7 @@ Item {
                 verticalAlignment:      Text.AlignVCenter
                 color:                  qgcPal.text
                 text:                   "滚转角:" + (_activeVehicle ? _rollAngle.toFixed(0) : "-.-") + "°"
-                font.pointSize:         ScreenTools.smallFontPointSize
+                font.pointSize:         ScreenTools.defaultFontPointSize
                 visible:                true
             }
         }
