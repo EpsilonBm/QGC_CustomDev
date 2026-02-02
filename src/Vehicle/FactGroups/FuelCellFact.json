@@ -16,7 +16,7 @@
             "shortDescription": "电堆电压",
             "longDescription": "Voltage at the load.",
             "units": "V",
-            "decimalPlaces": 2
+            "decimalPlaces": 1
         },
         {
             "name": "errorCode",
@@ -36,7 +36,7 @@
             "shortDescription": "最高电堆温度",
             "longDescription": "Highest temperature in the stack.",
             "units": "°C",
-            "decimalPlaces": 2
+            "decimalPlaces": 1
         },
         {
             "name": "highestFanSpeed",
@@ -57,7 +57,7 @@
             "shortDescription": "最低电堆电压",
             "longDescription": "Lowest voltage in the stack.",
             "units": "V",
-            "decimalPlaces": 2
+            "decimalPlaces": 1
         },
         {
             "name": "faultId",
@@ -83,7 +83,7 @@
             "shortDescription": "DC输出总电流",
             "longDescription": "Total DC output current.",
             "units": "A",
-            "decimalPlaces": 2
+            "decimalPlaces": 1
         },
         {
             "name": "dcInputPower",
@@ -91,7 +91,7 @@
             "shortDescription": "DC输入总功率",
             "longDescription": "Total DC input power.",
             "units": "W",
-            "decimalPlaces": 2
+            "decimalPlaces": 1
         },
         {
             "name": "dcOutputPower",
@@ -99,7 +99,7 @@
             "shortDescription": "DC输出总功率",
             "longDescription": "Total DC output power.",
             "units": "W",
-            "decimalPlaces": 2
+            "decimalPlaces": 1
         },
         {
             "name": "pressureLowestId",
@@ -112,16 +112,16 @@
             "type": "double",
             "shortDescription": "最低氢瓶压力",
             "longDescription": "Lowest pressure among hydrogen bottles.",
-            "units": "bar",
-            "decimalPlaces": 2
+            "units": "kPa",
+            "decimalPlaces": 1
         },
         {
             "name": "pressureTotal",
             "type": "double",
             "shortDescription": "氢瓶压力总和",
             "longDescription": "Total or average pressure of hydrogen bottles.",
-            "units": "bar",
-            "decimalPlaces": 2
+            "units": "kPa",
+            "decimalPlaces": 1
         },
         {
             "name": "instantPower",
@@ -135,14 +135,14 @@
             "type": "double",
             "shortDescription": "预估剩余电量",
             "units": "kWh",
-            "decimalPlaces": 2
+            "decimalPlaces": 1
         },
         {
             "name": "remainingTime",
             "type": "double",
             "shortDescription": "预估剩余时间",
             "units": "h",
-            "decimalPlaces": 2
+            "decimalPlaces": 1
         },
         {
             "name": "percentRemaining",
@@ -156,6 +156,10 @@
             "type": "double",
             "shortDescription": "氢瓶容量",
             "units": "L",
+            "default":              9.0,
+            "min":                  0.01,
+            "max":                  20.0,
+            "increment":            0.1,
             "decimalPlaces": 1
         },
         {

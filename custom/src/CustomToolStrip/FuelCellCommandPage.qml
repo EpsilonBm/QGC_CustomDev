@@ -8,16 +8,18 @@ import QGroundControl.FactControls
 import QGroundControl.ScreenTools
 
 // This component provides a drawer page for configuring and sending Fuel Cell commands.
-ToolIndicatorPage {
+QGCPopupDialog {
     id: root
+    title: qsTr("Fuel Cell Command")
+    buttons: Dialog.Close
 
     // Get references to the active vehicle and the specific settings group
     property var _activeVehicle:      QGroundControl.multiVehicleManager.activeVehicle
     property var _fuelCellSettings:   QGroundControl.settingsManager.fuelCellIndicatorSettings
 
-    // The main content of the drawer
-    contentComponent: SettingsGroupLayout {
-        heading: qsTr("Fuel Cell Command")
+    ColumnLayout {
+        spacing: ScreenTools.defaultFontPixelHeight
+        Layout.fillWidth: true
 
         // Use a GridLayout for clean alignment of labels and controls
         GridLayout {
@@ -60,7 +62,7 @@ ToolIndicatorPage {
         // Send Command Button
         QGCButton {
             text: qsTr("Send Command")
-            anchors.horizontalCenter: parent.horizontalCenter
+            Layout.alignment: Qt.AlignHCenter
             onClicked: {
                 if (_activeVehicle) {
                     _activeVehicle.sendFuelCellCommand(

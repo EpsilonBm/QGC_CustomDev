@@ -223,7 +223,6 @@ Item {
                 anchors.top:            parent.top
                 anchors.bottom:         parent.bottom
                 spacing:                0
-                // TODO: Add Temperature showing, Statues and warning
                 // Temperature
                 QGCLabel {
                     Layout.alignment:       Qt.AlignHCenter

@@ -9,6 +9,7 @@ import QGroundControl.Palette
 
 import Custom.QmlControls
 import Custom.Widgets
+import Custom.FlyView
 
 Item {
     id: _root
@@ -92,7 +93,7 @@ Item {
             }
         }
 
-        FuelCellIndicator {
+        FuelCellValueIndicator {
             id:                 _fuelCellIndicator
             anchors.right:      parent.right
         }

@@ -199,32 +199,8 @@ Item {
                     color:                  qgcPal.text
                     text:                   getBatteryPercentageText()
                     font.pointSize:         getVisibleCount()
-                    visible:                _showPercentage ? _showPercentage.rawValue : false
+                    visible:                ScreenTools.defaultFontPointSize
                 }
-                QGCLabel {
-                    Layout.alignment:       Qt.AlignHCenter
-                    verticalAlignment:      Text.AlignVCenter
-                    color:                  qgcPal.text
-                    text:                   getBatteryVoltageText()
-                    font.pointSize:         getVisibleCount()
-                    visible:                _showVoltage ? _showVoltage.rawValue : false
-                }
-                QGCLabel {
-                    Layout.alignment:       Qt.AlignHCenter
-                    verticalAlignment:      Text.AlignVCenter
-                    color:                  qgcPal.text
-                    text:                   getRemainingTimeText()
-                    font.pointSize:         getVisibleCount()
-                    visible:                _showRemainingTime ? _showRemainingTime.rawValue : false
-                }
-            }
-            ColumnLayout {
-                id:                     batteryInfoColumn2
-                anchors.top:            parent.top
-                anchors.bottom:         parent.bottom
-                spacing:                0
-                // TODO: Add Temperature showing, Statues and warning
-                // Temperature
                 QGCLabel {
                     Layout.alignment:       Qt.AlignHCenter
                     verticalAlignment:      Text.AlignVCenter

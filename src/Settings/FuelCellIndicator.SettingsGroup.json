@@ -23,8 +23,8 @@
     {
       "name": "RuntimeCommand",
       "shortDesc": "Command send 1",
-      "enumStrings": "example1, example2, example3",
-      "enumValues": "0,1,2",
+      "enumStrings": "Halt,Start,Scram,Reset",
+      "enumValues": "0,1,2,3",
       "type": "uint16",
       "default": false
     },
@@ -32,13 +32,15 @@
       "name": "RequestedPower",
       "shortDesc": "Command send 2",
       "type": "uint16",
-      "default": 0
+      "default": 0,
+      "min": 0.01,
+      "max": 50000
     },
     {
       "name": "StartupMode",
       "shortDesc": "Command send 3",
-      "enumStrings": "example1, example2",
-      "enumValues": "0,1",
+      "enumStrings": "Manual mode,Automatic mode,Manual debug,Single FCU debug",
+      "enumValues": "0,1,2,3",
       "type": "uint16",
       "default": false
     }

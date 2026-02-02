@@ -26,6 +26,7 @@ FuelCellFactGroup::FuelCellFactGroup(QObject* parent)
     , _remainingTimeFact        (0, "remainingTime",        FactMetaData::valueTypeDouble,  this)
     , _percentRemainingFact     (0, "percentRemaining",     FactMetaData::valueTypeDouble,  this)
     , _bottleCapacityFact       (0, "bottleCapacity",       FactMetaData::valueTypeDouble,  this)
+    , _maxEnergyFact            (0, "maxEnergy",            FactMetaData::valueTypeDouble,  this)
     , _bottleCapacity(9.0)      // 默认9L氢气瓶
     , _maxEnergy(3.0)           // 默认3度电
     , _avgPower(0.0)            // 平均功率初始化为0
@@ -54,9 +55,11 @@ FuelCellFactGroup::FuelCellFactGroup(QObject* parent)
     _addFact(&_remainingTimeFact,        _remainingTimeFact.name());
     _addFact(&_percentRemainingFact,     _percentRemainingFact.name());
     _addFact(&_bottleCapacityFact,       _bottleCapacityFact.name());
+    _addFact(&_maxEnergyFact,            _maxEnergyFact.name());
 
     // Initialize default values
     _bottleCapacityFact.setRawValue(_bottleCapacity);
+    _maxEnergyFact.setRawValue(_maxEnergy);
 }
 
 // 添加语音播报阈值设置方法
@@ -120,6 +123,7 @@ void FuelCellFactGroup::setBottleCapacity(double capacity, double maxEnergy)
     _bottleCapacityFact.setRawValue(capacity);
     // TODO: Add relationship between bottle capacity and max energy
     _maxEnergy = maxEnergy;
+    _maxEnergyFact.setRawValue(maxEnergy);
 }
 
 void FuelCellFactGroup::handleMessage(Vehicle* /*vehicle*/, mavlink_message_t& message)
@@ -182,16 +186,4 @@ void FuelCellFactGroup::handleMessage(Vehicle* /*vehicle*/, mavlink_message_t& m
 
     // 在这里添加语音播报检查
     checkAndAnnounceFuelLevel();
-
-    // 5. Determine status string
-    // TODO: match it after getting the specific meaning from the SEEEX
-    // QString statusStr = "NORMAL";
-    // if (status.fault_id != 0) {
-    //     statusStr = "FAULT";
-    // } else if (_highestTemperatureFact.rawValue().toDouble() > 80.0) {
-    //     statusStr = "HIGH_TEMP";
-    // } else if (_loadVoltageFact.rawValue().toDouble() < 20.0 && _loadVoltageFact.rawValue().toDouble() > 0) {
-    //     statusStr = "LOW_VOLTAGE";
-    // }
-    // _statusFact.setRawValue(statusStr);
 }

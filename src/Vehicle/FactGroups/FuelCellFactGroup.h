@@ -39,6 +39,7 @@ public:
     Q_PROPERTY(Fact* remainingTime        READ remainingTime        CONSTANT)
     Q_PROPERTY(Fact* percentRemaining     READ percentRemaining     CONSTANT)
     Q_PROPERTY(Fact* bottleCapacity       READ bottleCapacity       CONSTANT)
+    Q_PROPERTY(Fact* maxEnergy            READ maxEnergy            CONSTANT)
 
     // Fact 访问器 (C++侧使用，QML侧直接通过属性名访问)
     Fact* systemStatus          () { return &_systemStatusFact; }
@@ -63,6 +64,7 @@ public:
     Fact* remainingTime         () { return &_remainingTimeFact; }
     Fact* percentRemaining      () { return &_percentRemainingFact; }
     Fact* bottleCapacity        () { return &_bottleCapacityFact; }
+    Fact* maxEnergy             () { return &_maxEnergyFact; }
 
     void handleMessage(Vehicle* vehicle, mavlink_message_t& message);
 
@@ -98,6 +100,7 @@ private:
     Fact _remainingTimeFact;
     Fact _percentRemainingFact;
     Fact _bottleCapacityFact;
+    Fact _maxEnergyFact;
 
     // 燃料电池参数
     double _bottleCapacity;      // 氢气瓶容量 (L)
