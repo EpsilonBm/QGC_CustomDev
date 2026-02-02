@@ -4,7 +4,7 @@ import QGroundControl.Controls
 import QGroundControl.FlightDisplay
 
 ToolStripAction {
-    text:       qsTr("照片/视频切换")
+    text:       qsTr("切换")
     iconSource: _guidedController._customController.cameraSwitchIcon
     visible:    _guidedController._customController.cameraAvailable
     enabled:    _guidedController._customController.cameraAvailable

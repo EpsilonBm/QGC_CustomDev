@@ -8,7 +8,7 @@ import QGroundControl.ScreenTools
 import Custom.ToolStrip 1.0
 
 ToolStripAction {
-    text:           qsTr("Load")
+    text:           qsTr("负载控制")
     iconSource:     "/qmlimages/Gears.svg"
     visible:        QGroundControl.multiVehicleManager.activeVehicle
     enabled:        visible
@@ -21,7 +21,7 @@ ToolStripAction {
 
             QGCButton {
                 id:                 gimbalButton
-                text:               "gimbal"
+                text:               "云台"
                 iconSource:         "qrc:/custom/img/gimbal.svg"
                 Layout.fillWidth:   true
                 onClicked: {

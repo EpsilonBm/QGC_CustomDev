@@ -42,7 +42,7 @@ ToolIndicatorPage {
     contentComponent: GridLayout {
         // Label indicating the purpose of the panel and active gimbal instance
         QGCLabel {
-            text:                   qsTr("Gimbal ") +
+            text:                   qsTr("云台 ") +
                                         (root.multiGimbalSetup ? root.activeGimbal.deviceId.rawValue : "") +
                                             qsTr("<br> Controls")
 
