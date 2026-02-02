@@ -14,6 +14,8 @@ Item {
     id: root
     anchors.fill: parent
 
+
+
     // 定义关闭信号，用于通知父级隐藏自身
     signal closeRequested()
 
