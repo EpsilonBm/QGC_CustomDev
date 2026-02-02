@@ -13,7 +13,6 @@ import MAVLink
 
 import Custom.ToolStrip
 
-// TODO: choose appropriate value to restructure the popup page.
 ToolIndicatorPage {
     id: _root
     property var _fuelCell
@@ -136,9 +135,6 @@ ToolIndicatorPage {
                 heading: qsTr("氢瓶配置")
 
                 property real sliderWidth: ScreenTools.defaultFontPixelWidth * 40
-                // Display the bottle capacity
-                // TODO: Add the bottle capacity choosing logic
-
                 FactSlider {
                     Layout.fillWidth:       true
                     Layout.preferredWidth:  sliderWidth

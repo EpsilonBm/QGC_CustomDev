@@ -29,7 +29,6 @@ Item {
 
     height:                             valuesBar.height > 0 ? valuesBar.height : ScreenTools.defaultFontPixelHeight * 3
 
-    // TODO: Insets changing
     // ValuesBar {
     //     id: valuesBar
     //     anchors.bottom: parent.bottom

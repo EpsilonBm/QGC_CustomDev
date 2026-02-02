@@ -43,17 +43,6 @@ Item {
     property var    _activeVehicle:         QGroundControl.multiVehicleManager.activeVehicle
     property real   _toolsMargin:           ScreenTools.defaultFontPixelWidth * 0.75
 
-    function secondsToHHMMSS(timeS) {
-        var sec_num = parseInt(timeS, 10);
-        var hours   = Math.floor(sec_num / 3600);
-        var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
-        var seconds = sec_num - (hours * 3600) - (minutes * 60);
-        if (hours   < 10) {hours   = "0"+hours;}
-        if (minutes < 10) {minutes = "0"+minutes;}
-        if (seconds < 10) {seconds = "0"+seconds;}
-        return hours+':'+minutes+':'+seconds;
-    }
-
     QGCToolInsets {
         id:                     _totalToolInsets
         leftEdgeTopInset:       parentToolInsets.leftEdgeTopInset
@@ -70,27 +59,6 @@ Item {
         bottomEdgeRightInset:   customPanel.height + parentToolInsets.bottomEdgeRightInset
     }
 
-    // This is an example of how you can use parent tool insets to position an element on the custom fly view layer
-    // - we use parent topEdgeLeftInset to position the widget below the toolstrip
-    // - we use parent bottomEdgeLeftInset to dodge the virtual joystick if enabled
-    // - we use the parent leftEdgeTopInset to size our element to the same width as the ToolStripAction
-    // - we export the width of this element as the leftEdgeCenterInset so that the map will recenter if the vehicle flys behind this element
-    Rectangle {
-        id: exampleRectangle
-        visible: false // to see this example, set this to true. To view insets, enable the insets viewer FlyView.qml
-        anchors.left: parent.left
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        anchors.topMargin: parentToolInsets.topEdgeLeftInset + _toolsMargin
-        anchors.bottomMargin: parentToolInsets.bottomEdgeLeftInset + _toolsMargin
-        anchors.leftMargin: _toolsMargin
-        width: parentToolInsets.leftEdgeTopInset - _toolsMargin
-        color: 'red'
-
-        property real leftEdgeCenterInset: visible ? x + width : 0
-    }
-
-    // TODO: To see how its size adapted to the screen especially in Android
     CustomPanel {
         id:                        customPanel
         anchors.bottom:            parent.bottom

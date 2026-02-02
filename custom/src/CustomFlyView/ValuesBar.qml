@@ -106,8 +106,6 @@ Item {
     }
 
     // 右侧：电池指示器
-    // TODO: create a new type of the fuelcell indicator to change the mouse event
-    // TODO: two cell statue in column
     FuelCellIndicator {
         id:                     _fuelCellIndicator
         anchors.left:           parent.horizontalCenter  // 左边锚定到父元素中心
