@@ -48,6 +48,7 @@
         <file alias="QGroundControl/FlightDisplay/FlyViewBottomRightRowLayout.qml">src/CustomFlyView/FlyViewBottomRightRowLayout.qml</file>
         <file alias="QGroundControl/Controls/FlyViewToolBar.qml">src/FlyViewToolBar.qml</file>
         <file alias="QGroundControl/FlightDisplay/VtFlightPathLibrary.qml">src/VtFlightPathLibrary.qml</file>
+        <file alias="QGroundControl/FlightDisplay/MediaLibraryView.qml">src/MediaLibraryView.qml</file>
     </qresource>
     <qresource prefix="/Custom/res">
         <file alias="QGCLogoFull.svg">res/SEEEX_Logo.png</file>
