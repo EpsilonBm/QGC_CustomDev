@@ -1012,36 +1012,99 @@ Item {
 
     function exportFlightPath(index, targetPath) {
         var flightPath = flightPathModel.get(index)
-        if (!flightPath || !flightPath.filePath)
-            return
-
-        var sourcePath = flightPath.filePath
-        console.log("准备导出航线:", flightPath.name, sourcePath)
-
-        if (!fileDialogController.fileExists(sourcePath)) {
-            console.warn("源航线不存在:", sourcePath)
+        if (!flightPath || !flightPath.filePath) {
+            console.log("航线或文件路径不存在");
+            qgcApp.showMessageDialog(qsTr("错误"), qsTr("无法导出航线：航线或文件路径不存在"));
             return
         }
 
-        // 1. 加载原始航线
-        _planMasterController.loadFromFile(sourcePath)
+        var sourcePath = flightPath.filePath
+        console.log("准备导出航线:", flightPath.name, "源路径:", sourcePath, "目标路径:", targetPath)
 
-        // 2. 构造目标文件名（推荐加时间戳，避免覆盖）
-        var timeStr = Qt.formatDateTime(new Date(), "yyyyMMdd_hhmmss")
-        var fileName = flightPath.name + "_" + timeStr + ".plan"
+        if (!fileDialogController.fileExists(sourcePath)) {
+            console.warn("源航线不存在:", sourcePath)
+            qgcApp.showMessageDialog(qsTr("错误"), qsTr("源航线文件不存在:" + sourcePath));
+            return
+        }
 
-        // 3. 目标路径（Android 安全）
-        var targetPath =
-            QGCFileDialogController.defaultSavePath()
-            + "/" + fileName
+        // 1. 创建临时PlanMasterController实例用于导出
+        var tempController = Qt.createQmlObject(
+            'import QGroundControl.Controllers; PlanMasterController {}',
+            root, 'tempExportController'
+        );
+        
+        if (tempController) {
+            tempController.start();
+            
+            // 2. 加载原始航线
+            tempController.loadFromFile(sourcePath);
+            
+            // 3. 使用QGCFileDialog返回的实际目标路径
+            if (!targetPath || targetPath === "") {
+                console.log("目标路径为空，使用默认路径");
+                // 如果没有目标路径，构造一个默认路径
+                var defaultFileName = flightPath.name + ".plan";
+                targetPath = QGroundControl.settingsManager.appSettings.missionSavePath + "/" + defaultFileName;
+                
+                // 如果文件已存在，添加时间戳
+                if (fileDialogController.fileExists(targetPath)) {
+                    var timestamp = new Date().getTime();
+                    var baseName = flightPath.name;
+                    var newFileName = baseName + "_" + timestamp + ".plan";
+                    targetPath = QGroundControl.settingsManager.appSettings.missionSavePath + "/" + newFileName;
+                }
+            }
 
-        console.log("导出目标路径:", targetPath)
+            console.log("最终导出目标路径:", targetPath)
 
-        // 4. 保存
-        _planMasterController.saveToFile(targetPath)
-
-        // 5. 可选：提示
-        qgcApp.showMessage("航线已导出到:\n" + targetPath)
+            // 4. 保存到指定路径
+            try {
+                tempController.saveToFile(targetPath);
+                console.log("航线导出成功:", targetPath);
+                // 使用QGroundControl全局对象显示消息
+                if (typeof QGroundControl !== 'undefined' && QGroundControl.corePlugin && QGroundControl.corePlugin.options && typeof QGroundControl.corePlugin.options.showMessage === 'function') {
+                    QGroundControl.corePlugin.options.showMessage(qsTr("航线已成功导出到:\n" + targetPath));
+                } else {
+                    // 如果上述方法不可用，尝试使用qmlApp
+                    if (typeof qmlApp !== 'undefined' && qmlApp && typeof qmlApp.showMessage === 'function') {
+                        qmlApp.showMessage(qsTr("航线已成功导出到:\n" + targetPath));
+                    } else {
+                        console.log("航线已成功导出到:\n" + targetPath);
+                    }
+                }
+            } catch (error) {
+                console.log("导出航线时发生错误:", error.message);
+                // 使用QGroundControl全局对象显示错误消息
+                if (typeof QGroundControl !== 'undefined' && QGroundControl.corePlugin && QGroundControl.corePlugin.options && typeof QGroundControl.corePlugin.options.showMessageDialog === 'function') {
+                    QGroundControl.corePlugin.options.showMessageDialog(qsTr("错误"), qsTr("导出航线失败: " + error.message));
+                } else {
+                    // 如果上述方法不可用，尝试使用qmlApp
+                    if (typeof qmlApp !== 'undefined' && qmlApp && typeof qmlApp.showMessageDialog === 'function') {
+                        qmlApp.showMessageDialog(qsTr("错误"), qsTr("导出航线失败: " + error.message));
+                    } else {
+                        console.log("导出航线失败: " + error.message);
+                    }
+                }
+            } finally {
+                // 5. 清理临时控制器
+                if (tempController && tempController.destroy) {
+                    tempController.destroy();
+                }
+            }
+        } else {
+            console.log("无法创建临时PlanMasterController实例");
+            // 使用QGroundControl全局对象显示错误消息
+            if (typeof QGroundControl !== 'undefined' && QGroundControl.corePlugin && QGroundControl.corePlugin.options && typeof QGroundControl.corePlugin.options.showMessageDialog === 'function') {
+                QGroundControl.corePlugin.options.showMessageDialog(qsTr("错误"), qsTr("无法创建导出控制器"));
+            } else {
+                // 如果上述方法不可用，尝试使用qmlApp
+                if (typeof qmlApp !== 'undefined' && qmlApp && typeof qmlApp.showMessageDialog === 'function') {
+                    qmlApp.showMessageDialog(qsTr("错误"), qsTr("无法创建导出控制器"));
+                } else {
+                    console.log("无法创建导出控制器");
+                }
+            }
+        }
     }
 
     function loadFlightPathsFromStorage() {  
