@@ -14,6 +14,7 @@
 #include "AppSettings.h"
 
 #include <QtCore/QDir>
+#include <QtCore/QFile>
 
 QGC_LOGGING_CATEGORY(QGCFileDialogControllerLog, "qgc.qmlcontrols.qgcfiledialogcontroller")
 
@@ -113,4 +114,19 @@ QString QGCFileDialogController::urlToLocalFile(QUrl url)
     }
 
     return url.toString();
+}
+
+bool QGCFileDialogController::copyFile(const QString &source, const QString &destination)
+{
+    qCDebug(QGCFileDialogControllerLog) << "Copying file from" << source << "to" << destination;
+    
+    bool result = QFile::copy(source, destination);
+    
+    if (result) {
+        qCDebug(QGCFileDialogControllerLog) << "Successfully copied file from" << source << "to" << destination;
+    } else {
+        qCWarning(QGCFileDialogControllerLog) << "Failed to copy file from" << source << "to" << destination;
+    }
+    
+    return result;
 }

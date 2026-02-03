@@ -66,6 +66,27 @@ Item {
         parentToolInsets:          _root.parentToolInsets
     }
 
+    // 半透明背景覆盖层，用于点击关闭面板
+    Rectangle {
+        id: backgroundOverlay
+        z: 99
+        anchors.fill: parent
+        color: "black"
+        opacity: 0
+        visible: rightPanelOpen
+        
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                rightPanelOpen = false
+            }
+        }
+        
+        Behavior on opacity {
+            NumberAnimation { duration: 250 }
+        }
+    }
+    
     Rectangle {
         id: rightTaskPanel
         z: 100
@@ -83,70 +104,108 @@ Item {
             }
         }
 
+        // 阻止鼠标事件穿透到背景层
+        MouseArea {
+            anchors.fill: parent
+            propagateComposedEvents: true
+            onClicked: {
+                // 如果点击的是面板本身，则不关闭面板
+                mouse.accepted = true
+            }
+        }
+        
         Column {
             anchors.fill: parent
             anchors.margins: 12
             spacing: 10
-
+            
             Text {
                 text: "任务 / 设置"
                 color: "white"
                 font.pixelSize: 18
+                height: 30
             }
-
-            Button {
-                text: "任务规划"
-                onClicked: {
-                    // 跳转到任务规划视图
-                    if (mainWindow.allowViewSwitch()) {
-                        mainWindow.showPlanView()
-                        rightPanelOpen = false  // 关闭面板
+            
+            Flickable {
+                id: flickable
+                width: parent.width
+                height: parent.height - 40  // 减去标题的高度
+                contentWidth: parent.width
+                contentHeight: buttonColumn.height  // 根据内容调整高度
+                clip: true
+                
+                Column {
+                    id: buttonColumn
+                    width: parent.width
+                    spacing: 10
+                    
+                    Button {
+                        text: "任务规划"
+                        width: parent.width
+                        height: 40
+                        onClicked: {
+                            // 跳转到任务规划视图
+                            if (mainWindow.allowViewSwitch()) {
+                                mainWindow.showPlanView()
+                                rightPanelOpen = false  // 关闭面板
+                            }
+                        }
+                    }
+                    
+                    Button {
+                        text: "航线库"
+                        width: parent.width
+                        height: 40
+                        onClicked: {
+                            // 动态加载航线库界面
+                            console.log("航线库按钮被点击");
+                            flightPathLibraryLoader.source = "VtFlightPathLibrary.qml";
+                            flightPathLibraryLoader.active = true;
+                            rightPanelOpen = false;  // 关闭面板
+                        }
+                    }
+                    
+                    Button {
+                        text: "设备状态"
+                        width: parent.width
+                        height: 40
+                        onClicked: {
+                            // 打开设备配置页面
+                            if (mainWindow.allowViewSwitch()) {
+                                mainWindow.showVehicleConfig()
+                                rightPanelOpen = false
+                            }
+                        }
+                    }
+                    
+                    Button {
+                        text: "媒体库"
+                        width: parent.width
+                        height: 40
+                        onClicked: {
+                            // 动态加载媒体库界面
+                            console.log("媒体库按钮被点击");
+                            mediaLibraryLoader.source = "MediaLibraryView.qml";
+                            mediaLibraryLoader.active = true;
+                            rightPanelOpen = false;  // 关闭面板
+                        }
+                    }
+                    
+                    Button {
+                        text: "设置"
+                        width: parent.width
+                        height: 40
+                        onClicked: {
+                            // 跳转到应用设置
+                            if (mainWindow.allowViewSwitch()) {
+                                mainWindow.showSettingsTool()
+                                rightPanelOpen = false
+                            }
+                        }
                     }
                 }
-            }
-
-            Button {
-                text: "航线库"
-                onClicked: {
-                    // 动态加载航线库界面
-                    console.log("航线库按钮被点击");
-                    flightPathLibraryLoader.source = "VtFlightPathLibrary.qml";
-                    flightPathLibraryLoader.active = true;
-                    rightPanelOpen = false;  // 关闭面板
-                }
-            }
-
-            Button {
-                text: "设备状态"
-                onClicked: {
-                    // 打开设备配置页面
-                    if (mainWindow.allowViewSwitch()) {
-                        mainWindow.showVehicleConfig()
-                        rightPanelOpen = false
-                    }
-                }
-            }
-
-            Button {
-                text: "媒体库"
-                onClicked: {
-                    // 动态加载媒体库界面
-                    console.log("媒体库按钮被点击");
-                    mediaLibraryLoader.source = "MediaLibraryView.qml";
-                    mediaLibraryLoader.active = true;
-                    rightPanelOpen = false;  // 关闭面板
-                }
-            }
-
-            Button {
-                text: "设置"
-                onClicked: {
-                    // 跳转到应用设置
-                    if (mainWindow.allowViewSwitch()) {
-                        mainWindow.showSettingsTool()
-                        rightPanelOpen = false
-                    }
-                }
+                
+                ScrollBar.vertical: ScrollBar {}
             }
         }
     }

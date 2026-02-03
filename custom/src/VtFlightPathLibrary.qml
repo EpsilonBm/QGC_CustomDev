@@ -109,6 +109,112 @@ Item {
         }
     }
 
+    // 重命名航线对话框组件
+    Component {
+        id: renameRouteDialogComponent
+        
+        QGCPopupDialog {
+            id: renameRouteDialog
+            title: qsTr("重命名航线")
+            buttons: Dialog.Ok | Dialog.Cancel
+            
+            property string oldName
+            property string oldFilePath
+            property int currentIndex: -1
+            property var renameCallback
+            
+            // 输入字段
+            ColumnLayout {
+                QGCLabel {
+                    text: qsTr("请输入新的航线名称：")
+                    Layout.preferredWidth: Math.max(mainWindow.width / 3, headerMinWidth)
+                }
+                
+                TextField {
+                    id: newNameField
+                    text: oldName
+                    Layout.preferredWidth: Math.max(mainWindow.width / 3, headerMinWidth)
+                    selectByMouse: true
+                    focus: true
+                    
+                    Keys.onReturnPressed: {
+                        if (renameRouteDialog.buttons & Dialog.Ok) {
+                            renameRouteDialog.accept();
+                        }
+                    }
+                    
+                    Keys.onEnterPressed: {
+                        if (renameRouteDialog.buttons & Dialog.Ok) {
+                            renameRouteDialog.accept();
+                        }
+                    }
+                }
+                
+                QGCLabel {
+                    id: errorMessage
+                    text: ""
+                    color: "red"
+                    visible: text !== ""
+                    Layout.preferredWidth: Math.max(mainWindow.width / 3, headerMinWidth)
+                }
+            }
+            
+            onAccepted: {
+                var newName = newNameField.text.trim();
+                
+                if (newName === "") {
+                    errorMessage.text = qsTr("航线名称不能为空");
+                    return;
+                }
+                
+                if (newName === oldName) {
+                    // 名称未改变，直接关闭对话框
+                    if (renameCallback) {
+                        renameCallback();
+                    }
+                    return;
+                }
+                
+                // 检查新名称是否已存在
+                var newFileName = newName + ".plan";
+                var newFilePath = QGroundControl.settingsManager.appSettings.missionSavePath + "/" + newFileName;
+                
+                if (fileDialogController.fileExists(newFilePath)) {
+                    errorMessage.text = qsTr("该名称已存在，请选择其他名称");
+                    return;
+                }
+                
+                // 执行重命名操作 - 使用新的重命名函数
+                try {
+                    console.log("准备重命名文件: " + oldFilePath + " -> " + newName + " (索引: " + currentIndex + ")");
+                    
+                    // 调用新的重命名函数，它会处理加载、保存、删除的全过程
+                    var success = renameFlightPath(currentIndex, newName);
+                    
+                    if (success) {
+                        console.log("文件重命名成功");
+                        
+                        if (renameCallback) {
+                            console.log("调用重命名回调函数");
+                            renameCallback(newName, newFilePath);
+                        }
+                    } else {
+                        console.log("文件重命名失败");
+                        errorMessage.text = qsTr("重命名失败，请检查权限或文件状态");
+                    }
+                } catch (error) {
+                    console.log("重命名过程中发生错误: " + error.message);
+                    errorMessage.text = qsTr("重命名过程中发生错误: " + error.message);
+                }
+            }
+            
+            onRejected: {
+                // 用户取消操作
+                console.log("重命名操作已取消");
+            }
+        }
+    }
+
     // 半透明背景，让用户知道覆盖层已显示
     Rectangle {
         anchors.fill: parent
@@ -219,15 +325,7 @@ Item {
                     }
                 }
 
-                QGCButton {
-                    text: qsTr("新建")
-                    onClicked: {
-                        // 创建新航线
-                        console.log("准备创建新航线");
-                        // 可以在这里打开一个新的创建航线对话框
-                        createNewFlightPath();
-                    }
-                }
+
 
                 QGCButton {
                     text: qsTr("关闭")
@@ -433,6 +531,56 @@ Item {
                             }
 
                             QGCButton {
+                                text: qsTr("编辑")
+                                onClicked: {
+                                    console.log("【DEBUG】编辑按钮被点击 - 航线: " + name);
+                                    console.log("【DEBUG】当前索引: " + index);
+
+                                    // 选中当前项
+                                    flightPathList.currentIndex = index;
+                                    console.log("【DEBUG】设置flightPathList.currentIndex为: " + index);
+
+                                    console.log("【DEBUG】调用renameFlightPath函数");
+                                    // 创建重命名对话框并传入当前索引
+                                    var renameDialog = renameRouteDialogComponent.createObject(root, {
+                                        oldName: name,
+                                        oldFilePath: filePath,
+                                        currentIndex: index, // 传递当前索引
+                                        renameCallback: function(newName, newFilePath) {
+                                            console.log("重命名回调函数被调用");
+                                            
+                                            if (newName && newFilePath) {
+                                                // 更新模型中的数据
+                                                flightPathModel.setProperty(index, "name", newName);
+                                                flightPathModel.setProperty(index, "filePath", newFilePath);
+                                                
+                                                // 重新计算航线信息
+                                                var missionInfo = parseMissionInfo(newFilePath);
+                                                flightPathModel.setProperty(index, "distance", missionInfo.isValid ? formatDistance(missionInfo.totalDistance) : "未知");
+                                                flightPathModel.setProperty(index, "waypoints", missionInfo.isValid ? missionInfo.waypointCount : 0);
+                                                
+                                                // 更新过滤模型
+                                                updateFilteredModel();
+                                                
+                                                console.log("航线重命名成功: " + newName);
+                                                qgcApp.showMessage(qsTr("航线已重命名为: " + newName));
+                                            } else {
+                                                console.log("重命名操作失败或被取消");
+                                            }
+                                        }
+                                    });
+                                    
+                                    if (renameDialog) {
+                                        console.log("打开重命名对话框");
+                                        renameDialog.open();
+                                    } else {
+                                        console.log("无法创建重命名对话框");
+                                        qgcApp.showMessageDialog(qsTr("错误"), qsTr("无法创建重命名对话框。"));
+                                    }
+                                }
+                            }
+
+                            QGCButton {
                                 text: qsTr("删除")
                                 onClicked: {
                                     console.log("【DEBUG】删除按钮被点击 - 航线: " + name);
@@ -558,18 +706,7 @@ Item {
     }
 
     // JavaScript 函数实现实际功能
-    function createNewFlightPath() {
-        // 创建新航线的逻辑
-        console.log("创建新航线功能");
-        // 添加一个新航线到模型
-        flightPathModel.append({
-            "name": "新航线_" + (flightPathModel.count + 1),
-            "date": new Date().toISOString().split('T')[0],
-            "distance": "未知",
-            "waypoints": 0
-        });
-        updateFilteredModel();
-    }
+
 
     function loadFlightPath(index) {
         var flightPath = flightPathModel.get(index);
@@ -723,6 +860,129 @@ Item {
         console.log("=== 删除调试结束 ===");
     }
 
+    function renameFlightPath(index, newName) {
+        var flightPath = flightPathModel.get(index);
+        var oldFilePath = flightPath.filePath;
+        
+        if (!oldFilePath || oldFilePath === "") {
+            console.log("文件路径为空，无法重命名");
+            qgcApp.showMessageDialog(qsTr("错误"), qsTr("无法重命名此航线，因为它没有关联的文件。"));
+            return false;
+        }
+        
+        // 验证新名称
+        if (!newName || newName.trim() === "") {
+            console.log("新名称无效");
+            qgcApp.showMessageDialog(qsTr("错误"), qsTr("请输入有效的航线名称。"));
+            return false;
+        }
+        
+        try {
+            // 1. 加载现有航线文件
+            var planController = _createTempPlanController();
+            if (!planController) {
+                console.log("无法创建临时控制器");
+                return false;
+            }
+            
+            planController.loadFromFile(oldFilePath);
+            
+            if (!planController.containsItems) {
+                console.log("航线文件无效或为空");
+                planController.destroy();
+                return false;
+            }
+            
+            // 2. 生成新文件路径
+            var newFilePath = _generateNewFilePath(oldFilePath, newName);
+            
+            // 3. 检查新文件是否已存在
+            if (fileDialogController.fileExists(newFilePath)) {
+                console.log("目标文件已存在: " + newFilePath);
+                planController.destroy();
+                qgcApp.showMessageDialog(qsTr("错误"), qsTr("该航线名称已存在，请选择其他名称。"));
+                return false;
+            }
+            
+            // 4. 保存到新文件
+            planController.saveToFile(newFilePath);
+            
+            // 5. 删除旧文件
+            _deleteFileSafely(oldFilePath);
+            
+            // 6. 更新模型
+            flightPathModel.setProperty(index, "name", newName);
+            flightPathModel.setProperty(index, "filePath", newFilePath);
+            
+            // 重新计算航线信息
+            var missionInfo = parseMissionInfo(newFilePath);
+            flightPathModel.setProperty(index, "distance", missionInfo.isValid ? formatDistance(missionInfo.totalDistance) : "未知");
+            flightPathModel.setProperty(index, "waypoints", missionInfo.isValid ? missionInfo.waypointCount : 0);
+            
+            // 更新过滤模型
+            updateFilteredModel();
+            
+            // 7. 清理资源
+            planController.destroy();
+            
+            console.log("重命名成功: " + oldFilePath + " -> " + newFilePath);
+            qgcApp.showMessage(qsTr("航线已重命名为: " + newName));
+            return true;
+            
+        } catch (e) {
+            console.log("重命名失败: " + e.message);
+            qgcApp.showMessageDialog(qsTr("错误"), qsTr("重命名失败: " + e.message));
+            return false;
+        }
+    }
+    
+    function _generateNewFilePath(oldPath, newName) {
+        // 提取目录路径
+        var lastSlash = Math.max(oldPath.lastIndexOf('/'), oldPath.lastIndexOf('\\'));
+        var directory = oldPath.substring(0, lastSlash + 1);
+        
+        // 添加.plan扩展名
+        if (!newName.toLowerCase().endsWith('.plan')) {
+            newName += '.plan';
+        }
+        
+        return directory + newName;
+    }
+    
+    function _createTempPlanController() {
+        try {
+            return Qt.createQmlObject(
+                'import QGroundControl.Controllers; PlanMasterController {}',
+                root, 'tempRenameController'
+            );
+        } catch (e) {
+            console.log("创建临时控制器失败: " + e.message);
+            return null;
+        }
+    }
+    
+    function _deleteFileSafely(filePath) {
+        try {
+            if (typeof fileDialogController !== 'undefined' && 
+                fileDialogController.deleteFile) {
+                fileDialogController.deleteFile(filePath);
+                console.log("删除旧文件: " + filePath);
+            }
+        } catch (e) {
+            console.log("删除文件失败: " + e.message);
+        }
+    }
+    
+    function findFlightPathIndexByFilePath(filePath) {
+        for (var i = 0; i < flightPathModel.count; i++) {
+            var item = flightPathModel.get(i);
+            if (item.filePath === filePath) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     function importFlightPath(filePath) {
         // 导入航线文件的逻辑
         console.log("导入航线文件: " + filePath);
@@ -752,36 +1012,99 @@ Item {
 
     function exportFlightPath(index, targetPath) {
         var flightPath = flightPathModel.get(index)
-        if (!flightPath || !flightPath.filePath)
-            return
-
-        var sourcePath = flightPath.filePath
-        console.log("准备导出航线:", flightPath.name, sourcePath)
-
-        if (!fileDialogController.fileExists(sourcePath)) {
-            console.warn("源航线不存在:", sourcePath)
+        if (!flightPath || !flightPath.filePath) {
+            console.log("航线或文件路径不存在");
+            qgcApp.showMessageDialog(qsTr("错误"), qsTr("无法导出航线：航线或文件路径不存在"));
             return
         }
 
-        // 1. 加载原始航线
-        _planMasterController.loadFromFile(sourcePath)
+        var sourcePath = flightPath.filePath
+        console.log("准备导出航线:", flightPath.name, "源路径:", sourcePath, "目标路径:", targetPath)
 
-        // 2. 构造目标文件名（推荐加时间戳，避免覆盖）
-        var timeStr = Qt.formatDateTime(new Date(), "yyyyMMdd_hhmmss")
-        var fileName = flightPath.name + "_" + timeStr + ".plan"
+        if (!fileDialogController.fileExists(sourcePath)) {
+            console.warn("源航线不存在:", sourcePath)
+            qgcApp.showMessageDialog(qsTr("错误"), qsTr("源航线文件不存在:" + sourcePath));
+            return
+        }
 
-        // 3. 目标路径（Android 安全）
-        var targetPath =
-            QGCFileDialogController.defaultSavePath()
-            + "/" + fileName
+        // 1. 创建临时PlanMasterController实例用于导出
+        var tempController = Qt.createQmlObject(
+            'import QGroundControl.Controllers; PlanMasterController {}',
+            root, 'tempExportController'
+        );
+        
+        if (tempController) {
+            tempController.start();
+            
+            // 2. 加载原始航线
+            tempController.loadFromFile(sourcePath);
+            
+            // 3. 使用QGCFileDialog返回的实际目标路径
+            if (!targetPath || targetPath === "") {
+                console.log("目标路径为空，使用默认路径");
+                // 如果没有目标路径，构造一个默认路径
+                var defaultFileName = flightPath.name + ".plan";
+                targetPath = QGroundControl.settingsManager.appSettings.missionSavePath + "/" + defaultFileName;
+                
+                // 如果文件已存在，添加时间戳
+                if (fileDialogController.fileExists(targetPath)) {
+                    var timestamp = new Date().getTime();
+                    var baseName = flightPath.name;
+                    var newFileName = baseName + "_" + timestamp + ".plan";
+                    targetPath = QGroundControl.settingsManager.appSettings.missionSavePath + "/" + newFileName;
+                }
+            }
 
-        console.log("导出目标路径:", targetPath)
+            console.log("最终导出目标路径:", targetPath)
 
-        // 4. 保存
-        _planMasterController.saveToFile(targetPath)
-
-        // 5. 可选：提示
-        qgcApp.showMessage("航线已导出到:\n" + targetPath)
+            // 4. 保存到指定路径
+            try {
+                tempController.saveToFile(targetPath);
+                console.log("航线导出成功:", targetPath);
+                // 使用QGroundControl全局对象显示消息
+                if (typeof QGroundControl !== 'undefined' && QGroundControl.corePlugin && QGroundControl.corePlugin.options && typeof QGroundControl.corePlugin.options.showMessage === 'function') {
+                    QGroundControl.corePlugin.options.showMessage(qsTr("航线已成功导出到:\n" + targetPath));
+                } else {
+                    // 如果上述方法不可用，尝试使用qmlApp
+                    if (typeof qmlApp !== 'undefined' && qmlApp && typeof qmlApp.showMessage === 'function') {
+                        qmlApp.showMessage(qsTr("航线已成功导出到:\n" + targetPath));
+                    } else {
+                        console.log("航线已成功导出到:\n" + targetPath);
+                    }
+                }
+            } catch (error) {
+                console.log("导出航线时发生错误:", error.message);
+                // 使用QGroundControl全局对象显示错误消息
+                if (typeof QGroundControl !== 'undefined' && QGroundControl.corePlugin && QGroundControl.corePlugin.options && typeof QGroundControl.corePlugin.options.showMessageDialog === 'function') {
+                    QGroundControl.corePlugin.options.showMessageDialog(qsTr("错误"), qsTr("导出航线失败: " + error.message));
+                } else {
+                    // 如果上述方法不可用，尝试使用qmlApp
+                    if (typeof qmlApp !== 'undefined' && qmlApp && typeof qmlApp.showMessageDialog === 'function') {
+                        qmlApp.showMessageDialog(qsTr("错误"), qsTr("导出航线失败: " + error.message));
+                    } else {
+                        console.log("导出航线失败: " + error.message);
+                    }
+                }
+            } finally {
+                // 5. 清理临时控制器
+                if (tempController && tempController.destroy) {
+                    tempController.destroy();
+                }
+            }
+        } else {
+            console.log("无法创建临时PlanMasterController实例");
+            // 使用QGroundControl全局对象显示错误消息
+            if (typeof QGroundControl !== 'undefined' && QGroundControl.corePlugin && QGroundControl.corePlugin.options && typeof QGroundControl.corePlugin.options.showMessageDialog === 'function') {
+                QGroundControl.corePlugin.options.showMessageDialog(qsTr("错误"), qsTr("无法创建导出控制器"));
+            } else {
+                // 如果上述方法不可用，尝试使用qmlApp
+                if (typeof qmlApp !== 'undefined' && qmlApp && typeof qmlApp.showMessageDialog === 'function') {
+                    qmlApp.showMessageDialog(qsTr("错误"), qsTr("无法创建导出控制器"));
+                } else {
+                    console.log("无法创建导出控制器");
+                }
+            }
+        }
     }
 
     function loadFlightPathsFromStorage() {  
@@ -1004,19 +1327,10 @@ Item {
                             console.log("计算航点数结果: " + info.waypointCount);
                         }
 
-                        // 直接使用QGC计算的距离，无需等待
-                        info.totalDistance = missionController.missionTotalDistance;
-                        console.log("初始距离值: " + info.totalDistance);
-
-                        // 计算距离可能会失败，但我们仍要确保航点数被记录
+                        // 使用备选方法计算距离，不再使用QGC内置的距离计算
                         try {
-                            // 直接使用QGC计算的距离，单位已经是米
-                            // 只有当距离为0或异常时才使用备选方法
-                            if (info.totalDistance === 0 || info.totalDistance > 100000) {  // 超过100km认为是异常值
-                                console.log("QGC内置距离异常或为0，使用备选方法计算距离，当前距离: " + info.totalDistance);
-                                info.totalDistance = calculateTotalDistanceFromVisualItems(visualItems);
-                                console.log("备选方法计算结果: " + info.totalDistance);
-                            }
+                            info.totalDistance = calculateTotalDistanceFromVisualItems(visualItems);
+                            console.log("备选方法计算结果: " + info.totalDistance);
 
                             info.isValid = true; // 如果距离计算成功，设置为有效
                         } catch (distanceError) {
