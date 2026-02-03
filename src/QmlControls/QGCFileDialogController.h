@@ -46,4 +46,7 @@ public:
     /// Returns the standard QGC location portion of a fully qualified folder path.
     /// Example: "/Users/Don/Document/QGroundControl/Missions" returns "QGroundControl/Missions"
     Q_INVOKABLE static QString fullFolderPathToShortMobilePath(const QString &fullFolderPath);
+    
+    /// Copy a file from source to destination
+    Q_INVOKABLE static bool copyFile(const QString &source, const QString &destination);
 };

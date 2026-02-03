@@ -14,8 +14,6 @@ Item {
     id: root
     anchors.fill: parent
 
-
-
     // 定义关闭信号，用于通知父级隐藏自身
     signal closeRequested()
 
@@ -23,6 +21,12 @@ Item {
     property var filteredList: []
     property string currentFilter: "all"
     property var selectedFiles: []
+    property int selectionUpdateCounter: 0
+    
+    // 存储视频缩略图生成器实例，避免重复创建
+    property var thumbnailGenerators: ({})
+    property int exportProgress: 0
+    property bool isExporting: false
 
     QGCPalette { 
         id: qgcPal 
@@ -99,8 +103,8 @@ Item {
 
                 // 右侧操作按钮
                 QGCButton {
-                    text: qsTr("导出")
-                    enabled: selectedFiles.length > 0
+                    text: isExporting ? qsTr("导出中 %1%").arg(exportProgress) : qsTr("导出")
+                    enabled: selectedFiles.length > 0 && !isExporting
                     onClicked: exportSelectedFiles()
                 }
                 QGCButton {
@@ -165,100 +169,131 @@ Item {
                     cellHeight: 160
                     model: filteredList
 
-                    delegate: Rectangle {
-                        width: mediaGrid.cellWidth - 4
-                        height: mediaGrid.cellHeight - 4
-                        color: selectedFiles.includes(modelData.filePath) ? qgcPal.highlight : qgcPal.window
-                        border.color: selectedFiles.includes(modelData.filePath) ? qgcPal.highlight : qgcPal.windowText
-                        border.width: selectedFiles.includes(modelData.filePath) ? 3 : 1
-                        radius: 5
+                    delegate: Item {
+                        width: mediaGrid.cellWidth
+                        height: mediaGrid.cellHeight
+                        
+                        // 内容矩形
+                        Rectangle {
+                            id: contentRect
+                            anchors.centerIn: parent
+                            width: mediaGrid.cellWidth - 8  // 更小一点，让边框更明显
+                            height: mediaGrid.cellHeight - 8
+                            color: selectedFiles.includes(modelData.filePath) ? Qt.rgba(0.5, 0.5, 1.0, 0.3) : qgcPal.window  // 使用固定颜色避免undefined问题
+                            radius: 4  // 略小于边框半径，确保不会覆盖边框圆角
+                            border.color: "transparent"  // 移除内容矩形边框，只在外层边框矩形显示边框
+                            border.width: 0  // 移除内容矩形边框，只在外层边框矩形显示边框
 
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: 2
+                            ColumnLayout {
+                                anchors.fill: parent
+                                anchors.margins: 2
 
-                            // 缩略图显示
-                            Item {
-                                Layout.preferredWidth: parent.width - 4
-                                Layout.preferredHeight: parent.width - 4
-                                Layout.alignment: Qt.AlignHCenter
+                                // 缩略图显示
+                                Item {
+                                    Layout.preferredWidth: parent.width - 4
+                                    Layout.preferredHeight: parent.width - 4
+                                    Layout.alignment: Qt.AlignHCenter
 
-                                Image {
-                                    id: mediaImage
-                                    anchors.fill: parent
-                                    anchors.margins: 2
-                                    // 使用thumbnailPath而不是直接使用filePath
-                                    source: modelData.thumbnailPath
-                                    fillMode: modelData.isVideo ? Image.PreserveAspectFit : Image.PreserveAspectCrop
-                                    asynchronous: true
-                                    cache: true
-                                    sourceSize.width: 120
-                                    sourceSize.height: 120
-                                    
-                                    // 添加状态监控
-                                    onStatusChanged: {
-                                        if (status === Image.Error) {
-                                            console.log("缩略图加载失败:", source)
-                                            // 视频文件显示默认图标
+                                    Image {
+                                        id: mediaImage
+                                        anchors.fill: parent
+                                        anchors.margins: 2
+                                        // 使用更精确的条件处理空路径
+                                        source: {
                                             if (modelData.isVideo) {
-                                                source = "qrc:/qmlimages/video.svg"
+                                                if (modelData.thumbnailPath && modelData.thumbnailPath !== "" && modelData.thumbnailPath !== "qrc:/qmlimages/camera_video.svg") {
+                                                    return modelData.thumbnailPath
+                                                } else {
+                                                    return "qrc:/qmlimages/camera_video.svg"
+                                                }
                                             } else {
-                                                source = "qrc:/qmlimages/image.svg"
+                                                return modelData.filePath
                                             }
-                                        } else if (status === Image.Ready) {
-                                            console.log("缩略图加载成功:", source)
+                                        }
+                                        fillMode: modelData.isVideo ? Image.PreserveAspectFit : Image.PreserveAspectCrop
+                                        asynchronous: true
+                                        cache: true
+                                        sourceSize.width: 120
+                                        sourceSize.height: 120
+                                        
+                                        // 添加状态监控
+                                        onStatusChanged: {
+                                            if (status === Image.Error) {
+                                                console.log("缩略图加载失败:", source)
+                                                // 视频文件显示默认图标
+                                                if (modelData.isVideo) {
+                                                    source = "qrc:/qmlimages/camera_video.svg"
+                                                } else {
+                                                    source = "qrc:/qmlimages/image.svg"
+                                                }
+                                            } else if (status === Image.Ready) {
+                                                console.log("缩略图加载成功:", source)
+                                            }
+                                        }
+                                    }
+
+                                    // 添加加载占位符
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        color: qgcPal.windowShade
+                                        visible: mediaImage.status !== Image.Ready && !modelData.isVideo
+                                        
+                                        QGCLabel {
+                                            anchors.centerIn: parent
+                                            text: modelData.isVideo ? "视频" : "图片"
+                                            color: qgcPal.text
+                                        }
+                                    }
+
+                                    // 视频标识
+                                    Rectangle {
+                                        anchors.bottom: parent.bottom
+                                        anchors.right: parent.right
+                                        width: 20
+                                        height: 20
+                                        radius: 10
+                                        color: "red"
+                                        visible: modelData.isVideo
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "V"
+                                            color: "white"
+                                            font.pixelSize: 10
+                                            font.bold: true
                                         }
                                     }
                                 }
 
-                                // 添加加载占位符
-                                Rectangle {
-                                    anchors.fill: parent
-                                    color: qgcPal.windowShade
-                                    visible: mediaImage.status !== Image.Ready && !modelData.isVideo
-                                    
-                                    QGCLabel {
-                                        anchors.centerIn: parent
-                                        text: modelData.isVideo ? "视频" : "图片"
-                                        color: qgcPal.text
-                                    }
+                                // 文件名显示
+                                QGCLabel {
+                                    Layout.fillWidth: true
+                                    text: modelData.fileName
+                                    font.pixelSize: ScreenTools.smallFontPointSize
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                    wrapMode: Text.Wrap
+                                    maximumLineCount: 2
+                                    elide: Text.ElideRight
                                 }
-
-                                // 视频标识
-                                Rectangle {
-                                    anchors.bottom: parent.bottom
-                                    anchors.right: parent.right
-                                    width: 20
-                                    height: 20
-                                    radius: 10
-                                    color: "red"
-                                    visible: modelData.isVideo
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "V"
-                                        color: "white"
-                                        font.pixelSize: 10
-                                        font.bold: true
-                                    }
-                                }
-                            }
-
-                            // 文件名显示
-                            QGCLabel {
-                                Layout.fillWidth: true
-                                text: modelData.fileName
-                                font.pixelSize: ScreenTools.smallFontPointSize
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                                wrapMode: Text.Wrap
-                                maximumLineCount: 2
-                                elide: Text.ElideRight
                             }
                         }
+                        
+                        // 外层边框矩形 - 用于显示选中状态（放在最后以确保在最上层）
+                        Rectangle {
+                            id: borderRect
+                            anchors.centerIn: parent
+                            width: mediaGrid.cellWidth - 2
+                            height: mediaGrid.cellHeight - 2
+                            color: "transparent"
+                            border.color: selectedFiles.includes(modelData.filePath) ? "white" : "#CCCCCC"
+                            border.width: selectedFiles.includes(modelData.filePath) ? 3 : 1
+                            radius: 5
+                        }
 
+                        // 内容矩形上的鼠标区域
                         MouseArea {
-                            anchors.fill: parent
+                            anchors.fill: contentRect
                             onClicked: toggleSelection(modelData)
                             onDoubleClicked: openPreview(modelData)
                         }
@@ -286,10 +321,10 @@ Item {
     Dialog {
         id: videoPreviewDialog
         title: qsTr("视频预览")
-        x: (mediaGrid.width - width) / 2
-        y: (mediaGrid.height - height) / 2
-        width: Math.min(ScreenTools.defaultFontPixelWidth * 40, parent.width * 0.8)
-        height: Math.min(ScreenTools.defaultFontPixelHeight * 30, parent.height * 0.8)
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        width: Math.min(parent.width * 0.9, 1000)  // 与主界面相同宽度
+        height: Math.min(parent.height * 0.9, 700)  // 与主界面相同高度
         
         modal: true
         standardButtons: Dialog.Close
@@ -336,10 +371,10 @@ Item {
     Dialog {
         id: imagePreviewDialog
         title: qsTr("图片预览")
-        x: (mediaGrid.width - width) / 2
-        y: (mediaGrid.height - height) / 2
-        width: Math.min(ScreenTools.defaultFontPixelWidth * 40, parent.width * 0.8)
-        height: Math.min(ScreenTools.defaultFontPixelHeight * 30, parent.height * 0.8)
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        width: Math.min(parent.width * 0.9, 1000)  // 与主界面相同宽度
+        height: Math.min(parent.height * 0.9, 700)  // 与主界面相同高度
         
         modal: true
         standardButtons: Dialog.Close
@@ -373,6 +408,61 @@ Item {
         id: exportFolderDialog
         title: qsTr("选择导出目录")
         onAccepted: performExport(folder)
+    }
+
+    // 隐藏的Video组件用于生成缩略图
+    Video {
+        id: thumbnailVideo
+        visible: false
+        autoPlay: false
+          
+        onPlaybackStateChanged: {
+            if (playbackState === Video.PlayingState) {
+                console.log("视频播放中，准备跳转到第1秒")
+                Qt.callLater(function() {
+                    thumbnailVideo.seek(1000) // 跳转到第1秒
+                }, 1000) // 延迟1秒再seek，确保视频已准备好
+            } else if (playbackState === Video.StoppedState) {
+                console.log("视频已停止")
+            } else if (playbackState === Video.PausedState) {
+                console.log("视频已暂停")
+            }
+        }
+        
+        onPositionChanged: {
+            // 当位置达到或超过1000ms时，说明seek已完成
+            if (position >= 1000 && playbackState === Video.PlayingState) {
+                console.log("跳转完成，准备截图，当前位置:", position)
+                if (thumbnailVideo.seekable) {
+                    thumbnailVideo.pause()
+                    // 截取当前帧作为缩略图
+                    thumbnailVideo.grabToImage(function(result) {
+                        console.log("grabToImage 回调执行，结果:", !!result)
+                        if (result) {
+                            if (result.saveToFile(thumbnailVideo.thumbnailPath)) {
+                                console.log("缩略图保存成功:", thumbnailVideo.thumbnailPath)
+                                updateVideoThumbnail(thumbnailVideo.currentVideoPath, "file:///" + thumbnailVideo.thumbnailPath)
+                            } else {
+                                console.log("缩略图保存失败，使用默认图标")
+                                // 只有在保存失败时才设置默认图标
+                                updateVideoThumbnail(thumbnailVideo.currentVideoPath, "qrc:/qmlimages/camera_video.svg")
+                            }
+                        } else {
+                            console.log("无法获取视频帧，使用默认图标")
+                            // 只有在保存失败时才设置默认图标
+                            updateVideoThumbnail(thumbnailVideo.currentVideoPath, "qrc:/qmlimages/camera_video.svg")
+                        }
+                        thumbnailVideo.source = "" // 清空源
+                    })
+                } else {
+                    console.log("视频不支持跳转，使用默认图标")
+                    updateVideoThumbnail(thumbnailVideo.currentVideoPath, "qrc:/qmlimages/camera_video.svg")
+                }
+            }
+        }
+        
+        property string thumbnailPath: ""
+        property string currentVideoPath: ""
     }
 
     // 超时检测定时器
@@ -512,6 +602,34 @@ Item {
         }
     }
 
+    // 生成视频缩略图的函数
+    function generateVideoThumbnail(videoPath) {
+        console.log("开始生成视频缩略图:", videoPath)
+        
+        var localPath = videoPath.replace("file:///", "")
+        var thumbnailPath = localPath.replace(/\.[^/.]+$/, "_thumb.jpg")
+        
+        console.log("缩略图路径:", thumbnailPath)
+        
+        thumbnailVideo.thumbnailPath = thumbnailPath
+        thumbnailVideo.currentVideoPath = videoPath
+        thumbnailVideo.source = videoPath
+    }
+    
+    function updateVideoThumbnail(videoPath, thumbnailPath) {
+        console.log("更新视频缩略图:", videoPath, "->", thumbnailPath)
+        for (var i = 0; i < mediaList.length; i++) {
+            if (mediaList[i].filePath === videoPath && mediaList[i].isVideo) {
+                mediaList[i].thumbnailPath = thumbnailPath  // 直接使用传入的路径
+                console.log("缩略图路径已更新:", mediaList[i].thumbnailPath)
+                break
+            }
+        }
+        console.log("准备刷新过滤列表")
+        updateFilteredList() // 刷新显示
+        console.log("过滤列表已刷新")
+    }
+
     // 修复视频文件路径 - 确保视频文件路径构建正确
     function scanLocalMedia() {
         console.log("=== 开始扫描本地媒体文件 ===")
@@ -541,13 +659,35 @@ Item {
                     
                     console.log("视频文件完整路径:", fullVideoPath)
                     
+                    // 生成缩略图路径
+                    var fileNameWithoutExt = videoFiles[i].replace(/\.[^/.]+$/, "")
+                    var thumbnailPath = videoPath
+                    if (!thumbnailPath.endsWith('/') && !thumbnailPath.endsWith('\\')) {
+                        thumbnailPath += "/"
+                    }
+                    thumbnailPath += fileNameWithoutExt + "_thumb.jpg"
+                    
+                    // 检查缩略图是否存在
+                    var thumbnailExists = fileDialogController.fileExists(thumbnailPath)
+                    
+                    console.log("缩略图路径:", thumbnailPath, "存在:", thumbnailExists)
+                    
+                    // 重要：不要立即设置默认图标，先设置为空字符串
                     mediaList.push({
                         filePath: "file:///" + fullVideoPath,
                         fileName: videoFiles[i],
                         isVideo: true,
                         isLocal: true,
-                        thumbnailPath: "qrc:/qmlimages/video.svg"  // 使用默认视频图标
+                        thumbnailPath: thumbnailExists ? "file:///" + thumbnailPath : ""  // 空字符串而不是默认图标
                     })
+                    
+                    // 只有当缩略图不存在时才生成
+                    if (!thumbnailExists) {
+                        console.log("缩略图不存在，开始生成:", fullVideoPath)
+                        generateVideoThumbnail("file:///" + fullVideoPath)
+                    } else {
+                        console.log("缩略图已存在，使用现有缩略图:", thumbnailPath)
+                    }
                 }
 
                 // 扫描图片文件
@@ -620,6 +760,9 @@ Item {
             selectedFiles.push(item.filePath)
         }
         updateFilteredList() // 更新状态标签
+        
+        // 通过重新分配数组来强制绑定更新
+        selectedFiles = selectedFiles.slice()
     }
 
     function exportSelectedFiles() {
@@ -630,37 +773,55 @@ Item {
         exportFolderDialog.open()
     }
 
+    // 跨平台文件复制函数  
+    function copyFileNative(source, destination) {  
+        // 使用QGC扩展的QGCFileDialogController.copyFile方法
+        return QGCFileDialogController.copyFile(source, destination);
+    }
+
     function performExport(folder) {
         if (!folder) {
-            console.log("未选择导出目录")
-            return
-        }
-
-        try {
-            var fileDialogController = Qt.createQmlObject("import QGroundControl.Controllers 1.0; QGCFileDialogController {}", root, "fileDialogController");
-            
-            if (fileDialogController) {
-                for (var i = 0; i < selectedFiles.length; i++) {
-                    var sourceFile = selectedFiles[i]
-                    var fileName = sourceFile.split('/').pop().split('\\').pop() // 处理Windows和Unix路径
-                    var destFile = folder.toString() + "/" + fileName
-
-                    console.log("正在导出文件:", sourceFile, "到", destFile)
-                    
-                    // 尝试复制文件 - 使用QGC的文件操作接口
-                    if (fileDialogController.copyFile(sourceFile.replace("file:///", ""), destFile.replace("file:///", ""))) {
-                        console.log("成功导出文件:", destFile)
-                    } else {
-                        console.log("导出文件失败:", sourceFile, "到", destFile)
-                    }
-                }
-            }
-        } catch (e) {
-            console.log("导出文件时出错: " + e.message)
+            console.log("未选择导出目录");
+            return;
         }
         
-        selectedFiles = []
-        updateFilteredList() // 更新状态标签
+        if (isExporting) {
+            console.log("正在导出中，请等待");
+            return;
+        }
+        
+        // 移动端路径处理
+        if (ScreenTools.isMobile) {
+            folder = QGCFileDialogController.fullFolderPathToShortMobilePath(folder)
+        }
+        
+        isExporting = true;
+        exportProgress = 0;
+        
+        console.log("开始导出", selectedFiles.length, "个文件到:", folder);
+        
+        for (var i = 0; i < selectedFiles.length; i++) {
+            var sourceFile = selectedFiles[i].replace("file:///", "");
+            var fileName = sourceFile.split('/').pop();
+            var destFile = folder + "/" + fileName;
+            
+            console.log("导出进度:", (i + 1) + "/" + selectedFiles.length);
+            
+            if (QGCFileDialogController.copyFile(sourceFile, destFile)) {
+                console.log("成功导出文件:", destFile);
+            } else {
+                console.log("导出文件失败:", sourceFile);
+            }
+            
+            exportProgress = Math.round(((i + 1) / selectedFiles.length) * 100);
+        }
+        
+        selectedFiles = [];
+        isExporting = false;
+        exportProgress = 0;
+        updateFilteredList();
+        
+        console.log("导出完成");
     }
 
     // 添加视频预览功能 - 实现视频预览功能，当双击视频时使用QGC的视频播放器
