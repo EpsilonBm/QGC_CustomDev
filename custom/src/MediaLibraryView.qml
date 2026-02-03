@@ -112,15 +112,6 @@ Item {
                     onClicked: refreshMedia()
                 }
                 QGCButton {
-                    text: qsTr("测试")
-                    onClicked: {
-                        console.log("=== 开始媒体库功能测试 ===")
-                        refreshMedia()
-                        testFiltering()
-                        console.log("=== 测试完成 ===")
-                    }
-                }
-                QGCButton {
                     text: qsTr("关闭")
                     onClicked: {
                         // 发送关闭信号给父级
@@ -403,11 +394,16 @@ Item {
         }
     }
 
-    // 文件对话框 - 用于导出
-    Labs.FolderDialog {
-        id: exportFolderDialog
-        title: qsTr("选择导出目录")
-        onAccepted: performExport(folder)
+    // 文件对话框 - 使用QGCFileDialog实现导出
+    QGCFileDialog {  
+        id: exportFolderDialog  
+        title: qsTr("选择导出目录")  
+        selectFolder: true  
+        folder: QGroundControl.settingsManager.appSettings.savePath.rawValue  // 使用.rawValue获取实际路径
+          
+        onAcceptedForLoad: (folder) => {  
+            performExport(folder)  
+        }  
     }
 
     // 隐藏的Video组件用于生成缩略图
@@ -765,63 +761,52 @@ Item {
         selectedFiles = selectedFiles.slice()
     }
 
-    function exportSelectedFiles() {
-        if (selectedFiles.length === 0) {
-            console.log("没有选中任何文件")
-            return
-        }
-        exportFolderDialog.open()
+    function exportSelectedFiles() {  
+        if (selectedFiles.length === 0) {  
+            console.log("没有选中任何文件")  
+            return  
+        }  
+        exportFolderDialog.openForLoad()  
     }
 
     // 跨平台文件复制函数  
-    function copyFileNative(source, destination) {  
+    function copyFileUsingQt(source, destination) {  
         // 使用QGC扩展的QGCFileDialogController.copyFile方法
-        return QGCFileDialogController.copyFile(source, destination);
+        var fileDialogController = Qt.createQmlObject("import QGroundControl.Controllers 1.0; QGCFileDialogController {}", root, "fileDialogController");
+        var result = fileDialogController.copyFile(source, destination);
+        fileDialogController.destroy();
+        return result;
     }
 
-    function performExport(folder) {
-        if (!folder) {
-            console.log("未选择导出目录");
-            return;
-        }
-        
-        if (isExporting) {
-            console.log("正在导出中，请等待");
-            return;
-        }
-        
-        // 移动端路径处理
-        if (ScreenTools.isMobile) {
-            folder = QGCFileDialogController.fullFolderPathToShortMobilePath(folder)
-        }
-        
-        isExporting = true;
-        exportProgress = 0;
-        
-        console.log("开始导出", selectedFiles.length, "个文件到:", folder);
-        
-        for (var i = 0; i < selectedFiles.length; i++) {
-            var sourceFile = selectedFiles[i].replace("file:///", "");
-            var fileName = sourceFile.split('/').pop();
-            var destFile = folder + "/" + fileName;
-            
-            console.log("导出进度:", (i + 1) + "/" + selectedFiles.length);
-            
-            if (QGCFileDialogController.copyFile(sourceFile, destFile)) {
-                console.log("成功导出文件:", destFile);
-            } else {
-                console.log("导出文件失败:", sourceFile);
-            }
-            
-            exportProgress = Math.round(((i + 1) / selectedFiles.length) * 100);
-        }
-        
-        selectedFiles = [];
-        isExporting = false;
-        exportProgress = 0;
-        updateFilteredList();
-        
-        console.log("导出完成");
+    function performExport(folder) {  
+        if (selectedFiles.length === 0) {  
+            console.log("没有选中任何文件")  
+            return  
+        }  
+          
+        console.log("开始导出到:", folder)  
+          
+        for (var i = 0; i < selectedFiles.length; i++) {  
+            var sourceFile = selectedFiles[i]  
+            var fileName = sourceFile.split('/').pop()  
+            var destFile = folder + "/" + fileName  
+              
+            // 使用QGC的路径处理  
+            var sourcePath = sourceFile.replace("file:///", "")  
+            var destPath = destFile  
+              
+            console.log("导出:", sourcePath, "到", destPath)  
+              
+            // 直接使用Qt的文件复制  
+            if (copyFileUsingQt(sourcePath, destPath)) {  
+                console.log("导出成功:", destPath)  
+            } else {  
+                console.log("导出失败:", sourcePath)  
+            }  
+        }  
+          
+        selectedFiles = []  
+        updateFilteredList()  
     }
 
     // 添加视频预览功能 - 实现视频预览功能，当双击视频时使用QGC的视频播放器
@@ -845,31 +830,6 @@ Item {
         }
     }
 
-    function testFiltering() {
-        console.log("=== 测试文件过滤功能 ===")
-        
-        var allCount = mediaList.length
-        var videoCount = mediaList.filter(function(item) { return item.isVideo }).length
-        var imageCount = mediaList.filter(function(item) { return !item.isVideo }).length
-        
-        console.log("总文件数:", allCount)
-        console.log("视频文件数:", videoCount)
-        console.log("图片文件数:", imageCount)
-        
-        // 测试各种过滤模式
-        setFilter("all")
-        console.log("全部模式显示数量:", filteredList.length)
-        
-        setFilter("video")
-        console.log("视频模式显示数量:", filteredList.length)
-        
-        setFilter("image")
-        console.log("图片模式显示数量:", filteredList.length)
-        
-        // 恢复到全部模式
-        setFilter("all")
-    }
-
     Component.onCompleted: {
         console.log("=== 媒体库初始化检测开始 ===")
         
@@ -881,9 +841,6 @@ Item {
         
         // 刷新媒体
         refreshMedia()
-        
-        // 测试过滤
-        testFiltering()
         
         console.log("=== 媒体库初始化检测完成 ===")
     }
