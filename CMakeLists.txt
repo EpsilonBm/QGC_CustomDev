@@ -465,8 +465,29 @@ elseif(ANDROID)
     endif()
 
     # Version code format: BBMIPPDDD (B=Bitness, M=Major, I=Minor, P=Patch, D=Dev) - Dev not currently supported and always 000
-    set(ANDROID_VERSION_CODE "${ANDROID_BITNESS_CODE}${CMAKE_PROJECT_VERSION_MAJOR}${CMAKE_PROJECT_VERSION_MINOR}${ANDROID_PATCH_VERSION}000")
+    set(ANDROID_VERSION_CODE "1001")
     message(STATUS "Android version code: ${ANDROID_VERSION_CODE}")
+
+    # -------------------------------------------------------------------------
+    # 处理自定义 Android 模板 (移动到此处以确保在 set_target_properties 之前执行)
+    set(QGC_ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_SOURCE_DIR}/android") # 默认为标准路径
+
+    if(QGC_CUSTOM_BUILD)
+        set(CUSTOM_ANDROID_DIR "${CMAKE_SOURCE_DIR}/custom/android")
+        if(EXISTS "${CUSTOM_ANDROID_DIR}")
+            message(STATUS "QGC: Custom Android package template found. Overlaying custom files...")
+            set(DEFAULT_ANDROID_DIR "${CMAKE_SOURCE_DIR}/android")
+            set(FINAL_ANDROID_DIR "${CMAKE_BINARY_DIR}/custom/android")
+            
+            # 复制默认文件，然后覆盖自定义文件
+            file(COPY "${DEFAULT_ANDROID_DIR}/." DESTINATION "${FINAL_ANDROID_DIR}")
+            file(COPY "${CUSTOM_ANDROID_DIR}/." DESTINATION "${FINAL_ANDROID_DIR}")
+            
+            set(QGC_ANDROID_PACKAGE_SOURCE_DIR "${FINAL_ANDROID_DIR}")
+            message(STATUS "QGC: Android package template path set to: ${QGC_ANDROID_PACKAGE_SOURCE_DIR}")
+        endif()
+    endif()
+    # -------------------------------------------------------------------------
 
     message(STATUS "QGC: Configuring for Android Target - GStreamer setup")
     # 强制指定 Android GStreamer 路径，必须在 add_subdirectory(src) 之前设置

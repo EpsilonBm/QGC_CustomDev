@@ -9,27 +9,8 @@ set_property(DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
 if(ANDROID)
-    set(CUSTOM_ANDROID_DIR "${CMAKE_SOURCE_DIR}/custom/android")
-    if(EXISTS "${CUSTOM_ANDROID_DIR}")
-        file(GLOB CUSTOM_ANDROID_FILES "${CUSTOM_ANDROID_DIR}/*")
-        if(CUSTOM_ANDROID_FILES)
-            message(STATUS "QGC: Custom Android package template found. Overlaying custom files...")
-            set(DEFAULT_ANDROID_DIR "${CMAKE_SOURCE_DIR}/android")
-            set(FINAL_ANDROID_DIR "${CMAKE_BINARY_DIR}/custom/android")
-            file(COPY "${DEFAULT_ANDROID_DIR}/." DESTINATION "${FINAL_ANDROID_DIR}")
-            file(COPY "${CUSTOM_ANDROID_DIR}/." DESTINATION "${FINAL_ANDROID_DIR}")
-            set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
-                            "${DEFAULT_ANDROID_DIR}/"
-                            "${CUSTOM_ANDROID_DIR}/"
-                        )
-            set(QGC_ANDROID_PACKAGE_SOURCE_DIR "${FINAL_ANDROID_DIR}" CACHE PATH "Path to a custom Android package template" FORCE)
-            message(STATUS "QGC: Android package template path will be set to: ${QGC_ANDROID_PACKAGE_SOURCE_DIR}")
-        else()
-            message(STATUS "QGC: Custom Android package template empty. Using default.")
-        endif()
-    else()
-        message(STATUS "QGC: No custom Android package template found. Using default.")
-    endif()
+    # Android 模板处理逻辑已移动到根目录 CMakeLists.txt，
+    # 以确保在 set_target_properties 之前正确设置 QT_ANDROID_PACKAGE_SOURCE_DIR。
 endif()
 
 # Our own, custom resources
