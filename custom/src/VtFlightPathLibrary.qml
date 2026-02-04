@@ -393,7 +393,7 @@ Item {
 
                 QGCComboBox {
                     id: sortComboBox
-                    model: [qsTr("按名称"), qsTr("按日期"), qsTr("按距离"), qsTr("按航点数")]
+                    model: [qsTr("按名称"),qsTr("按距离"), qsTr("按航点数")]
                     currentIndex: 0
                     onCurrentIndexChanged: {
                         // 在排序前重置选中状态，避免状态错乱
@@ -449,11 +449,7 @@ Item {
                                     Layout.fillWidth: true
                                 }
 
-                                QGCLabel {
-                                    text: date
-                                    color: qgcPalDelegate.text
-                                    Layout.preferredWidth: 100
-                                }
+
 
                                 QGCLabel {
                                     text: distance
@@ -1183,7 +1179,7 @@ Item {
             flightPathModel.append({  
                 "name": fileName,  
                 "filePath": filePath,  
-                "date": new Date().toISOString().split('T')[0],  
+
                 "distance": missionInfo.isValid ? formatDistance(missionInfo.totalDistance) : "未知",
                 "waypoints": missionInfo.isValid ? missionInfo.waypointCount : 0
             });  
@@ -1519,12 +1515,7 @@ Item {
                     return a.name.localeCompare(b.name);
                 });
                 break;
-            case 1: // 按日期排序
-                tempArray.sort(function(a, b) {
-                    return new Date(b.date) - new Date(a.date); // 新日期在前
-                });
-                break;
-            case 2: // 按距离排序
+            case 1: // 按距离排序
                 tempArray.sort(function(a, b) {
                     // 使用统一的单位进行比较
                     var distA = extractDistanceValue(a.distance);
@@ -1534,7 +1525,7 @@ Item {
                     return distB - distA; // 大距离在前
                 });
                 break;
-            case 3: // 按航点数排序
+            case 2: // 按航点数排序
                 tempArray.sort(function(a, b) {
                     return b.waypoints - a.waypoints; // 多航点在前
                 });
