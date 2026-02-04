@@ -7,8 +7,8 @@
             "type": "uint16",
             "shortDescription": "系统状态",
             "longDescription": "Overall status of the fuel cell system.",
-            "enumString" : "Stop, Warm-up, Running, Fault",
-            "enumValues" : "0,1,2,3"
+            "enumString" : "Init,Check,Standby,Startup,Running,Shutdown,Exception,Estop,Reset,Debug",
+            "enumValues" : "0   ,1    ,2      ,3      ,4      ,5       ,6        ,7    ,8    ,9    "
         },
         {
             "name": "loadVoltage",
@@ -156,10 +156,8 @@
             "type": "double",
             "shortDescription": "氢瓶容量",
             "units": "L",
-            "default":              9.0,
-            "min":                  0.01,
-            "max":                  20.0,
-            "increment":            0.1,
+            "enumStrings": "5.0L,9.0L,12.0L,20.0L",
+            "enumValues": "5.0,9.0,12.0,20.0",
             "decimalPlaces": 1
         },
         {

@@ -25,12 +25,12 @@ ToolIndicatorPage {
     contentComponent:   _fuelCellContentComponent
     expandedComponent:  _fuelCellExpandedComponent
 
-    Connections {
-        target: _fuelCell ? _fuelCell.bottleCapacity : null
-        onValueChanged: {
-            // TODO: Add Max energy changing logic
-        }
-    }
+    // Connections {
+    //     target: _fuelCell ? _fuelCell.bottleCapacity : null
+    //     onValueChanged: {
+    //         // TODO: Add Max energy changing logic
+    //     }
+    // }
 
     Component {
         id: _fuelCellContentComponent
@@ -43,13 +43,6 @@ ToolIndicatorPage {
             property var _lowestVoltageId      : _fuelCell ? _fuelCell.lowestVoltageId      : null
             property var _pressureLowestId     : _fuelCell ? _fuelCell.pressureLowestId     : null
 
-            property var fuelCellStatusCodeList: [
-                { label: qsTr("系统状态码"),     fact: "systemStatus"},
-                { label: qsTr("ECU故障码"),     fact: "errorCode"},
-                { label: qsTr("故障ID"),        fact: "faultId"},
-                { label: qsTr("故障DC标志"),     fact: "faultDcFlag"},
-                { label: qsTr("故障FC标志"),     fact: "faultFcFlag"},
-            ]
 
             property var fuelCellDataList: [
                 { label: qsTr("电堆电压"),          fact: "loadVoltage" },
@@ -79,19 +72,27 @@ ToolIndicatorPage {
              */
             // NOTE: the "shortDescription" keys is written in Chinese, but it fails to load just now.
             // if it can't work, we can use the "label" keys instead.
-            SettingsGroupLayout {
-                heading:        qsTr("燃料电池状态码")
-                contentSpacing: 0
-                showDividers:   false
 
-                Repeater {
-                    model: fuelCellStatusCodeList
-                    LabelledLabel {
-                        property var factObj: _fuelCell ? _fuelCell[modelData.fact] : null
-                        label:      modelData.label
-                        labelText:  factObj ? factObj.valueString : "N/A"
-                        visible:    factObj !== null
-                    }
+            SettingsGroupLayout {
+                heading: qsTr("氢瓶配置")
+
+                // FactSlider {
+                //     Layout.fillWidth:       true
+                //     Layout.preferredWidth:  sliderWidth
+                //     label:                  qsTr("氢瓶容量")
+                //     fact:                   _fuelCell.bottleCapacity
+                //     majorTickStepSize:      0.1
+                //     visible:                _fuelCell && _fuelCell.bottleCapacity
+                // }
+                LabelledFactComboBox {
+                    label:          qsTr("氢瓶容量")
+                    fact:           _fuelCell.bottleCapacity
+                    visible:        _fuelCell && _fuelCell.bottleCapacity
+                }
+                LabelledLabel {
+                    label:      qsTr("最大电量")
+                    labelText:  (_fuelCell && _fuelCell.maxEnergy) ? (_fuelCell.maxEnergy.valueString + " " + _fuelCell.maxEnergy.units) : ""
+                    visible:    _fuelCell && _fuelCell.maxEnergy
                 }
             }
             SettingsGroupLayout {
@@ -121,32 +122,35 @@ ToolIndicatorPage {
                     }
                      */
                 }
-
             }
-
         }
     }
     Component {
         id: _fuelCellExpandedComponent
 
         ColumnLayout{
+
+            property var fuelCellStatusCodeList: [
+                { label: qsTr("系统状态码"),     fact: "systemStatus"},
+                { label: qsTr("ECU故障码"),     fact: "errorCode"},
+                { label: qsTr("故障ID"),        fact: "faultId"},
+                { label: qsTr("故障DC标志"),     fact: "faultDcFlag"},
+                { label: qsTr("故障FC标志"),     fact: "faultFcFlag"},
+            ]
             spacing:  ScreenTools.defaultFontPixelHeight
             SettingsGroupLayout {
-                heading: qsTr("氢瓶配置")
+                heading:        qsTr("燃料电池状态码")
+                contentSpacing: 0
+                showDividers:   false
 
-                property real sliderWidth: ScreenTools.defaultFontPixelWidth * 40
-                FactSlider {
-                    Layout.fillWidth:       true
-                    Layout.preferredWidth:  sliderWidth
-                    label:                  qsTr("氢瓶容量")
-                    fact:                   _fuelCell.bottleCapacity
-                    majorTickStepSize:      0.1
-                    visible:                _fuelCell && _fuelCell.bottleCapacity
-                }
-                LabelledLabel {
-                    label:      qsTr("最大电量")
-                    labelText:  (_fuelCell && _fuelCell.maxEnergy) ? (_fuelCell.maxEnergy.valueString + " " + _fuelCell.maxEnergy.units) : ""
-                    visible:    _fuelCell && _fuelCell.maxEnergy
+                Repeater {
+                    model: fuelCellStatusCodeList
+                    LabelledLabel {
+                        property var factObj: _fuelCell ? _fuelCell[modelData.fact] : null
+                        label:      modelData.label
+                        labelText:  factObj ? factObj.valueString : "N/A"
+                        visible:    factObj !== null
+                    }
                 }
             }
             SettingsGroupLayout {
