@@ -35,40 +35,6 @@ Item {
 
     // fuelCell object
     property var fuelCell: _activeVehicle ? _activeVehicle.fuelCell : null
-
-    function getBatteryColor() {
-        if (fuelCell && fuelCell.percentRemaining) {
-            var p = fuelCell.percentRemaining.value
-            if (p > 90) return qgcPal.colorGreen
-            if (p > 70) return qgcPal.colorYellowGreen
-            if (p > 50) return qgcPal.colorYellow
-            if (p > 30) return qgcPal.colorOrange
-            return qgcPal.colorRed // Critical (30-10) & Emergency (10-0)
-        }
-        return qgcPal.text
-    }
-
-    function getBatterySvgSource() {
-        if (fuelCell && fuelCell.percentRemaining) {
-            var p = fuelCell.percentRemaining.value
-            if (p > 90) return "qrc:/custom/img/BatteryGreen.svg"
-            if (p > 70) return "qrc:/custom/img/BatteryYellowGreen.svg"
-            if (p > 50) return "qrc:/custom/img/BatteryYellow.svg"
-            if (p > 30) return "qrc:/custom/img/BatteryOrange.svg"
-            if (p > 10) return "qrc:/custom/img/BatteryCritical.svg"
-            return "qrc:/custom/img/BatteryEMERGENCY.svg"
-        }
-        return "qrc:/custom/img/Battery.svg"
-    }
-
-    function getBatteryPercentageText() {
-        if (fuelCell && fuelCell.percentRemaining) {
-            // 直接显示百分比数值
-            return fuelCell.percentRemaining.valueString + "%"
-        }
-        return qsTr("n/a")
-    }
-
     function getBatteryVoltageText() {
         if (fuelCell && fuelCell.loadVoltage) {
             // Use loadVoltage from the new FactGroup
@@ -82,26 +48,6 @@ Item {
             return fuelCell.remainingTime.valueString + " " + fuelCell.remainingTime.units
         }
         return qsTr("n/a")
-    }
-
-    function getVisibleCount(){
-        let count = 0
-        if(control._showPercentage && control._showPercentage.rawValue){
-            count += 1
-        }
-        if(control._showVoltage && control._showVoltage.rawValue){
-            count += 1
-        }
-        if(control._showRemainingTime && control._showRemainingTime.rawValue){
-            count += 1
-        }
-        if(count === 1){
-            return ScreenTools.mediumFontPointSize
-        }else if(count === 2){
-            return ScreenTools.defaultFontPointSize
-        }else{
-            return ScreenTools.smallFontPointSize
-        }
     }
 
     function getSystemStatue(){
@@ -148,39 +94,8 @@ Item {
         anchors.top:    parent.top
         anchors.bottom: parent.bottom
 
-        Item {
-            anchors.top:    parent.top
-            anchors.bottom: parent.bottom
-            width:          height
-
-            QGCColoredImage {
-                id:                 fuelCellImage
-                anchors.top:        parent.top
-                anchors.bottom:     parent.bottom
-                width:              height
-                sourceSize.width:   width
-                source:             getBatterySvgSource()
-                fillMode:           Image.PreserveAspectFit
-                color:              getBatteryColor()
-            }
-
-            ColumnLayout{
-                id:                     valuesInImage
-                anchors.top:            parent.top
-                anchors.bottom:         parent.bottom
-                anchors.left:           fuelCellImage.left
-                anchors.right:          fuelCellImage.right
-                spacing:                0
-
-                QGCLabel {
-                    Layout.alignment:       Qt.AlignHCenter
-                    verticalAlignment:      Text.AlignVCenter
-                    color:                  qgcPal.text
-                    text:                   getBatteryPercentageText()
-                    font.pointSize:         ScreenTools.defaultFontPointSize
-                    visible:                true
-                }
-            }
+        FuelCellImage{
+            id:                     fuelCellImage
         }
 
         ColumnLayout {

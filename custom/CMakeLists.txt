@@ -116,6 +116,7 @@ qt_add_qml_module(CustomFlyViewModule
 qt_add_library(CustomFuelCell STATIC)
 
 set_source_files_properties(src/FuelCell/FuelCellPage.qml PROPERTIES QT_RESOURCE_ALIAS FuelCellPage)
+set_source_files_properties(src/FuelCell/FuelCellImage.qml PROPERTIES QT_RESOURCE_ALIAS FuelCellImage)
 
 qt_add_qml_module(CustomFuelCell
         URI Custom.FuelCell
@@ -123,6 +124,7 @@ qt_add_qml_module(CustomFuelCell
         RESOURCE_PREFIX /qml
         QML_FILES
             src/FuelCell/FuelCellPage.qml
+            src/FuelCell/FuelCellImage.qml
         NO_PLUGIN
 )
 
