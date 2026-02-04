@@ -56,6 +56,21 @@ Item {
     //     }
     // }
 
+    function getVoltageText() {
+        if (fuelCell && fuelCell.loadVoltage) {
+            // Use loadVoltage from the new FactGroup
+            return fuelCell.loadVoltage.valueString + " " + fuelCell.loadVoltage.units
+        }
+        return ""
+    }
+
+    function getPowerText() {
+        if (fuelCell && fuelCell.instantPower) {
+            // Use loadVoltage from the new FactGroup
+            return fuelCell.instantPower.valueString + " " + fuelCell.instantPower.units
+        }
+        return ""
+    }
     function getSystemStatue(){
         if (fuelCell && fuelCell.systemStatus) {
             switch (fuelCell.systemStatus.value) {
@@ -134,6 +149,28 @@ Item {
                 verticalAlignment:      Text.AlignVCenter
                 color:                  getSystemStatueColor()
                 text:                   fuelCell ? getSystemStatue() : "无效"
+                font.pointSize:         ScreenTools.defaultFontPointSize
+                visible:                true
+            }
+        }
+        ColumnLayout {
+            id:                     batteryInfoColumn2
+            anchors.top:            parent.top
+            anchors.bottom:         parent.bottom
+            spacing:                0
+            QGCLabel {
+                Layout.alignment:       Qt.AlignHCenter
+                verticalAlignment:      Text.AlignVCenter
+                color:                  qgcPal.text
+                text:                   getVoltageText()
+                font.pointSize:         ScreenTools.defaultFontPointSize
+                visible:                true
+            }
+            QGCLabel {
+                Layout.alignment:       Qt.AlignHCenter
+                verticalAlignment:      Text.AlignVCenter
+                color:                  qgcPal.text
+                text:                   getPowerText()
                 font.pointSize:         ScreenTools.defaultFontPointSize
                 visible:                true
             }

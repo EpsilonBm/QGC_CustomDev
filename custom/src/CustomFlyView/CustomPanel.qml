@@ -94,7 +94,7 @@ Item {
             }
         }
 
-        FuelCellValueIndicator {
+        FuelCellIndicator {
             id:                 _fuelCellIndicator
             anchors.right:      parent.right
         }

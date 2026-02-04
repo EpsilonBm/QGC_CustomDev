@@ -42,8 +42,7 @@ Item {
             if (p > 80) return qgcPal.colorGreen
             if (p > 60) return qgcPal.colorYellowGreen
             if (p > 40) return qgcPal.colorYellow
-            if (p > 20) return qgcPal.colorOrange
-            return qgcPal.colorRed
+            return qgcPal.colorOrange
         }
         return qgcPal.text
     }
@@ -79,7 +78,7 @@ Item {
     function getBatteryPercentageText() {
         if (fuelCell && fuelCell.percentRemaining) {
             // 直接显示百分比数值
-            return fuelCell.percentRemaining.valueString + "%"
+            return parseInt(fuelCell.percentRemaining.value).toString()
         }
         return qsTr("n/a")
     }

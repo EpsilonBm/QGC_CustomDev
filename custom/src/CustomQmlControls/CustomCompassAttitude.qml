@@ -59,11 +59,11 @@ Item {
     }
 
     QGCLabel {
-        anchors.bottomMargin:     _toolsMargin + _compassRadius / 4
+        anchors.bottomMargin:     _toolsMargin + _compassRadius * 2 - _compassRadius / 2
         anchors.bottom:           parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
-        text:                     (_activeVehicle ? _heading.toFixed(0) : "-.-") + "°"
-        color:                    qgcPal.text
+        text:                     (_activeVehicle ? _heading.toFixed(0) : "-.-")
+        color:                    "#FFFFFF"
         font.pointSize:           ScreenTools.defaultFontPointSize
     }
 }
