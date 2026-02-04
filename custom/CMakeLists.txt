@@ -122,7 +122,7 @@ qt_add_qml_module(CustomFuelCell
         VERSION 1.0
         RESOURCE_PREFIX /qml
         QML_FILES
-        src/FuelCell/FuelCellPage.qml
+            src/FuelCell/FuelCellPage.qml
         NO_PLUGIN
 )
 

@@ -153,13 +153,25 @@ Item {
                 if (fuelCell && fuelCell.systemStatus) {
                     switch (fuelCell.systemStatus.value) {
                         case 0:
-                            return qsTr("停机")
+                            return qsTr("初始化")
                         case 1:
-                            return qsTr("热机")
+                            return qsTr("自检")
                         case 2:
-                            return qsTr("运行")
+                            return qsTr("待命")
                         case 3:
-                            return qsTr("故障")
+                            return qsTr("启动")
+                        case 4:
+                            return qsTr("运行")
+                        case 5:
+                            return qsTr("关机")
+                        case 6:
+                            return qsTr("异常")
+                        case 7:
+                            return qsTr("急停")
+                        case 8:
+                            return qsTr("复位")
+                        case 9:
+                            return qsTr("调试")
                     }
                 }
             }
@@ -167,12 +179,10 @@ Item {
             function getSystemStatueColor(){
                 if (fuelCell && fuelCell.systemStatus) {
                     switch (fuelCell.systemStatus.value) {
-                        case 0:
-                        case 1:
-                        case 2:
-                            return qgcPal.text
-                        case 3:
+                        case 6:
                             return qgcPal.colorRed
+                        default:
+                            return qgcPal.text
                     }
                 }
             }
