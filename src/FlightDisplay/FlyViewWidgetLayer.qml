@@ -54,6 +54,8 @@ Item {
 
     property bool utmspActTrigger
 
+    property bool   mainWindowIsMap:       true
+
     QGCToolInsets {
         id:                     _totalToolInsets
         leftEdgeTopInset:       toolStrip.leftEdgeTopInset
@@ -179,7 +181,7 @@ Item {
         anchors.top:            parent.top
         z:                      QGroundControl.zOrderWidgets
         maxHeight:              parent.height - y - parentToolInsets.bottomEdgeLeftInset - _toolsMargin
-        visible:                !QGroundControl.videoManager.fullScreen
+        visible:                !QGroundControl.videoManager.fullScreen && mainWindowIsMap
 
         onDisplayPreFlightChecklist: {
             if (!preFlightChecklistLoader.active) {

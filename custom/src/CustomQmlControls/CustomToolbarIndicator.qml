@@ -205,11 +205,6 @@ Item {
             // GPS Indicator
             GPSIndicator { }
 
-            // Message indicator
-            // Attention that the MessageIndicator is not supported in v5.0, cause many problems.
-            // Original MessageIndicator function is shift into the MainStatueIndicator.
-            MessageIndicator { }
-
             // Fuel Cell Indicator
             FuelCellIndicator { }
 
