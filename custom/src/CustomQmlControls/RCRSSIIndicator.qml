@@ -81,4 +81,67 @@ Item {
             font.pointSize:     ScreenTools.defaultFontPointSize
         }
     }
+    MouseArea {
+        anchors.fill:   parent
+        onClicked:      mainWindow.showIndicatorDrawer(_RSSIInfoPage, _root)
+    }
+
+    Component {
+        id: _RSSIInfoPage
+
+        ToolIndicatorPage {
+            showExpand: false
+
+            contentComponent:
+                ColumnLayout{
+                    SettingsGroupLayout {
+                    heading: qsTr("遥控信号强度")
+
+                    LabelledLabel {
+                        label:      qsTr("RSSI")
+                        labelText:  _activeVehicle.rcRSSI + "%"
+                    }
+                }
+                    SettingsGroupLayout {
+                        heading: qsTr("遥测数据信号强度")
+
+                        LabelledLabel {
+                            label:      qsTr("Local RSSI:")
+                            labelText:  _activeVehicle.telemetryLRSSI + " " + qsTr("dBm")
+                        }
+
+                        LabelledLabel {
+                            label:      qsTr("Remote RSSI:")
+                            labelText:  _activeVehicle.telemetryRRSSI + " " + qsTr("dBm")
+                        }
+
+                        LabelledLabel {
+                            label:      qsTr("RX Errors:")
+                            labelText:  _activeVehicle.telemetryRXErrors
+                        }
+
+                        LabelledLabel {
+                            label:      qsTr("Errors Fixed:")
+                            labelText:  _activeVehicle.telemetryFixed
+                        }
+
+                        LabelledLabel {
+                            label:      qsTr("TX Buffer:")
+                            labelText:  _activeVehicle.telemetryTXBuffer
+                        }
+
+                        LabelledLabel {
+                            label:      qsTr("Local Noise:")
+                            labelText:  _activeVehicle.telemetryLNoise
+                        }
+
+                        LabelledLabel {
+                            label:      qsTr("Remote Noise:")
+                            labelText:  _activeVehicle.telemetryRNoise
+                        }
+                    }
+                }
+
+        }
+    }
 }
