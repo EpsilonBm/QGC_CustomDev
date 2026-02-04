@@ -153,25 +153,25 @@ ToolIndicatorPage {
                     }
                 }
             }
-            SettingsGroupLayout {
-                heading: qsTr("显示选项")
-
-                FactCheckBoxSlider { // Use QGCSwitch if you only need a toggle
-                    text:           qsTr("显示电量百分比")
-                    fact:           showPercentage
-                    visible:        showPercentage ? showPercentage.visible : false
-                }
-                FactCheckBoxSlider {
-                    text:           qsTr("显示电压")
-                    fact:           showVoltage
-                    visible:        showVoltage ? showVoltage.visible : false
-                }
-                FactCheckBoxSlider {
-                    text:           qsTr("显示预估剩余时间")
-                    fact:           showRemainingTime
-                    visible:        showRemainingTime ? showRemainingTime.visible : false
-                }
-            }
+            // SettingsGroupLayout {
+            //     heading: qsTr("显示选项")
+            //
+            //     FactCheckBoxSlider { // Use QGCSwitch if you only need a toggle
+            //         text:           qsTr("显示电量百分比")
+            //         fact:           showPercentage
+            //         visible:        showPercentage ? showPercentage.visible : false
+            //     }
+            //     FactCheckBoxSlider {
+            //         text:           qsTr("显示电压")
+            //         fact:           showVoltage
+            //         visible:        showVoltage ? showVoltage.visible : false
+            //     }
+            //     FactCheckBoxSlider {
+            //         text:           qsTr("显示预估剩余时间")
+            //         fact:           showRemainingTime
+            //         visible:        showRemainingTime ? showRemainingTime.visible : false
+            //     }
+            // }
             SettingsGroupLayout{
                 heading: qsTr("开发者工具")
                 LabelledButton{

@@ -36,19 +36,106 @@ Item {
     // fuelCell object
     property var fuelCell: _activeVehicle ? _activeVehicle.fuelCell : null
 
+    // function getVisibleCount(){
+    //     let count = 0
+    //     if(control._showPercentage && control._showPercentage.rawValue){
+    //         count += 1
+    //     }
+    //     if(control._showVoltage && control._showVoltage.rawValue){
+    //         count += 1
+    //     }
+    //     if(control._showRemainingTime && control._showRemainingTime.rawValue){
+    //         count += 1
+    //     }
+    //     if(count === 1){
+    //         return ScreenTools.mediumFontPointSize
+    //     }else if(count === 2){
+    //         return ScreenTools.defaultFontPointSize
+    //     }else{
+    //         return ScreenTools.smallFontPointSize
+    //     }
+    // }
+
+    function getSystemStatue(){
+        if (fuelCell && fuelCell.systemStatus) {
+            switch (fuelCell.systemStatus.value) {
+                case 0:
+                    return qsTr("初始化")
+                case 1:
+                    return qsTr("自检")
+                case 2:
+                    return qsTr("待命")
+                case 3:
+                    return qsTr("启动")
+                case 4:
+                    return qsTr("运行")
+                case 5:
+                    return qsTr("关机")
+                case 6:
+                    return qsTr("异常")
+                case 7:
+                    return qsTr("急停")
+                case 8:
+                    return qsTr("复位")
+                case 9:
+                    return qsTr("调试")
+            }
+        }
+    }
+
+    function getSystemStatueColor(){
+        if (fuelCell && fuelCell.systemStatus) {
+            switch (fuelCell.systemStatus.value) {
+                case 6:
+                    return qgcPal.colorRed
+                default:
+                    return qgcPal.text
+            }
+        }
+    }
+
     // fuelCellIndicatorRow
     Row {
         id:             fuelCellIndicatorRow
         anchors.top:    parent.top
         anchors.bottom: parent.bottom
 
-        // Since there is only one FuelCellManager, we don't need a Repeater.
-        // We use a Loader and make it visible if the fuelCellManager exists.
-        Loader {
-            anchors.top:        parent.top
-            anchors.bottom:     parent.bottom
-            sourceComponent:    fuelCellVisual
-            visible:            control.fuelCell !== null
+        FuelCellImage{
+            id:                     fuelCellImage
+        }
+
+        ColumnLayout {
+            id:                     batteryInfoColumn
+            anchors.top:            parent.top
+            anchors.bottom:         parent.bottom
+            spacing:                0
+
+            // QGCLabel {
+            //     Layout.alignment:       Qt.AlignHCenter
+            //     verticalAlignment:      Text.AlignVCenter
+            //     color:                  qgcPal.text
+            //     text:                   getRemainingTimeText()
+            //     font.pointSize:         getVisibleCount()
+            //     visible:                _showRemainingTime ? _showRemainingTime.rawValue : false
+            // }
+            // Temperature
+            QGCLabel {
+                Layout.alignment:       Qt.AlignHCenter
+                verticalAlignment:      Text.AlignVCenter
+                color:                  qgcPal.text
+                text:                   fuelCell.highestTemperature ? (fuelCell.highestTemperature.valueString + " " + fuelCell.highestTemperature.units) : "N/A"
+                font.pointSize:         ScreenTools.defaultFontPointSize
+                visible:                true
+            }
+            // SystemStatues
+            QGCLabel {
+                Layout.alignment:       Qt.AlignHCenter
+                verticalAlignment:      Text.AlignVCenter
+                color:                  getSystemStatueColor()
+                text:                   fuelCell ? getSystemStatue() : "无效"
+                font.pointSize:         ScreenTools.defaultFontPointSize
+                visible:                true
+            }
         }
     }
     MouseArea {
@@ -68,191 +155,4 @@ Item {
             showRemainingTime: _showRemainingTime
         }
     }
-
-    // fuelCellVisual
-    /* fuelCell visual indicator
-    *  called from: fuelCellIndicatorRow
-    *  function   : show the battery icon and some important information
-    */
-    Component {
-        id: fuelCellVisual
-
-        Row {
-            anchors.top:    parent.top
-            anchors.bottom: parent.bottom
-
-            function getBatteryColor() {
-                if (fuelCell && fuelCell.percentRemaining) {
-                    var p = fuelCell.percentRemaining.value
-                    if (p > 90) return qgcPal.colorGreen
-                    if (p > 70) return qgcPal.colorYellowGreen
-                    if (p > 50) return qgcPal.colorYellow
-                    if (p > 30) return qgcPal.colorOrange
-                    return qgcPal.colorRed // Critical (30-10) & Emergency (10-0)
-                }
-                return qgcPal.text
-            }
-
-            function getBatterySvgSource() {
-                if (fuelCell && fuelCell.percentRemaining) {
-                    var p = fuelCell.percentRemaining.value
-                    if (p > 90) return "qrc:/custom/img/BatteryGreen.svg"
-                    if (p > 70) return "qrc:/custom/img/BatteryYellowGreen.svg"
-                    if (p > 50) return "qrc:/custom/img/BatteryYellow.svg"
-                    if (p > 30) return "qrc:/custom/img/BatteryOrange.svg"
-                    if (p > 10) return "qrc:/custom/img/BatteryCritical.svg"
-                    return "qrc:/custom/img/BatteryEMERGENCY.svg"
-                }
-                return "qrc:/custom/img/Battery.svg"
-            }
-
-            function getBatteryPercentageText() {
-                if (fuelCell && fuelCell.percentRemaining) {
-                    // 直接显示百分比数值
-                    return fuelCell.percentRemaining.valueString + "%"
-                }
-                return qsTr("n/a")
-            }
-
-            function getBatteryVoltageText() {
-                if (fuelCell && fuelCell.loadVoltage) {
-                    // Use loadVoltage from the new FactGroup
-                    return fuelCell.loadVoltage.valueString + " " + fuelCell.loadVoltage.units
-                }
-                return qsTr("n/a")
-            }
-
-            function getRemainingTimeText() {
-                if (fuelCell && fuelCell.remainingTime) {
-                    return fuelCell.remainingTime.valueString + " " + fuelCell.remainingTime.units
-                }
-                return qsTr("n/a")
-            }
-
-            function getVisibleCount(){
-                let count = 0
-                if(control._showPercentage && control._showPercentage.rawValue){
-                    count += 1
-                }
-                if(control._showVoltage && control._showVoltage.rawValue){
-                    count += 1
-                }
-                if(control._showRemainingTime && control._showRemainingTime.rawValue){
-                    count += 1
-                }
-                if(count === 1){
-                    return ScreenTools.mediumFontPointSize
-                }else if(count === 2){
-                    return ScreenTools.defaultFontPointSize
-                }else{
-                    return ScreenTools.smallFontPointSize
-                }
-            }
-
-            function getSystemStatue(){
-                if (fuelCell && fuelCell.systemStatus) {
-                    switch (fuelCell.systemStatus.value) {
-                        case 0:
-                            return qsTr("初始化")
-                        case 1:
-                            return qsTr("自检")
-                        case 2:
-                            return qsTr("待命")
-                        case 3:
-                            return qsTr("启动")
-                        case 4:
-                            return qsTr("运行")
-                        case 5:
-                            return qsTr("关机")
-                        case 6:
-                            return qsTr("异常")
-                        case 7:
-                            return qsTr("急停")
-                        case 8:
-                            return qsTr("复位")
-                        case 9:
-                            return qsTr("调试")
-                    }
-                }
-            }
-
-            function getSystemStatueColor(){
-                if (fuelCell && fuelCell.systemStatus) {
-                    switch (fuelCell.systemStatus.value) {
-                        case 6:
-                            return qgcPal.colorRed
-                        default:
-                            return qgcPal.text
-                    }
-                }
-            }
-
-            QGCColoredImage {
-                anchors.top:        parent.top
-                anchors.bottom:     parent.bottom
-                width:              height
-                sourceSize.width:   width
-                source:             getBatterySvgSource()
-                fillMode:           Image.PreserveAspectFit
-                color:              getBatteryColor()
-            }
-
-            ColumnLayout {
-                id:                     batteryInfoColumn
-                anchors.top:            parent.top
-                anchors.bottom:         parent.bottom
-                spacing:                0
-
-                QGCLabel {
-                    Layout.alignment:       Qt.AlignHCenter
-                    verticalAlignment:      Text.AlignVCenter
-                    color:                  qgcPal.text
-                    text:                   getBatteryPercentageText()
-                    font.pointSize:         getVisibleCount()
-                    visible:                _showPercentage ? _showPercentage.rawValue : false
-                }
-                QGCLabel {
-                    Layout.alignment:       Qt.AlignHCenter
-                    verticalAlignment:      Text.AlignVCenter
-                    color:                  qgcPal.text
-                    text:                   getBatteryVoltageText()
-                    font.pointSize:         getVisibleCount()
-                    visible:                _showVoltage ? _showVoltage.rawValue : false
-                }
-                QGCLabel {
-                    Layout.alignment:       Qt.AlignHCenter
-                    verticalAlignment:      Text.AlignVCenter
-                    color:                  qgcPal.text
-                    text:                   getRemainingTimeText()
-                    font.pointSize:         getVisibleCount()
-                    visible:                _showRemainingTime ? _showRemainingTime.rawValue : false
-                }
-            }
-            ColumnLayout {
-                id:                     batteryInfoColumn2
-                anchors.top:            parent.top
-                anchors.bottom:         parent.bottom
-                spacing:                0
-                // Temperature
-                QGCLabel {
-                    Layout.alignment:       Qt.AlignHCenter
-                    verticalAlignment:      Text.AlignVCenter
-                    color:                  qgcPal.text
-                    text:                   fuelCell.highestTemperature ? (fuelCell.highestTemperature.valueString + " " + fuelCell.highestTemperature.units) : "N/A"
-                    font.pointSize:         ScreenTools.defaultFontPointSize
-                    visible:                true
-                }
-                // SystemStatues
-                QGCLabel {
-                    Layout.alignment:       Qt.AlignHCenter
-                    verticalAlignment:      Text.AlignVCenter
-                    color:                  getSystemStatueColor()
-                    text:                   fuelCell ? getSystemStatue() : "无效"
-                    font.pointSize:         ScreenTools.defaultFontPointSize
-                    visible:                true
-                }
-            }
-        }
-    }
-
 }
