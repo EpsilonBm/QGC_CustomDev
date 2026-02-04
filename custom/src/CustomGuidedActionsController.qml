@@ -15,10 +15,10 @@ import QGroundControl
 QtObject {
     // action ID
     readonly property int actionCustomButton:   10000 + 0 // _guidedController.customActionStart is 10000
-    readonly property int actionCameraSwitch:   10000 + 1
-    readonly property int actionGimbalControl:  10000 + 2
-    readonly property int actionLoadSec2:       10000 + 3
-    readonly property int actionLoadSec3:       10000 + 4
+    //readonly property int actionCameraSwitch:   10000 + 1
+    //readonly property int actionGimbalControl:  10000 + 2
+    //readonly property int actionLoadSec2:       10000 + 3
+    //readonly property int actionLoadSec3:       10000 + 4
     readonly property int actionFuelCellStart:  10000 + 5
 
     readonly property string customButtonTitle: qsTr("Custom")
@@ -47,14 +47,13 @@ QtObject {
 
     property string startSwitchIcon: {
         if (_fuelCell) {
-            if (_fuelCell.systemStatus.rawValue === 0) {
-                // 0 = Stop
-                // when Stop show power icon
-                return "qrc:/custom/img/PowerButton.svg"
-            } else {
-                // 1,2,3 = Warm-up, Running, Fault
-                // when Running show pause icon
-                return "qrc:/custom/img/pause.svg"
+            switch (_fuelCell.systemStatus.rawValue){
+                case 0:
+                case 5:
+                case 7:
+                    return "qrc:/custom/img/PowerButton.svg"
+                default:
+                    return "qrc:/custom/img/pause.svg"
             }
         }
         // default show power icon
@@ -63,14 +62,13 @@ QtObject {
 
     property string startSwitchText: {
         if (_fuelCell) {
-            if (_fuelCell.systemStatus.rawValue === 0) {
-                // 0 = Stop
-                // when Stop show power icon
-                return "启动燃料电池"
-            } else {
-                // 1,2,3 = Warm-up, Running, Fault
-                // when Running show pause icon
-                return "停止燃料电池"
+            switch (_fuelCell.systemStatus.rawValue){
+                case 0:
+                case 5:
+                case 7:
+                    return "启动燃料电池"
+                default:
+                    return "停止燃料电池"
             }
         }
         // default show power icon
@@ -101,24 +99,6 @@ QtObject {
         switch (actionCode) {
         case actionCustomButton:
             mainWindow.showMessageDialog("Custom Action", "Custom action executed.")
-            break
-        case actionCameraSwitch:
-            if (_currentCamera) {
-                if (_currentCamera.cameraMode === -1){
-                    mainWindow.showMessageDialog("Error", "Camera not set yet!")
-                    //mainWindow.showMessageDialog("TestMessage", "_currentCamera:" + _currentCamera + "\ncameraMode: " + _currentCamera.cameraMode)
-                    break
-                }
-                // Use toggle method provided by C++ layer
-                _currentCamera.toggleCameraMode()
-                //mainWindow.showMessageDialog("TestMessage", "_currentCamera:" + _currentCamera + "\ncameraMode: " + _currentCamera.cameraMode)
-            }
-            break
-        case actionLoadSec2:
-            // mainWindow.showMessageDialog("Load Control", "sec2 executed")
-            break
-        case actionLoadSec3:
-            // mainWindow.showMessageDialog("Load Control", "sec3 executed")
             break
         case actionFuelCellStart:
             if (_fuelCell) {

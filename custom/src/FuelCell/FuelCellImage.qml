@@ -17,29 +17,52 @@ Item {
     anchors.bottom: parent.bottom
     width:          height * 0.7
 
+    property string fuelCellState:{
+        if(!fuelCell){
+            return "invalid"
+        }
+        switch (fuelCell.systemStatus.value){
+            case 6:
+            case 7:
+                return "critical"
+            default:
+                return "normal"
+        }
+        return "invalid"
+    }
     function getBatteryColor() {
-        if (fuelCell && fuelCell.percentRemaining) {
+        if(fuelCellState === "invalid"){
+            return qgcPal.text
+        }
+        if(fuelCellState === "critical"){
+            return qgcPal.colorRed
+        }
+        if(fuelCellState === "normal"){
             var p = fuelCell.percentRemaining.value
-            if (p > 90) return qgcPal.colorGreen
-            if (p > 70) return qgcPal.colorYellowGreen
-            if (p > 50) return qgcPal.colorYellow
-            if (p > 30) return qgcPal.colorOrange
-            return qgcPal.colorRed // Critical (30-10) & Emergency (10-0)
+            if (p > 80) return qgcPal.colorGreen
+            if (p > 60) return qgcPal.colorYellowGreen
+            if (p > 40) return qgcPal.colorYellow
+            if (p > 20) return qgcPal.colorOrange
+            return qgcPal.colorRed
         }
         return qgcPal.text
     }
 
     function getBatterySvgSource() {
-        if (fuelCell && fuelCell.percentRemaining) {
-            var p = fuelCell.percentRemaining.value
-            if (p > 90) return "qrc:/custom/img/BatteryGreen.svg"
-            if (p > 70) return "qrc:/custom/img/BatteryYellowGreen.svg"
-            if (p > 50) return "qrc:/custom/img/BatteryYellow.svg"
-            if (p > 30) return "qrc:/custom/img/BatteryOrange.svg"
-            if (p > 10) return "qrc:/custom/img/BatteryCritical.svg"
+        if(fuelCellState === "invalid"){
+            return "qrc:/custom/img/Battery.svg"
+        }
+        if(fuelCellState === "critical"){
             return "qrc:/custom/img/BatteryEMERGENCY.svg"
         }
-        return "qrc:/custom/img/Battery.svg"
+        if(fuelCellState === "normal"){
+            var p = fuelCell.percentRemaining.value
+            if (p > 80) return "qrc:/custom/img/BatteryGreen.svg"
+            if (p > 60) return "qrc:/custom/img/BatteryYellowGreen.svg"
+            if (p > 40) return "qrc:/custom/img/BatteryYellow.svg"
+            if (p > 20) return "qrc:/custom/img/BatteryOrange.svg"
+            return "qrc:/custom/img/BatteryCritical.svg"
+        }
     }
 
     QGCColoredImage {

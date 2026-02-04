@@ -24,7 +24,6 @@ Item {
 
     property real   _toolsMargin:           ScreenTools.defaultFontPixelWidth * 0.75
 
-    //-------------------------------------------------------------------------
     Rectangle {
         id:                     attitudeIndicator
         anchors.bottomMargin:   _toolsMargin
@@ -57,5 +56,14 @@ Item {
                 origin.y:   headingNeedle.height / 2
                 angle:      _heading
             }]
+    }
+
+    QGCLabel {
+        anchors.bottomMargin:     _toolsMargin + _compassRadius / 4
+        anchors.bottom:           parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        text:                     (_activeVehicle ? _heading.toFixed(0) : "-.-") + "°"
+        color:                    qgcPal.text
+        font.pointSize:           ScreenTools.defaultFontPointSize
     }
 }

@@ -87,6 +87,7 @@ Item {
         if (fuelCell && fuelCell.systemStatus) {
             switch (fuelCell.systemStatus.value) {
                 case 6:
+                case 7:
                     return qgcPal.colorRed
                 default:
                     return qgcPal.text
