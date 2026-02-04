@@ -34,7 +34,7 @@ FuelCellFactGroup::FuelCellFactGroup(QObject* parent)
 
 {
     // 设置定时器每秒触发一次
-    _announcementTimer->setInterval(15000); // 1000ms = 1s
+    _announcementTimer->setInterval(12000); // 1000ms = 1s
     connect(_announcementTimer, &QTimer::timeout, this, &FuelCellFactGroup::checkAndAnnounceFuelLevel);
     _addFact(&_systemStatusFact,         _systemStatusFact.name());
     _addFact(&_loadVoltageFact,          _loadVoltageFact.name());
@@ -63,7 +63,6 @@ FuelCellFactGroup::FuelCellFactGroup(QObject* parent)
     // Initialize default values
     _bottleCapacityFact.setRawValue(_bottleCapacity);
     _maxEnergyFact.setRawValue(_maxEnergy);
-    _announcementTimer->start();
 }
 
 // 添加检查和播报方法
@@ -110,6 +109,23 @@ void FuelCellFactGroup::handleMessage(Vehicle* /*vehicle*/, mavlink_message_t& m
     mavlink_msg_fuel_cell_status_decode(&message, &status);
 
     _systemStatusFact.setRawValue(status.system_status);
+    // 根据 system_status 控制计时器启停
+    switch (status.system_status) {
+        case 0:
+        case 5:
+        case 7:
+            if (_announcementTimer->isActive()) {
+                _announcementTimer->stop();
+                qDebug() << "Timer stopped due to system_status:" << status.system_status;
+            }
+            break;
+        default:
+            if (!_announcementTimer->isActive()) {
+                _announcementTimer->start();
+                qDebug() << "Timer started due to system_status:" << status.system_status;
+            }
+            break;
+    }
     _loadVoltageFact.setRawValue(status.load_voltage / 10.0);
     _errorCodeFact.setRawValue(status.error_code);
     _highestTemperatureIdFact.setRawValue(status.highest_temperature_id);
@@ -158,5 +174,33 @@ void FuelCellFactGroup::handleMessage(Vehicle* /*vehicle*/, mavlink_message_t& m
     }
     _remainingTimeFact.setRawValue(remaining_time_hours);
 
+}
 
+void FuelCellFactGroup::onCommunicationLostChanged(bool communicationLost)
+{
+    if (communicationLost) {
+        // 连接丢失时停止计时器
+        if (_announcementTimer->isActive()) {
+            _announcementTimer->stop();
+            qDebug() << "Timer stopped due to communication loss";
+        }
+    } else {
+        // 连接恢复时启动计时器（前提是 system_status 允许）
+        mavlink_fuel_cell_status_t status;
+        status.system_status = _systemStatusFact.rawValue().toUInt(); // 获取当前 system_status
+
+        switch (status.system_status) {
+            case 0:
+            case 5:
+            case 7:
+                // 不启动计时器
+                break;
+            default:
+                if (!_announcementTimer->isActive()) {
+                    _announcementTimer->start();
+                    qDebug() << "Timer started due to communication restored";
+                }
+                break;
+        }
+    }
 }
