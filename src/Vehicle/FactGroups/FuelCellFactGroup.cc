@@ -80,10 +80,10 @@ void FuelCellFactGroup::checkAndAnnounceFuelLevel()
     }
 
     // 构造播报内容
-    QString announcement = QStringLiteral("氢燃料电池状态：氢气剩余百分之%1，电堆温度%2摄氏度，电压%3伏特")
+    QString announcement = QStringLiteral("氢燃料电池状态：氢气百分之%1，堆温%2，电压%3")
                               .arg(qRound(hydrogenPercentage))
                               .arg(qRound(stackTemperature))
-                              .arg(QString::number(voltage, 'f', 2)); // 保留两位小数
+                              .arg(qRound(voltage));
 
     // 发出信号用于语音播报
     emit fuelLevelAnnouncementNeeded(announcement);
