@@ -4477,12 +4477,3 @@ void Vehicle::sendFuelCellStartupMode(uint16_t startup_mode)
     // 发送启动模式设置命令 (runtime_command = 3)
     sendFuelCellCommand(3, 0, startup_mode);
 }
-
-// 链接Vehicle和FuelCellFactGroup，传递语音信息
-void Vehicle::_connectFuelCellVoiceAlerts()
-{
-    connect(&_fuelCellFactGroup, &FuelCellFactGroup::fuelLevelAnnouncementNeeded,
-            this, [this](const QString& announcement) {
-        _say(announcement);
-    });
-}
