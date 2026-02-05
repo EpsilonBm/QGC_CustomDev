@@ -89,19 +89,6 @@ void FuelCellFactGroup::checkAndAnnounceFuelLevel()
     emit fuelLevelAnnouncementNeeded(announcement);
 }
 
-void FuelCellFactGroup::handleCommunicationLost(bool lost)
-{
-    if (lost) {
-        _announcementTimer->stop();
-    } else {
-        int status = _systemStatusFact.rawValue().toInt();
-        if (status != 0 && status != 5 && status != 7) {
-            if (!_announcementTimer->isActive()) {
-                _announcementTimer->start();
-            }
-        }
-    }
-}
 
 void FuelCellFactGroup::setBottleCapacity(double capacity, double maxEnergy)
 {
