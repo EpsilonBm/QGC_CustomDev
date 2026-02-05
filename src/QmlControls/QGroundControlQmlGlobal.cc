@@ -401,6 +401,14 @@ QString QGroundControlQmlGlobal::appName()
     return QCoreApplication::applicationName();
 }
 
+void QGroundControlQmlGlobal::setPlanFilePathToLoad(const QString& filePath)
+{
+    if (_planFilePathToLoad != filePath) {
+        _planFilePathToLoad = filePath;
+        emit planFilePathToLoadChanged();
+    }
+}
+
 void QGroundControlQmlGlobal::deleteAllSettingsNextBoot()
 {
     QGCApplication::deleteAllSettingsNextBoot();

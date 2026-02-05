@@ -1,0 +1,111 @@
+import QtQuick
+import QtQuick.Layouts
+
+import QGroundControl
+import QGroundControl.Controls
+import QGroundControl.MultiVehicleManager
+import QGroundControl.ScreenTools
+import QGroundControl.Palette
+import QGroundControl.FactSystem
+import QGroundControl.FactControls
+import QGroundControl.AutoPilotPlugin
+import MAVLink
+
+import Custom.FuelCell
+Item {
+    anchors.top:    parent.top
+    anchors.bottom: parent.bottom
+    width:          height * 0.7
+
+    property string fuelCellState:{
+        if(!fuelCell){
+            return "invalid"
+        }
+        switch (fuelCell.systemStatus.value){
+            case 6:
+            case 7:
+                return "critical"
+            default:
+                return "normal"
+        }
+        return "invalid"
+    }
+    function getBatteryColor() {
+        if(fuelCellState === "invalid"){
+            return qgcPal.text
+        }
+        if(fuelCellState === "critical"){
+            return qgcPal.colorRed
+        }
+        if(fuelCellState === "normal"){
+            var p = fuelCell.percentRemaining.value
+            if (p > 80) return qgcPal.colorGreen
+            if (p > 60) return qgcPal.colorYellowGreen
+            if (p > 40) return qgcPal.colorYellow
+            return qgcPal.colorOrange
+        }
+        return qgcPal.text
+    }
+
+    function getBatterySvgSource() {
+        if(fuelCellState === "invalid"){
+            return "qrc:/custom/img/Battery.svg"
+        }
+        if(fuelCellState === "critical"){
+            return "qrc:/custom/img/BatteryEMERGENCY.svg"
+        }
+        if(fuelCellState === "normal"){
+            var p = fuelCell.percentRemaining.value
+            if (p > 80) return "qrc:/custom/img/BatteryGreen.svg"
+            if (p > 60) return "qrc:/custom/img/BatteryYellowGreen.svg"
+            if (p > 40) return "qrc:/custom/img/BatteryYellow.svg"
+            if (p > 20) return "qrc:/custom/img/BatteryOrange.svg"
+            return "qrc:/custom/img/BatteryCritical.svg"
+        }
+    }
+
+    QGCColoredImage {
+        id:                 fuelCellImage
+        anchors.top:        parent.top
+        anchors.bottom:     parent.bottom
+        width:              height * 0.7
+        sourceSize.width:   width
+        source:             getBatterySvgSource()
+        fillMode:           Image.PreserveAspectFit
+        color:              getBatteryColor()
+    }
+
+    function getBatteryPercentageText() {
+        if (fuelCell && fuelCell.percentRemaining) {
+            // 直接显示百分比数值
+            return parseInt(fuelCell.percentRemaining.value).toString()
+        }
+        return qsTr("n/a")
+    }
+
+    ColumnLayout{
+        id:                     valuesInImage
+        anchors.top:            parent.top
+        anchors.bottom:         parent.bottom
+        anchors.left:           fuelCellImage.left
+        anchors.right:          fuelCellImage.right
+        spacing:                0
+
+        QGCLabel {
+            Layout.alignment:       Qt.AlignHCenter
+            verticalAlignment:      Text.AlignVCenter
+            color:                  qgcPal.text
+            text:                   getBatteryPercentageText()
+            font.pointSize:         ScreenTools.defaultFontPointSize
+            visible:                true
+        }
+    }
+    QGCLabel {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom:           parent.bottom
+        color:                    qgcPal.text
+        text:                     fuelCell.bottleCapacity.valueString
+        font.pointSize:           ScreenTools.smallFontPointSize
+        visible:                  true
+    }
+}

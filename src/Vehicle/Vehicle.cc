@@ -58,6 +58,7 @@
 #include "GimbalController.h"
 #include "MavlinkSettings.h"
 #include "APM.h"
+#include "mavlink_msg_fuel_cell_status.h"
 
 #ifdef QGC_UTM_ADAPTER
 #include "UTMSPVehicle.h"
@@ -68,6 +69,9 @@
 #endif
 
 #include <QtCore/QDateTime>
+#include <QTimer>
+#include "LinkInterface.h"
+//#include  "SpeechManager.h"
 
 QGC_LOGGING_CATEGORY(VehicleLog, "VehicleLog")
 
@@ -78,7 +82,7 @@ QGC_LOGGING_CATEGORY(VehicleLog, "VehicleLog")
 #define SET_HOME_TERRAIN_ALT_MIN -500
 
 // After a second GCS has requested control and we have given it permission to takeover, we will remove takeover permission automatically after this timeout
-// If the second GCS didn't get control 
+// If the second GCS didn't get control
 #define REQUEST_OPERATOR_CONTROL_ALLOW_TAKEOVER_TIMEOUT_MSECS 10000
 
 const QString guided_mode_not_supported_by_vehicle = QObject::tr("Guided mode not supported by Vehicle.");
@@ -116,6 +120,7 @@ Vehicle::Vehicle(LinkInterface*             link,
     , _generatorFactGroup           (this)
     , _efiFactGroup                 (this)
     , _rpmFactGroup                 (this)
+    , _fuelCellFactGroup            (this)
     , _terrainFactGroup             (this)
     , _terrainProtocolHandler       (new TerrainProtocolHandler(this, &_terrainFactGroup, this))
 {
@@ -190,6 +195,21 @@ Vehicle::Vehicle(LinkInterface*             link,
 
     // Start timer to limit altitude above terrain queries
     _altitudeAboveTerrQueryTimer.restart();
+
+    // // 创建语音管理器
+    // _speechManager = new SpeechManager(this, this);
+
+    // 在添加燃料电池FactGroup后连接语音信号
+    _addFactGroup(&_fuelCellFactGroup, _fuelCellFactGroupName);
+
+    // 连接燃料电池语音播报信号
+    connect(&_fuelCellFactGroup, &FuelCellFactGroup::fuelLevelAnnouncementNeeded,
+            this, [this](const QString& announcement) {
+        _say(announcement);
+    });
+
+    connect(_vehicleLinkManager,&VehicleLinkManager::communicationLostChanged,
+        &_fuelCellFactGroup,&FuelCellFactGroup::onCommunicationLostChanged);
 }
 
 // Disconnected Vehicle for offline editing
@@ -219,6 +239,7 @@ Vehicle::Vehicle(MAV_AUTOPILOT              firmwareType,
     , _distanceSensorFactGroup          (this)
     , _localPositionFactGroup           (this)
     , _localPositionSetpointFactGroup   (this)
+    , _fuelCellFactGroup                (this)
 {
     // This will also set the settings based firmware/vehicle types. So it needs to happen first.
     if (_firmwareType == MAV_AUTOPILOT_TRACK) {
@@ -337,6 +358,7 @@ void Vehicle::_commonInit()
     _addFactGroup(&_generatorFactGroup,         _generatorFactGroupName);
     _addFactGroup(&_efiFactGroup,               _efiFactGroupName);
     _addFactGroup(&_rpmFactGroup,               _rpmFactGroupName);
+    _addFactGroup(&_fuelCellFactGroup,          _fuelCellFactGroupName);
     _addFactGroup(&_terrainFactGroup,           _terrainFactGroupName);
 
     // Add firmware-specific fact groups, if provided
@@ -593,6 +615,9 @@ void Vehicle::_mavlinkMessageReceived(LinkInterface* link, mavlink_message_t mes
     case MAVLINK_MSG_ID_FENCE_STATUS:
         _handleFenceStatus(message);
         break;
+    case MAVLINK_MSG_ID_FUEL_CELL_STATUS:
+        _fuelCellFactGroup.handleMessage(this, message);
+        break;
 
     case MAVLINK_MSG_ID_EVENT:
     case MAVLINK_MSG_ID_CURRENT_EVENT_SEQUENCE:
@@ -653,7 +678,7 @@ void Vehicle::_mavlinkMessageReceived(LinkInterface* link, mavlink_message_t mes
     }
     case MAVLINK_MSG_ID_CONTROL_STATUS:
         _handleControlStatus(message);
-        break;   
+        break;
     case MAVLINK_MSG_ID_COMMAND_LONG:
         _handleCommandLong(message);
         break;
@@ -1096,6 +1121,7 @@ void Vehicle::_setHomePosition(QGeoCoordinate& homeCoord)
     if (homeCoord != _homePosition) {
         _homePosition = homeCoord;
         qCDebug(VehicleLog) << "new home location set at coordinate: " << homeCoord;
+        AudioOutput::instance()->say(tr("返航点已刷新"));
         emit homePositionChanged(_homePosition);
     }
 }
@@ -2129,8 +2155,8 @@ double Vehicle::minimumEquivalentAirspeed()
     return _firmwarePlugin->minimumEquivalentAirspeed(this);
 }
 
-bool Vehicle::hasGripper()  const 
-{ 
+bool Vehicle::hasGripper()  const
+{
     return _firmwarePlugin->hasGripper(this);
 }
 
@@ -2629,12 +2655,12 @@ bool Vehicle::_commandCanBeDuplicated(MAV_CMD command)
 }
 
 void Vehicle::_sendMavCommandWorker(
-    bool        commandInt, 
-    bool        showError, 
+    bool        commandInt,
+    bool        showError,
     const MavCmdAckHandlerInfo_t* ackHandlerInfo,
-    int         targetCompId, 
-    MAV_CMD     command, 
-    MAV_FRAME   frame, 
+    int         targetCompId,
+    MAV_CMD     command,
+    MAV_FRAME   frame,
     float param1, float param2, float param3, float param4, double param5, double param6, float param7)
 {
     // We can't send commands to compIdAll using this method. The reason being that we would get responses back possibly from multiple components
@@ -2927,7 +2953,7 @@ void Vehicle::_waitForMavlinkMessageMessageReceivedHandler(const mavlink_message
         // We use any incoming message as a trigger to check timeouts on message requests
 
         for (auto& compIdEntry : _requestMessageInfoMap) {
-            for (auto requestMessageInfo : compIdEntry) {    
+            for (auto requestMessageInfo : compIdEntry) {
                 if (requestMessageInfo->messageWaitElapsedTimer.isValid() && requestMessageInfo->messageWaitElapsedTimer.elapsed() > (qgcApp()->runningUnitTests() ? 50 : 1000)) {
                     auto resultHandler      = requestMessageInfo->resultHandler;
                     auto resultHandlerData  = requestMessageInfo->resultHandlerData;
@@ -3668,8 +3694,8 @@ void Vehicle::doSetHome(const QGeoCoordinate& coord)
             disconnect(_currentDoSetHomeTerrainAtCoordinateQuery, &TerrainAtCoordinateQuery::terrainDataReceived, this, &Vehicle::_doSetHomeTerrainReceived);
             _currentDoSetHomeTerrainAtCoordinateQuery = nullptr;
         }
-        // Save the coord for using when our terrain data arrives. If there was a pending terrain query paired with an older coordinate it is safe to 
-        // Override now, as we just disconnected the signal that would trigger the command sending 
+        // Save the coord for using when our terrain data arrives. If there was a pending terrain query paired with an older coordinate it is safe to
+        // Override now, as we just disconnected the signal that would trigger the command sending
         _doSetHomeCoordinate = coord;
         // Now setup and trigger the new terrain query
         _currentDoSetHomeTerrainAtCoordinateQuery = new TerrainAtCoordinateQuery(true /* autoDelet */);
@@ -3949,7 +3975,7 @@ void Vehicle::sendGripperAction(QGCMAVLink::GRIPPER_OPTIONS gripperOption)
         case QGCMAVLink::Invalid_option:
             qDebug("unknown function");
             break;
-        default: 
+        default:
             break;
     }
 }
@@ -4008,7 +4034,7 @@ void Vehicle::startTimerRevertAllowTakeover()
     _timerRevertAllowTakeover.setInterval(operatorControlTakeoverTimeoutMsecs());
     // Disconnect any previous connections to avoid multiple handlers
     disconnect(&_timerRevertAllowTakeover, &QTimer::timeout, nullptr, nullptr);
-    
+
     connect(&_timerRevertAllowTakeover, &QTimer::timeout, this, [this](){
         if (MAVLinkProtocol::instance()->getSystemId() == _sysid_in_control) {
             this->requestOperatorControl(false);
@@ -4062,12 +4088,12 @@ void Vehicle::_requestOperatorControlAckHandler(void* resultHandlerData, int com
         default:
             break;
     }
-    
+
     Vehicle* vehicle = static_cast<Vehicle*>(resultHandlerData);
     if (!vehicle) {
         return;
     }
-    
+
     if (ack.result == MAV_RESULT_ACCEPTED) {
         qCDebug(VehicleLog) << "Operator control request accepted";
     } else {
@@ -4400,3 +4426,54 @@ MAVLinkLogManager *Vehicle::mavlinkLogManager() const
 }
 
 /*---------------------------------------------------------------------------*/
+/*===========================================================================*/
+/*                         FuelCell Command                                  */
+/*===========================================================================*/
+
+void Vehicle::sendFuelCellCommand(uint16_t runtime_command, uint16_t requested_power, uint16_t startup_mode)
+{
+    // 创建并发送 FUEL_CELL_COMMAND 消息
+    mavlink_message_t msg;
+
+    mavlink_msg_fuel_cell_command_pack(
+        static_cast<uint8_t>(MAVLinkProtocol::instance()->getSystemId()),
+        static_cast<uint8_t>(MAVLinkProtocol::getComponentId()),
+        &msg,
+        runtime_command,  // 运行时命令
+        requested_power,  // 请求功率
+        startup_mode      // 启动模式
+    );
+
+    // 通过主链路发送消息
+    SharedLinkInterfacePtr sharedLink = vehicleLinkManager()->primaryLink().lock();
+    if (!sharedLink) {
+        qCWarning(VehicleLog) << "sendFuelCellCommand: primary link gone!";
+        return;
+    }
+
+    sendMessageOnLinkThreadSafe(sharedLink.get(), msg);
+}
+
+void Vehicle::sendFuelCellStart()
+{
+    // 发送启动命令 (runtime_command = 1)
+    sendFuelCellCommand(1, 0, 0);
+}
+
+void Vehicle::sendFuelCellStop()
+{
+    // 发送停止命令 (runtime_command = 0)
+    sendFuelCellCommand(0, 0, 0);
+}
+
+void Vehicle::sendFuelCellPowerRequest(uint16_t power_request)
+{
+    // 发送功率请求命令 (runtime_command = 2)
+    sendFuelCellCommand(2, power_request, 0);
+}
+
+void Vehicle::sendFuelCellStartupMode(uint16_t startup_mode)
+{
+    // 发送启动模式设置命令 (runtime_command = 3)
+    sendFuelCellCommand(3, 0, startup_mode);
+}

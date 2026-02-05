@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<mavlink>
+  <include>D:/mavlink/message_definitions/v1.0/all.xml</include>
+  <version>3</version>
+  <enums/>
+  <messages>
+  <!-- Fuel cell status message -->
+  <message id="12921" name="FUEL_CELL_STATUS">
+    <!-- System status -->
+    <description>Fuel Cell System Status</description>
+    <field type="uint16_t" name="system_status">System Status</field>
+    <field type="uint16_t" name="load_voltage">Load Voltage</field>
+    <field type="uint16_t" name="error_code">Error Code</field>
+    <field type="uint16_t" name="highest_temperature_id">Stack Temperature Highest ID</field>
+    <field type="uint16_t" name="highest_temperature">Stack Temperature Highest Temperature</field>
+    <field type="uint16_t" name="highest_fan_speed">Stack Temperature Highest Fan Speed</field>
+    <field type="uint16_t" name="lowest_voltage_id">Stack Voltage Lowest ID</field>
+    <field type="uint16_t" name="lowest_voltage">Stack Voltage Lowest Voltage</field>
+    <field type="uint16_t" name="fault_id">Fault ID</field>
+    <field type="uint16_t" name="fault_dc_flag">Fault DC Flag</field>
+    <field type="uint16_t" name="fault_fc_flag">Fault FC Flag</field>
+    <field type="uint16_t" name="dc_output_current">DC Output Total Current</field>
+    <field type="uint16_t" name="dc_input_power">DC Input Total Power</field>
+    <field type="uint16_t" name="dc_output_power">DC Output Total Power</field>
+    <field type="uint16_t" name="pressure_lowest_id">Hydrogen Bottle Pressure Lowest ID</field>
+    <field type="uint16_t" name="pressure_lowest">Hydrogen Bottle Pressure Lowest Pressure</field>
+    <field type="uint16_t" name="pressure_total">Hydrogen Bottle Pressure Total</field>
+  </message>
+  <!-- Fuel cell command message -->
+  <message id="12922" name="FUEL_CELL_COMMAND">
+    <description>Fuel Cell System Operation Command</description>
+    <field type="uint16_t" name="runtime_command">Runtime Command</field>
+    <field type="uint16_t" name="requested_power">Requested Power</field>
+    <field type="uint16_t" name="startup_mode">Startup Mode</field>
+  </message>
+</messages>
+</mavlink>

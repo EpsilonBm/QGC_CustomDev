@@ -72,15 +72,15 @@ void VehicleLinkManager::_commRegainedOnLink(LinkInterface *link)
     QString commRegainedMessage;
     const bool isPrimaryLink = link == _primaryLink.lock().get();
     if (_rgLinkInfo.count() > 1) {
-        commRegainedMessage = tr("%1Communication regained on %2 link").arg(_vehicle->_vehicleIdSpeech()).arg(isPrimaryLink ? tr("primary") : tr("secondary"));
+        commRegainedMessage = tr("%1通信已恢复，%2链路").arg(_vehicle->_vehicleIdSpeech()).arg(isPrimaryLink ? tr("主") : tr("副"));
     } else {
-        commRegainedMessage = tr("%1Communication regained").arg(_vehicle->_vehicleIdSpeech());
+        commRegainedMessage = tr("%1通信已恢复").arg(_vehicle->_vehicleIdSpeech());
     }
 
     // Try to switch to another link
     QString primarySwitchMessage;
     if (_updatePrimaryLink()) {
-        primarySwitchMessage = tr("%1Switching communication to new primary link").arg(_vehicle->_vehicleIdSpeech());
+        primarySwitchMessage = tr("%1正在切换通信至新的主链路").arg(_vehicle->_vehicleIdSpeech());
     }
 
     if (!commRegainedMessage.isEmpty()) {
@@ -128,7 +128,7 @@ void VehicleLinkManager::_commLostCheck()
             // Notify the user of individual link communication loss
             const bool isPrimaryLink = linkInfo.link.get() == _primaryLink.lock().get();
             if (_rgLinkInfo.count() > 1) {
-                const QString msg = tr("%1Communication lost on %2 link.").arg(_vehicle->_vehicleIdSpeech()).arg(isPrimaryLink ? tr("primary") : tr("secondary"));
+                const QString msg = tr("%1通信丢失，%2链路").arg(_vehicle->_vehicleIdSpeech()).arg(isPrimaryLink ? tr("主") : tr("副"));
                 AudioOutput::instance()->say(msg.toLower());
             }
         }
@@ -139,7 +139,7 @@ void VehicleLinkManager::_commLostCheck()
     }
 
     if (_updatePrimaryLink()) {
-        QString msg = tr("%1Switching communication to secondary link.").arg(_vehicle->_vehicleIdSpeech());
+        QString msg = tr("%1正在切换通信至备用链路").arg(_vehicle->_vehicleIdSpeech());
         AudioOutput::instance()->say(msg.toLower());
         qgcApp()->showAppMessage(msg);
     }
@@ -163,7 +163,7 @@ void VehicleLinkManager::_commLostCheck()
             return;
         }
 
-        AudioOutput::instance()->say(tr("%1Communication lost").arg(_vehicle->_vehicleIdSpeech()).toLower());
+        AudioOutput::instance()->say(tr("%1通信丢失").arg(_vehicle->_vehicleIdSpeech()).toLower());
 
         _communicationLost = true;
         emit communicationLostChanged(_communicationLost);

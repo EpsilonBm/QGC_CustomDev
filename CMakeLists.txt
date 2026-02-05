@@ -25,6 +25,7 @@ if(IS_DIRECTORY ${CMAKE_SOURCE_DIR}/custom)
     set(QGC_CUSTOM_BUILD ON)
     list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/custom/cmake)
     include(CustomOverrides)
+
 endif()
 
 #######################################################
@@ -45,6 +46,13 @@ project(${QGC_APP_NAME}
     HOMEPAGE_URL ${QGC_ORG_DOMAIN}
     LANGUAGES C CXX
 )
+
+# TODO: Check if Qt Multimedia is available
+# Note: if the platform is android, the gstreamer function will be banned and changing to use Qt Multimedia
+#       to gain better performance on android platform.
+#if(ANDROID)
+#    set(QGC_ENABLE_GSTREAMER OFF CACHE BOOL "" FORCE)
+#endif()
 
 if(APPLE AND NOT IOS)
     set(MACOS TRUE)
@@ -259,6 +267,13 @@ endif()
 
 if(QGC_CUSTOM_BUILD)
     add_subdirectory(custom)
+    # 添加自定义MAVLink消息头文件路径
+    include_directories(
+            ${CMAKE_SOURCE_DIR}/custom/src/mavlink/generated
+            ${CMAKE_SOURCE_DIR}/custom/src/mavlink/generated/custom_messages
+            ${CMAKE_SOURCE_DIR}/custom/src/mavlink/generated/common
+            ${CMAKE_SOURCE_DIR}/custom/src/FuelCell
+    )
 endif()
 
 #######################################################
@@ -450,8 +465,53 @@ elseif(ANDROID)
     endif()
 
     # Version code format: BBMIPPDDD (B=Bitness, M=Major, I=Minor, P=Patch, D=Dev) - Dev not currently supported and always 000
-    set(ANDROID_VERSION_CODE "${ANDROID_BITNESS_CODE}${CMAKE_PROJECT_VERSION_MAJOR}${CMAKE_PROJECT_VERSION_MINOR}${ANDROID_PATCH_VERSION}000")
+    set(ANDROID_VERSION_CODE "1001")
     message(STATUS "Android version code: ${ANDROID_VERSION_CODE}")
+
+    # -------------------------------------------------------------------------
+    # 处理自定义 Android 模板 (移动到此处以确保在 set_target_properties 之前执行)
+    set(QGC_ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_SOURCE_DIR}/android") # 默认为标准路径
+
+    if(QGC_CUSTOM_BUILD)
+        set(CUSTOM_ANDROID_DIR "${CMAKE_SOURCE_DIR}/custom/android")
+        if(EXISTS "${CUSTOM_ANDROID_DIR}")
+            message(STATUS "QGC: Custom Android package template found. Overlaying custom files...")
+            set(DEFAULT_ANDROID_DIR "${CMAKE_SOURCE_DIR}/android")
+            set(FINAL_ANDROID_DIR "${CMAKE_BINARY_DIR}/custom/android")
+            
+            # 复制默认文件，然后覆盖自定义文件
+            file(COPY "${DEFAULT_ANDROID_DIR}/." DESTINATION "${FINAL_ANDROID_DIR}")
+            file(COPY "${CUSTOM_ANDROID_DIR}/." DESTINATION "${FINAL_ANDROID_DIR}")
+            
+            set(QGC_ANDROID_PACKAGE_SOURCE_DIR "${FINAL_ANDROID_DIR}")
+            message(STATUS "QGC: Android package template path set to: ${QGC_ANDROID_PACKAGE_SOURCE_DIR}")
+        endif()
+    endif()
+    # -------------------------------------------------------------------------
+
+    message(STATUS "QGC: Configuring for Android Target - GStreamer setup")
+    # 强制指定 Android GStreamer 路径，必须在 add_subdirectory(src) 之前设置
+    set(ANDROID_GST_ROOT "D:/gstreamer-android/arm64")
+    set(ENV{GST_ROOT} "${ANDROID_GST_ROOT}")
+    set(ENV{GST_ROOT_ANDROID} "${ANDROID_GST_ROOT}")
+
+    # 显式设置 CMake 变量 (使用标准变量名 GST_ROOT 和 GSTREAMER_ROOT)
+    # FindGStreamer.cmake 通常查找这些变量
+    set(GST_ROOT "${ANDROID_GST_ROOT}")
+    set(GSTREAMER_ROOT "${ANDROID_GST_ROOT}")
+    set(GStreamer_ROOT "${ANDROID_GST_ROOT}")
+    #        set(GStreamer_ROOT_DIR "D:/gstreamer-android/arm64")
+    #        set(GSTREAMER_LIB_PATH "D:/gstreamer-android/arm64/lib")
+    #        set(GSTREAMER_PLUGIN_PATH "D:/gstreamer-android/arm64/lib/gstreamer-1.0")
+
+
+    # 添加到 CMAKE_PREFIX_PATH 和 CMAKE_FIND_ROOT_PATH 辅助 find_path/find_library
+    list(APPEND CMAKE_PREFIX_PATH "${ANDROID_GST_ROOT}")
+    list(APPEND CMAKE_FIND_ROOT_PATH "${ANDROID_GST_ROOT}")
+
+    # Clear PKG_CONFIG_PATH to avoid picking up Windows paths
+    set(ENV{PKG_CONFIG_PATH} "")
+    set(ENV{PKG_CONFIG_LIBDIR} "${ANDROID_GST_ROOT}/lib/pkgconfig")
 
     set_target_properties(${CMAKE_PROJECT_NAME}
         PROPERTIES
@@ -573,3 +633,6 @@ endif()
 include(Install)
 
 include(PrintSummary)
+
+# TODO: As the same above
+#add_definitions(-DQGC_DISABLE_GST_GL)

@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "fileType": "FactMetaData",
+  "QGC.MetaData.Facts": [
+    {
+      "name": "PercentageDisplay",
+      "shortDesc": "Choose if show percentage in FuelCell indicator",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "name": "VoltageDisplay",
+      "shortDesc": "Choose if show Voltage in FuelCell indicator",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "name": "RemainingTimeDisplay",
+      "shortDesc": "Choose if show Remaining Time in FuelCell indicator",
+      "type": "bool",
+      "default": false
+    },
+    {
+      "name": "RuntimeCommand",
+      "shortDesc": "Command send 1",
+      "enumStrings": "Halt,Start,Scram,Reset",
+      "enumValues": "0,1,2,3",
+      "type": "uint16",
+      "default": false
+    },
+    {
+      "name": "RequestedPower",
+      "shortDesc": "Command send 2",
+      "type": "uint16",
+      "default": 0,
+      "min": 0.01,
+      "max": 50000
+    },
+    {
+      "name": "StartupMode",
+      "shortDesc": "Command send 3",
+      "enumStrings": "Manual mode,Automatic mode,Manual debug,Single FCU debug",
+      "enumValues": "0,1,2,3",
+      "type": "uint16",
+      "default": false
+    }
+  ]
+}

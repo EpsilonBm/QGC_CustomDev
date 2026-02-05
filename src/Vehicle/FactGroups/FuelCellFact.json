@@ -1,0 +1,180 @@
+{
+    "version": 1,
+    "fileType": "FactMetaData",
+    "QGC.MetaData.Facts": [
+        {
+            "name": "systemStatus",
+            "type": "uint16",
+            "shortDescription": "系统状态",
+            "longDescription": "Overall status of the fuel cell system.",
+            "enumString" : "Init,Check,Standby,Startup,Running,Shutdown,Exception,Estop,Reset,Debug",
+            "enumValues" : "0   ,1    ,2      ,3      ,4      ,5       ,6        ,7    ,8    ,9    "
+        },
+        {
+            "name": "loadVoltage",
+            "type": "double",
+            "shortDescription": "电堆电压",
+            "longDescription": "Voltage at the load.",
+            "units": "V",
+            "decimalPlaces": 1
+        },
+        {
+            "name": "errorCode",
+            "type": "uint16",
+            "shortDescription": "ECU故障码",
+            "longDescription": "System error code."
+        },
+        {
+            "name": "highestTemperatureId",
+            "type": "uint16",
+            "shortDescription": "最高温度电堆ID",
+            "longDescription": "ID of the stack with the highest temperature."
+        },
+        {
+            "name": "highestTemperature",
+            "type": "double",
+            "shortDescription": "最高电堆温度",
+            "longDescription": "Highest temperature in the stack.",
+            "units": "°C",
+            "decimalPlaces": 1
+        },
+        {
+            "name": "highestFanSpeed",
+            "type": "uint16",
+            "shortDescription": "最高风扇转速",
+            "longDescription": "Speed of the fan for the hottest stack.",
+            "units": "rpm"
+        },
+        {
+            "name": "lowestVoltageId",
+            "type": "uint16",
+            "shortDescription": "最低电压电堆ID",
+            "longDescription": "ID of the stack with the lowest voltage."
+        },
+        {
+            "name": "lowestVoltage",
+            "type": "double",
+            "shortDescription": "最低电堆电压",
+            "longDescription": "Lowest voltage in the stack.",
+            "units": "V",
+            "decimalPlaces": 1
+        },
+        {
+            "name": "faultId",
+            "type": "uint16",
+            "shortDescription": "故障ID",
+            "longDescription": "Identifier for the current fault."
+        },
+        {
+            "name": "faultDcFlag",
+            "type": "uint16",
+            "shortDescription": "故障DC标志",
+            "longDescription": "Flag indicating a DC-side fault."
+        },
+        {
+            "name": "faultFcFlag",
+            "type": "uint16",
+            "shortDescription": "故障FC标志",
+            "longDescription": "Flag indicating a fuel cell-side fault."
+        },
+        {
+            "name": "dcOutputCurrent",
+            "type": "double",
+            "shortDescription": "DC输出总电流",
+            "longDescription": "Total DC output current.",
+            "units": "A",
+            "decimalPlaces": 1
+        },
+        {
+            "name": "dcInputPower",
+            "type": "double",
+            "shortDescription": "DC输入总功率",
+            "longDescription": "Total DC input power.",
+            "units": "W",
+            "decimalPlaces": 1
+        },
+        {
+            "name": "dcOutputPower",
+            "type": "double",
+            "shortDescription": "DC输出总功率",
+            "longDescription": "Total DC output power.",
+            "units": "W",
+            "decimalPlaces": 1
+        },
+        {
+            "name": "pressureLowestId",
+            "type": "uint16",
+            "shortDescription": "最低压力氢瓶ID",
+            "longDescription": "ID of the hydrogen bottle with the lowest pressure."
+        },
+        {
+            "name": "pressureLowest",
+            "type": "double",
+            "shortDescription": "最低氢瓶压力",
+            "longDescription": "Lowest pressure among hydrogen bottles.",
+            "units": "kPa",
+            "decimalPlaces": 1
+        },
+        {
+            "name": "pressureTotal",
+            "type": "double",
+            "shortDescription": "氢瓶压力总和",
+            "longDescription": "Total or average pressure of hydrogen bottles.",
+            "units": "kPa",
+            "decimalPlaces": 1
+        },
+        {
+            "name": "instantPower",
+            "type": "double",
+            "shortDescription": "计算瞬时功率",
+            "units": "W",
+            "decimalPlaces": 1
+        },
+        {
+            "name": "remainingEnergy",
+            "type": "double",
+            "shortDescription": "预估剩余电量",
+            "units": "kWh",
+            "decimalPlaces": 1
+        },
+        {
+            "name": "remainingTime",
+            "type": "double",
+            "shortDescription": "预估剩余时间",
+            "units": "h",
+            "decimalPlaces": 1
+        },
+        {
+            "name": "percentRemaining",
+            "type": "double",
+            "shortDescription": "剩余电量百分比",
+            "units": "%",
+            "decimalPlaces": 1
+        },
+        {
+            "name": "bottleCapacity",
+            "type": "double",
+            "shortDescription": "氢瓶容量",
+            "units": "L",
+            "enumStrings": "5.0L,9.0L,12.0L,20.0L",
+            "enumValues": "5.0,9.0,12.0,20.0",
+            "decimalPlaces": 1
+        },
+        {
+            "name": "maxEnergy",
+            "type": "double",
+            "shortDescription": "最大电量",
+            "longDescription": "Maximum energy of the fuel cell system determined by the bottle capacity.",
+            "units": "kWh",
+            "decimalPlaces": 1
+        },
+        {
+            "name": "avgPower",
+            "type": "double",
+            "shortDescription": "平均功率",
+            "longDescription": "Average power of the fuel cell system.",
+            "units": "W",
+            "decimalPlaces": 1
+        }
+    ]
+}

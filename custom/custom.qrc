@@ -1,0 +1,57 @@
+<RCC>
+    <qresource prefix="/custom/img">
+        <file alias="altitude.svg">res/Images/altitude.svg</file>
+        <file alias="attitude_crosshair.svg">res/Images/attitude_crosshair.svg</file>
+        <file alias="attitude_dial.svg">res/Images/attitude_dial.svg</file>
+        <file alias="attitude_pointer.svg">res/Images/attitude_pointer.svg</file>
+        <file alias="chronometer.svg">res/Images/chronometer.svg</file>
+        <file alias="compass_needle.svg">res/Images/compass_needle.svg</file>
+        <file alias="compass_pointer.svg">res/Images/compass_pointer.svg</file>
+        <file alias="distance.svg">res/Images/distance.svg</file>
+        <file alias="horizontal_speed.svg">res/Images/horizontal_speed.svg</file>
+        <file alias="microSD.svg">res/Images/microSD.svg</file>
+        <file alias="odometer.svg">res/Images/odometer.svg</file>
+        <file alias="vertical_speed.svg">res/Images/vertical_speed.svg</file>
+        <file alias="dronecode-black.svg">res/Images/dronecode-black.svg</file>
+        <file alias="dronecode-white.svg">res/Images/dronecode-white.svg</file>
+        <file alias="RC_signal_0.svg">res/Images/SignalStrength/RC_signal_0.svg</file>
+        <file alias="RC_signal_25.svg">res/Images/SignalStrength/RC_signal_25.svg</file>
+        <file alias="RC_signal_50.svg">res/Images/SignalStrength/RC_signal_50.svg</file>
+        <file alias="RC_signal_75.svg">res/Images/SignalStrength/RC_signal_75.svg</file>
+        <file alias="RC_signal_100.svg">res/Images/SignalStrength/RC_signal_100.svg</file>
+        <file alias="Battery.svg">res/Images/FuelCell/Battery.svg</file>
+        <file alias="BatteryGreen.svg">res/Images/FuelCell/BatteryGreen.svg</file>
+        <file alias="BatteryOrange.svg">res/Images/FuelCell/BatteryOrange.svg</file>
+        <file alias="BatteryYellow.svg">res/Images/FuelCell/BatteryYellow.svg</file>
+        <file alias="BatteryCritical.svg">res/Images/FuelCell/BatteryCritical.svg</file>
+        <file alias="BatteryEMERGENCY.svg">res/Images/FuelCell/BatteryEMERGENCY.svg</file>
+        <file alias="BatteryYellowGreen.svg">res/Images/FuelCell/BatteryYellowGreen.svg</file>
+        <file alias="Gps.svg">res/Images/Gps.svg</file>
+        <file alias="Yield.svg">res/Images/MessageIndicator/Yield.svg</file>
+        <file alias="Megaphone.svg">res/Images/MessageIndicator/Megaphone.svg</file>
+        <file alias="TrashDelete.svg">res/Images/MessageIndicator/TrashDelete.svg</file>
+        <file alias="camera_video.svg">res/Images/camera_video.svg</file>
+        <file alias="camera_photo.svg">res/Images/camera_photo.svg</file>
+        <file alias="px4.png">res/Images/px4.png</file>
+        <file alias="gimbal.svg">res/Images/gimbal.svg</file>
+        <file alias="waves.svg">res/Images/waves.svg</file>
+        <file alias="pause.svg">res/Images/pause.svg</file>
+        <file alias="PowerButton.svg">res/Images/PowerButton.svg</file>
+    </qresource>
+    <qresource prefix="/Custom/qmlimages">
+        <file alias="PaperPlane.svg">res/Images/CustomVehicleIcon.svg</file>
+    </qresource>
+    <qresource prefix="/Custom/qml">
+        <file alias="QGroundControl/FlightDisplay/CustomGuidedActionsController.qml">src/CustomGuidedActionsController.qml</file>
+        <file alias="QGroundControl/FlightDisplay/FlyViewCustomLayer.qml">src/FlyViewCustomLayer.qml</file>
+        <file alias="QGroundControl/FlightDisplay/FlyViewToolStripActionList.qml">src/FlyViewToolStripActionList.qml</file>
+        <file alias="QGroundControl/FlightDisplay/FlyViewBottomRightRowLayout.qml">src/CustomFlyView/FlyViewBottomRightRowLayout.qml</file>
+        <file alias="QGroundControl/Controls/FlyViewToolBar.qml">src/FlyViewToolBar.qml</file>
+        <file alias="QGroundControl/FlightDisplay/VtFlightPathLibrary.qml">src/VtFlightPathLibrary.qml</file>
+        <file alias="QGroundControl/FlightDisplay/MediaLibraryView.qml">src/MediaLibraryView.qml</file>
+    </qresource>
+    <qresource prefix="/Custom/res">
+        <file alias="QGCLogoFull.svg">res/SEEEX_Logo.png</file>
+        <file alias="qgroundcontrol.ico">res/icons/custom_qgroundcontrol.ico</file>
+    </qresource>
+</RCC>

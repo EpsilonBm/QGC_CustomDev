@@ -25,6 +25,7 @@ Item {
     anchors.top:    parent.top
     anchors.bottom: parent.bottom
 
+    // 定义与飞行器和云台相关的属性
     property var    activeVehicle:              QGroundControl.multiVehicleManager.activeVehicle
     property var    gimbalController:           activeVehicle.gimbalController
     property bool   showIndicator:              gimbalController && gimbalController.gimbals.count
@@ -32,6 +33,7 @@ Item {
     property var    multiGimbalSetup:           gimbalController.gimbals.count > 1
     property bool   joystickButtonsAvailable:   activeVehicle.joystickEnabled
 
+    // UI元素尺寸相关属性
     property var    margins:                    ScreenTools.defaultFontPixelWidth
     property var    panelRadius:                ScreenTools.defaultFontPixelWidth * 0.5
     property var    buttonHeight:               height * 1.6
@@ -39,13 +41,13 @@ Item {
     property var    separatorHeight:            buttonHeight * 0.9
     property var    settingsPanelVisible:       false
 
-    // Popup panel, appears when clicking top toolbar gimbal indicator
+    // 弹出面板组件，点击顶部工具栏云台指示器时出现
     Component {
         id: gimbalControlsPage
 
         ToolIndicatorPage {
             contentComponent: GridLayout {
-                // Label indicating the purpose of the panel and active gimbal instance
+                // 标签显示面板目的和活动云台实例
                 QGCLabel {
                     text:                   qsTr("Gimbal ") + 
                                                 (multiGimbalSetup ? activeGimbal.deviceId.rawValue : "") + 
@@ -72,13 +74,14 @@ Item {
                     ]
 
                     QGCButton {
+                        // 定义每个按钮对应的回调函数列表
                         property var callbackList: [
-                           {"yawLock":      function(){ gimbalController.toggleGimbalYawLock(!activeGimbal.yawLock) }   },
-                           {"center":       function(){ gimbalController.centerGimbal() }                               },
-                           {"tilt90":       function(){ gimbalController.sendPitchBodyYaw(-90, 0) }                     },
-                           {"pointHome":    function(){ activeVehicle.guidedModeROI(activeVehicle.homePosition) }       },
-                           {"retract":      function(){ gimbalController.toggleGimbalRetracted(true) }                  },
-                           // This button changes its action depending on gimbal being under control or not
+                           {"yawLock":      function(){ gimbalController.toggleGimbalYawLock(!activeGimbal.yawLock) }   }, // 切换云台偏航锁定状态
+                           {"center":       function(){ gimbalController.centerGimbal() }                               }, // 将云台归中
+                           {"tilt90":       function(){ gimbalController.sendPitchBodyYaw(-90, 0) }                     }, // 发送俯仰角度到-90度
+                           {"pointHome":    function(){ activeVehicle.guidedModeROI(activeVehicle.homePosition) }       }, // 指向家位置
+                           {"retract":      function(){ gimbalController.toggleGimbalRetracted(true) }                  }, // 设置云台为收回状态
+                           // 此按钮根据云台是否受控制而改变其动作
                            {"acqControl":   function(){ simpleGimbalButtonsRepeater.hasControl ? 
                                                             gimbalController.releaseGimbalControl() : 
                                                                 gimbalController.acquireGimbalControl() }               }
@@ -95,10 +98,12 @@ Item {
                         leftPadding: squareButtonPadding
                         rightPadding: squareButtonPadding
                         onClicked: {
+                            // 查找匹配当前按钮ID的回调函数
                             var callback = callbackList.find(function(item) {
                                 return item.hasOwnProperty(modelData.id);
                             });
                             if (callback !== undefined) {
+                                // 执行找到的回调函数
                                 callback[modelData.id]();
                             }
                         }
@@ -146,6 +151,7 @@ Item {
                         visible:                    gimbalSelectorPanel.visible
                     }
                     
+                    // 云台选择面板 - 显示所有可用云台并允许选择
                     Rectangle {
                         id:                         gimbalSelectorPanel
                         width:                      buttonHeight + margins * 2
@@ -161,11 +167,13 @@ Item {
                         anchors.horizontalCenter:   parent.horizontalCenter
                         anchors.topMargin:          margins
 
+                        // 面板内部属性定义
                         property var buttonWidth:    width - margins * 2
                         property var panelHeight:    gimbalSelectorContentGrid.childrenRect.height + margins * 2
                         property var gridRowSpacing: margins
                         property var buttonFontSize: ScreenTools.smallFontPointSize * 0.9
 
+                        // 网格布局用于排列云台选择按钮
                         GridLayout {
                             id:               gimbalSelectorContentGrid
                             width:            parent.width
@@ -176,17 +184,22 @@ Item {
                             anchors.top:              parent.top
                             anchors.topMargin:        margins
 
+                            // 重复器用于为每个云台创建选择按钮
                             Repeater {
                                 model: gimbalController && gimbalController.gimbals ? gimbalController.gimbals : undefined
                                 delegate: QGCButton {
+                                    // 按钮尺寸和对齐设置
                                     Layout.preferredWidth:  Layout.preferredHeight
                                     Layout.preferredHeight: buttonHeight
                                     Layout.alignment:       Qt.AlignHCenter | Qt.AlignVCenter
                                     fontWeight:             Font.DemiBold
                                     pointSize:              ScreenTools.smallFontPointSize
                                     backRadius:             panelRadius * 0.5
+                                    // 按钮文本显示云台名称
                                     text:                   qsTr("Gimbal ") + object.deviceId.rawValue
+                                    // 如果此按钮代表当前活动云台，则按钮处于选中状态
                                     checked:                activeGimbal === object
+                                    // 点击按钮时切换活动云台并关闭选择器
                                     onClicked: {
                                         gimbalController.activeGimbal = object
                                         gimbalSelectorButton.checked = false
@@ -296,6 +309,7 @@ Item {
                         color:                   qgcPal.windowShade
                     }
 
+                    // 摇杆按钮速度设置 - 仅在摇杆可用且设置页面可见时显示
                     QGCLabel {
                         text:               qsTr("Joystick buttons speed:")
                         visible:            joystickButtonsAvailable && QGroundControl.settingsManager.gimbalControllerSettings.visible
@@ -316,6 +330,7 @@ Item {
                         visible:                 joystickButtonsAvailable && QGroundControl.settingsManager.gimbalControllerSettings.visible
                     }
 
+                    // 地图上显示云台方位指示器复选框 - 控制是否在地图上显示云台方向指示
                     FactCheckBox {
                         id:                 gimbalAzimuthMapCheckbox
                         text:               "  " + qsTr("Show gimbal Azimuth indicator in map")
@@ -325,6 +340,7 @@ Item {
                         uncheckedValue:     0
                     }
 
+                    // 工具栏使用方位角而非局部偏航角 - 控制顶部工具栏显示模式
                     FactCheckBox {
                         id:                 gimbalAzimutIndicatorCheckbox
                         text:               "  " + qsTr("Use Azimuth instead of local yaw on top toolbar indicator")
@@ -334,6 +350,7 @@ Item {
                         uncheckedValue:     0
                     }
 
+                    // 显示获取/释放控制按钮 - 控制是否显示控制权获取/释放按钮
                     FactCheckBox {
                         id:                 showAcquireControlCheckbox
                         text:               "  " + qsTr("Show Acquire/Release control button")

@@ -24,6 +24,7 @@ Rectangle {
     radius:     ScreenTools.defaultFontPixelWidth / 2
     color:      qgcPal.window
     visible:    _utmspEnabled === true ? utmspSliderTrigger: false
+    anchors.centerIn: parent
 
     property var    guidedController
     property var    guidedValueSlider
@@ -119,6 +120,8 @@ Rectangle {
                 Layout.fillWidth:   true
                 enabled: _utmspEnabled === true? utmspSliderTrigger : true
                 opacity: if(_utmspEnabled){utmspSliderTrigger === true ? 1 : 0.5} else{1}
+
+                color: message === "停止燃料电池" ? qgcPal.colorRed : qgcPal.colorGreen
 
                 onAccept: {
                     _root.visible = false
