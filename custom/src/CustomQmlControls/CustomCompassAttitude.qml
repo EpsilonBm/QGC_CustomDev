@@ -63,7 +63,7 @@ Item {
         anchors.bottom:           parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         text:                     (_activeVehicle ? _heading.toFixed(0) : "-.-")
-        color:                    "#FFFFFF"
+        color:                    "#080808"
         font.pointSize:           ScreenTools.defaultFontPointSize
     }
 }

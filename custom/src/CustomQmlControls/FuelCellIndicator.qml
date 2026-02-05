@@ -56,6 +56,13 @@ Item {
     //     }
     // }
 
+    function getRemainingTimeText() {
+        if (fuelCell && fuelCell.remainingTime) {
+            return fuelCell.remainingTime.valueString + " " + fuelCell.remainingTime.units
+        }
+        return qsTr("n/a")
+    }
+
     function getVoltageText() {
         if (fuelCell && fuelCell.loadVoltage) {
             // Use loadVoltage from the new FactGroup
@@ -126,14 +133,14 @@ Item {
             anchors.bottom:         parent.bottom
             spacing:                0
 
-            // QGCLabel {
-            //     Layout.alignment:       Qt.AlignHCenter
-            //     verticalAlignment:      Text.AlignVCenter
-            //     color:                  qgcPal.text
-            //     text:                   getRemainingTimeText()
-            //     font.pointSize:         getVisibleCount()
-            //     visible:                _showRemainingTime ? _showRemainingTime.rawValue : false
-            // }
+            QGCLabel {
+                Layout.alignment:       Qt.AlignHCenter
+                verticalAlignment:      Text.AlignVCenter
+                color:                  qgcPal.text
+                text:                   getRemainingTimeText()
+                font.pointSize:         ScreenTools.defaultFontPointSize
+                visible:                true
+            }
             // Temperature
             QGCLabel {
                 Layout.alignment:       Qt.AlignHCenter

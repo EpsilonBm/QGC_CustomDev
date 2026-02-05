@@ -100,4 +100,12 @@ Item {
             visible:                true
         }
     }
+    QGCLabel {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom:           parent.bottom
+        color:                    qgcPal.text
+        text:                     fuelCell.bottleCapacity.valueString
+        font.pointSize:           ScreenTools.smallFontPointSize
+        visible:                  true
+    }
 }
