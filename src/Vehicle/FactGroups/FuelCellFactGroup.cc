@@ -27,8 +27,9 @@ FuelCellFactGroup::FuelCellFactGroup(QObject* parent)
     , _percentRemainingFact     (0, "percentRemaining",     FactMetaData::valueTypeDouble,  this)
     , _bottleCapacityFact       (0, "bottleCapacity",       FactMetaData::valueTypeDouble,  this)
     , _maxEnergyFact            (0, "maxEnergy",            FactMetaData::valueTypeDouble,  this)
+    , _avgPowerFact             (0, "avgPower",             FactMetaData::valueTypeDouble,  this)
     , _bottleCapacity(9.0)      // 默认9L氢气瓶
-    , _maxEnergy(3.0)           // 默认3度电
+    , _maxEnergy(3.08)           // 默认3.08度电
     , _avgPower(0.0)            // 平均功率初始化为0
     , _announcementTimer(new QTimer(this)) // 初始化定时器
 
@@ -59,10 +60,12 @@ FuelCellFactGroup::FuelCellFactGroup(QObject* parent)
     _addFact(&_percentRemainingFact,     _percentRemainingFact.name());
     _addFact(&_bottleCapacityFact,       _bottleCapacityFact.name());
     _addFact(&_maxEnergyFact,            _maxEnergyFact.name());
+    _addFact(&_avgPowerFact,            _avgPowerFact.name());
 
     // Initialize default values
     _bottleCapacityFact.setRawValue(_bottleCapacity);
     _maxEnergyFact.setRawValue(_maxEnergy);
+    _avgPowerFact.setRawValue(_avgPower);
 }
 
 // 添加检查和播报方法
@@ -90,14 +93,13 @@ void FuelCellFactGroup::checkAndAnnounceFuelLevel()
 }
 
 
-void FuelCellFactGroup::setBottleCapacity(double capacity, double maxEnergy)
-{
-    _bottleCapacity = capacity;
-    _bottleCapacityFact.setRawValue(capacity);
-    // TODO: Add relationship between bottle capacity and max energy
-    _maxEnergy = maxEnergy;
-    _maxEnergyFact.setRawValue(maxEnergy);
-}
+// void FuelCellFactGroup::setBottleCapacity(double capacity, double maxEnergy)
+// {
+//     _bottleCapacity = capacity;
+//     _bottleCapacityFact.setRawValue(capacity);
+//     _maxEnergy = maxEnergy;
+//     _maxEnergyFact.setRawValue(maxEnergy);
+// }
 
 void FuelCellFactGroup::handleMessage(Vehicle* /*vehicle*/, mavlink_message_t& message)
 {
@@ -164,7 +166,7 @@ void FuelCellFactGroup::handleMessage(Vehicle* /*vehicle*/, mavlink_message_t& m
     for (double power : _powerHistory) {
         power_sum += power;
     }
-    _avgPower = _powerHistory.isEmpty() ? 0.0 : (power_sum / _powerHistory.size());
+    _avgPower= _powerHistory.isEmpty() ? 0.0 : (power_sum / _powerHistory.size());
 
     // 3. Calculate remaining energy and percentage from pressure
     double min_pressure = 2.0;
@@ -181,7 +183,7 @@ void FuelCellFactGroup::handleMessage(Vehicle* /*vehicle*/, mavlink_message_t& m
         remaining_time_hours = remaining_energy / _avgPower;
     }
     _remainingTimeFact.setRawValue(remaining_time_hours);
-
+    _avgPowerFact.setRawValue(_avgPower);
 }
 
 void FuelCellFactGroup::onCommunicationLostChanged(bool communicationLost)

@@ -25,12 +25,26 @@ ToolIndicatorPage {
     contentComponent:   _fuelCellContentComponent
     expandedComponent:  _fuelCellExpandedComponent
 
-    // Connections {
-    //     target: _fuelCell ? _fuelCell.bottleCapacity : null
-    //     onValueChanged: {
-    //         // TODO: Add Max energy changing logic
-    //     }
-    // }
+    Connections {
+        target: _fuelCell ? _fuelCell.bottleCapacity : null
+        onValueChanged: {
+            // TODO: Add Max energy changing logic
+            switch (_fuelCell.bottleCapacity.value){
+                case 5.0:
+                    _fuelCell.maxEnergy.value = 1.7
+                    break
+                case 9.0:
+                    _fuelCell.maxEnergy.value = 3.08
+                    break
+                case 12.0:
+                    _fuelCell.maxEnergy.value = 4.06
+                    break
+                case 20.0:
+                    _fuelCell.maxEnergy.value = 6.5
+                    break
+            }
+        }
+    }
 
     Component {
         id: _fuelCellContentComponent
@@ -105,11 +119,12 @@ ToolIndicatorPage {
                     LabelledLabel {
                         property var factObj: _fuelCell ? _fuelCell[modelData.fact] : null
                         label:      modelData.label
-                        labelText:  factObj ? (
-                                    modelData.fact === "highestTemperature" ? (factObj.valueString + " " + factObj.units + "(" + (_highestTemperatureId ? _highestTemperatureId.valueString : "") + ")") :
-                                    modelData.fact === "pressureLowest"     ? (factObj.valueString + " " + factObj.units + "(" + (_pressureLowestId ? _pressureLowestId.valueString : "") + ")") :
-                                    modelData.fact === "lowestVoltage"      ? (factObj.valueString + " " + factObj.units + "(" + (_lowestVoltageId ? _lowestVoltageId.valueString : "") + ")") :
-                                    factObj.valueString + " " + factObj.units) : "N/A"
+                        // labelText:  factObj ? (
+                        //             modelData.fact === "highestTemperature" ? (factObj.valueString + " " + factObj.units + "(" + (_highestTemperatureId ? _highestTemperatureId.valueString : "") + ")") :
+                        //             modelData.fact === "pressureLowest"     ? (factObj.valueString + " " + factObj.units + "(" + (_pressureLowestId ? _pressureLowestId.valueString : "") + ")") :
+                        //             modelData.fact === "lowestVoltage"      ? (factObj.valueString + " " + factObj.units + "(" + (_lowestVoltageId ? _lowestVoltageId.valueString : "") + ")") :
+                        //             factObj.valueString + " " + factObj.units) : "N/A"
+                        labelText:  factObj ? (factObj.valueString + " " + factObj.units) : "N/A"
                         visible:    factObj !== null
                     }
                     /*
