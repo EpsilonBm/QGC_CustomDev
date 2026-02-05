@@ -15,6 +15,7 @@ public:
     void setBottleCapacity(double capacity, double maxEnergy);
     // 添加语音播报相关方法
     void checkAndAnnounceFuelLevel();
+    void handleCommunicationLost(bool lost);
 
     Q_PROPERTY(Fact* systemStatus         READ systemStatus         CONSTANT)
     Q_PROPERTY(Fact* loadVoltage          READ loadVoltage          CONSTANT)

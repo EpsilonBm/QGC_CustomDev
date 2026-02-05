@@ -207,6 +207,8 @@ Vehicle::Vehicle(LinkInterface*             link,
             this, [this](const QString& announcement) {
         _say(announcement);
     });
+
+    connect(_vehicleLinkManager, &VehicleLinkManager::communicationLostChanged, &_fuelCellFactGroup, &FuelCellFactGroup::handleCommunicationLost);
 }
 
 // Disconnected Vehicle for offline editing

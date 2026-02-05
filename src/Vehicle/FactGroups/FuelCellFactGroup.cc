@@ -63,7 +63,6 @@ FuelCellFactGroup::FuelCellFactGroup(QObject* parent)
     // Initialize default values
     _bottleCapacityFact.setRawValue(_bottleCapacity);
     _maxEnergyFact.setRawValue(_maxEnergy);
-    _announcementTimer->start();
 }
 
 // 添加检查和播报方法
@@ -90,6 +89,19 @@ void FuelCellFactGroup::checkAndAnnounceFuelLevel()
     emit fuelLevelAnnouncementNeeded(announcement);
 }
 
+void FuelCellFactGroup::handleCommunicationLost(bool lost)
+{
+    if (lost) {
+        _announcementTimer->stop();
+    } else {
+        int status = _systemStatusFact.rawValue().toInt();
+        if (status != 0 && status != 5 && status != 7) {
+            if (!_announcementTimer->isActive()) {
+                _announcementTimer->start();
+            }
+        }
+    }
+}
 
 void FuelCellFactGroup::setBottleCapacity(double capacity, double maxEnergy)
 {
@@ -126,6 +138,14 @@ void FuelCellFactGroup::handleMessage(Vehicle* /*vehicle*/, mavlink_message_t& m
     _pressureLowestIdFact.setRawValue(status.pressure_lowest_id);
     _pressureLowestFact.setRawValue(status.pressure_lowest / 10.0);
     _pressureTotalFact.setRawValue(status.pressure_total / 10.0);
+
+    if (status.system_status == 0 || status.system_status == 5 || status.system_status == 7) {
+        _announcementTimer->stop();
+    } else {
+        if (!_announcementTimer->isActive()) {
+            _announcementTimer->start();
+        }
+    }
 
     // 1. Calculate instantaneous power (W)
     double instantaneous_power_w = _loadVoltageFact.rawValue().toDouble() * _dcOutputCurrentFact.rawValue().toDouble();
