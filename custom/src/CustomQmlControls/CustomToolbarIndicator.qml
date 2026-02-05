@@ -63,7 +63,7 @@ Item {
 
         QGCButton {
             id:                 disconnectButton
-            text:               qsTr("未连接")
+            text:               qsTr("断开连接")
             onClicked:          _activeVehicle.closeVehicle()
             visible:            _activeVehicle && _communicationLost
         }

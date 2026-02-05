@@ -9746,19 +9746,19 @@ Click Ok to start the auto-tuning process.
       <location filename="../src/UI/MainWindow.qml" line="143"/>
       <location filename="../src/UI/MainWindow.qml" line="367"/>
       <source>Analyze Tools</source>
-      <translation type="unfinished">Analyze Tools</translation>
+      <translation>分析工具</translation>
     </message>
     <message>
       <location filename="../src/UI/MainWindow.qml" line="147"/>
       <location filename="../src/UI/MainWindow.qml" line="382"/>
       <source>Vehicle Configuration</source>
-      <translation type="unfinished">Vehicle Configuration</translation>
+      <translation>载具配置</translation>
     </message>
     <message>
       <location filename="../src/UI/MainWindow.qml" line="164"/>
       <location filename="../src/UI/MainWindow.qml" line="396"/>
       <source>Application Settings</source>
-      <translation type="unfinished">Application Settings</translation>
+      <translation>应用设置</translation>
     </message>
     <message>
       <location filename="../src/UI/MainWindow.qml" line="226"/>
@@ -9805,17 +9805,17 @@ Click Ok to start the auto-tuning process.
     <message>
       <location filename="../src/UI/MainWindow.qml" line="353"/>
       <source>Plan Flight</source>
-      <translation type="unfinished">Plan Flight</translation>
+      <translation>计划视图</translation>
     </message>
     <message>
       <location filename="../src/UI/MainWindow.qml" line="429"/>
       <source>%1 Version</source>
-      <translation type="unfinished">%1 Version</translation>
+      <translation>%1版本</translation>
     </message>
     <message>
       <location filename="../src/UI/MainWindow.qml" line="519"/>
       <source>Exit</source>
-      <translation type="unfinished">Exit</translation>
+      <translation>退出</translation>
     </message>
     <message>
       <location filename="../src/UI/MainWindow.qml" line="600"/>
@@ -16018,42 +16018,42 @@ ROTATION_NONE indicates component points in direction of flight.</translation>
     <message>
       <location filename="../src/UI/AppSettings/SettingsPagesModel.qml" line="17"/>
       <source>General</source>
-      <translation type="unfinished">General</translation>
+      <translation>通用</translation>
     </message>
     <message>
       <location filename="../src/UI/AppSettings/SettingsPagesModel.qml" line="24"/>
       <source>Fly View</source>
-      <translation type="unfinished">Fly View</translation>
+      <translation>飞行视图</translation>
     </message>
     <message>
       <location filename="../src/UI/AppSettings/SettingsPagesModel.qml" line="31"/>
       <source>Plan View</source>
-      <translation type="unfinished">Plan View</translation>
+      <translation>计划视图</translation>
     </message>
     <message>
       <location filename="../src/UI/AppSettings/SettingsPagesModel.qml" line="38"/>
       <source>Video</source>
-      <translation type="unfinished">Video</translation>
+      <translation>视频</translation>
     </message>
     <message>
       <location filename="../src/UI/AppSettings/SettingsPagesModel.qml" line="45"/>
       <source>Telemetry</source>
-      <translation type="unfinished">Telemetry</translation>
+      <translation>遥测</translation>
     </message>
     <message>
       <location filename="../src/UI/AppSettings/SettingsPagesModel.qml" line="52"/>
       <source>ADSB Server</source>
-      <translation type="unfinished">ADSB Server</translation>
+      <translation>ADSB服务器</translation>
     </message>
     <message>
       <location filename="../src/UI/AppSettings/SettingsPagesModel.qml" line="59"/>
       <source>Comm Links</source>
-      <translation type="unfinished">Comm Links</translation>
+      <translation>通信连接</translation>
     </message>
     <message>
       <location filename="../src/UI/AppSettings/SettingsPagesModel.qml" line="66"/>
       <source>Maps</source>
-      <translation type="unfinished">Maps</translation>
+      <translation>地图</translation>
     </message>
     <message>
       <location filename="../src/UI/AppSettings/SettingsPagesModel.qml" line="73"/>
@@ -16063,32 +16063,32 @@ ROTATION_NONE indicates component points in direction of flight.</translation>
     <message>
       <location filename="../src/UI/AppSettings/SettingsPagesModel.qml" line="85"/>
       <source>Remote ID</source>
-      <translation type="unfinished">Remote ID</translation>
+      <translation>远程ID</translation>
     </message>
     <message>
       <location filename="../src/UI/AppSettings/SettingsPagesModel.qml" line="92"/>
       <source>Console</source>
-      <translation type="unfinished">Console</translation>
+      <translation>控制台</translation>
     </message>
     <message>
       <location filename="../src/UI/AppSettings/SettingsPagesModel.qml" line="99"/>
       <source>Help</source>
-      <translation type="unfinished">Help</translation>
+      <translation>帮助</translation>
     </message>
     <message>
       <location filename="../src/UI/AppSettings/SettingsPagesModel.qml" line="106"/>
       <source>Mock Link</source>
-      <translation type="unfinished">Mock Link</translation>
+      <translation>模拟连接</translation>
     </message>
     <message>
       <location filename="../src/UI/AppSettings/SettingsPagesModel.qml" line="113"/>
       <source>Debug</source>
-      <translation type="unfinished">Debug</translation>
+      <translation>调试</translation>
     </message>
     <message>
       <location filename="../src/UI/AppSettings/SettingsPagesModel.qml" line="120"/>
       <source>Palette Test</source>
-      <translation type="unfinished">Palette Test</translation>
+      <translation>色卡测试</translation>
     </message>
   </context>
   <context>
